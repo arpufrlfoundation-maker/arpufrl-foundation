@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import Header from '@/components/common/Header'
+import { getFallbackContent } from '@/lib/content-types'
 
 // Mock Next.js Link component
 jest.mock('next/link', () => {
@@ -8,25 +8,84 @@ jest.mock('next/link', () => {
   )
 })
 
+// Mock next-auth completely
+jest.mock('next-auth/react', () => ({
+  useSession: () => ({ data: null, status: 'unauthenticated' }),
+  signOut: jest.fn(),
+  SessionProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+}))
+
+// Mock auth utils
+jest.mock('@/lib/auth-utils', () => ({
+  sessionUtils: {
+    canAccessAdmin: () => false,
+    canAccessCoordinator: () => false,
+  }
+}))
+
+// Mock content provider
+jest.mock('@/lib/content-provider', () => ({
+  useContent: () => ({
+    content: getFallbackContent(),
+    loading: false,
+    error: null,
+    reloadContent: jest.fn(),
+    isUsingFallback: false,
+    lastUpdated: new Date(),
+  }),
+  ContentProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+}))
+
+// Mock lucide-react icons
+jest.mock('lucide-react', () => ({
+  ChevronDown: () => <span>ChevronDown</span>,
+  User: () => <span>User</span>,
+  LogOut: () => <span>LogOut</span>,
+  Settings: () => <span>Settings</span>,
+  LayoutDashboard: () => <span>LayoutDashboard</span>,
+}))
+
+// Mock PWA Install Button
+jest.mock('@/components/common/PWAInstallButton', () => {
+  return function PWAInstallButton() {
+    return <button>Install PWA</button>
+  }
+})
+
+// Mock Button component
+jest.mock('@/components/ui/button', () => ({
+  Button: ({ children, asChild, ...props }: any) => {
+    if (asChild) {
+      return <div {...props}>{children}</div>
+    }
+    return <button {...props}>{children}</button>
+  }
+}))
+
+// Import Header after mocks
+import Header from '@/components/common/Header'
+
 describe('Header', () => {
-  it('renders the logo and organization name', () => {
+  it('renders the organization name from dynamic content', () => {
     render(<Header />)
 
-    const logo = screen.getByText('A')
-    expect(logo).toBeInTheDocument()
-
-    expect(screen.getByText('ARPU Foundation')).toBeInTheDocument()
+    expect(screen.getByText('ARPU Future Rise Life Foundation')).toBeInTheDocument()
     expect(screen.getByText('Future Rise Life')).toBeInTheDocument()
   })
 
-  it('renders navigation items on desktop', () => {
+  it('renders navigation items from dynamic content', () => {
     render(<Header />)
 
-    expect(screen.getByText('Home')).toBeInTheDocument()
-    expect(screen.getByText('About')).toBeInTheDocument()
-    expect(screen.getByText('Programs')).toBeInTheDocument()
-    expect(screen.getByText('Stories')).toBeInTheDocument()
-    expect(screen.getByText('Contact')).toBeInTheDocument()
+    expect(screen.getByText('HOME')).toBeInTheDocument()
+    expect(screen.getByText('ABOUT')).toBeInTheDocument()
+    expect(screen.getByText('PROGRAMS')).toBeInTheDocument()
+  })
+
+  it('renders authentication buttons when not logged in', () => {
+    render(<Header />)
+
+    expect(screen.getByText('Login')).toBeInTheDocument()
+    expect(screen.getByText('Sign Up')).toBeInTheDocument()
   })
 
   it('renders donate button', () => {
@@ -40,26 +99,23 @@ describe('Header', () => {
   it('toggles mobile menu when hamburger button is clicked', () => {
     render(<Header />)
 
-    const mobileMenuButton = screen.getByRole('button')
+    const mobileMenuButton = screen.getByLabelText('Toggle mobile menu')
     expect(mobileMenuButton).toBeInTheDocument()
-
-    // Mobile menu should not be visible initially
-    expect(screen.queryByText('Mobile Navigation')).not.toBeInTheDocument()
 
     // Click to open mobile menu
     fireEvent.click(mobileMenuButton)
 
     // Check if mobile navigation items are visible
-    const mobileNavItems = screen.getAllByText('Home')
+    const mobileNavItems = screen.getAllByText('HOME')
     expect(mobileNavItems.length).toBeGreaterThan(1) // Desktop + Mobile
   })
 
-  it('has proper navigation links', () => {
+  it('has proper navigation links from dynamic content', () => {
     render(<Header />)
 
-    const homeLink = screen.getByRole('link', { name: 'Home' })
-    const aboutLink = screen.getByRole('link', { name: 'About' })
-    const programsLink = screen.getByRole('link', { name: 'Programs' })
+    const homeLink = screen.getByRole('link', { name: 'HOME' })
+    const aboutLink = screen.getByRole('link', { name: 'ABOUT' })
+    const programsLink = screen.getByRole('link', { name: 'PROGRAMS' })
 
     expect(homeLink).toHaveAttribute('href', '/')
     expect(aboutLink).toHaveAttribute('href', '/about')
@@ -71,5 +127,11 @@ describe('Header', () => {
     const header = container.firstChild as HTMLElement
 
     expect(header).toHaveClass('sticky', 'top-0', 'z-50')
+  })
+
+  it('renders PWA install button', () => {
+    render(<Header />)
+
+    expect(screen.getByText('Install PWA')).toBeInTheDocument()
   })
 })

@@ -22,6 +22,7 @@ const publicRoutes = [
   '/login',
   '/register',
   '/api/auth',
+  '/api/content',
   '/api/donations',
   '/api/programs',
   '/api/webhooks',

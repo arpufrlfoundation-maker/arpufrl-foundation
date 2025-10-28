@@ -144,50 +144,51 @@ export class PWAInstaller {
 
     // Check for iOS Safari standalone mode
     if ((window.navigator as any).standalone === true) {
-      thid = true
+      this.isInstalled = true
     }
   }
 
   public async install(): Promise<boolean> {
-    if (!this.deferredPrompt) console.log('Install prompt not available')
-    return false
-  }
+    if (!this.deferredPrompt) {
+      console.log('Install prompt not available')
+      return false
+    }
 
     try {
-  await this.deferredPrompt.prompt()
-  const choiceResult = await this.deferredPrompt.userChoice
+      await this.deferredPrompt.prompt()
+      const choiceResult = await this.deferredPrompt.userChoice
 
-  if (choiceResult.outcome === 'accepted') {
-    console.log('User accepted the install prompt')
-    this.deferredPrompt = null
-    return true
-  } else {
-    console.log('User dismissed the install prompt')
-    return false
-  }
-} catch (error) {
-  console.error('Error during installation:', error)
-  return false
-}
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt')
+        this.deferredPrompt = null
+        return true
+      } else {
+        console.log('User dismissed the install prompt')
+        return false
+      }
+    } catch (error) {
+      console.error('Error during installation:', error)
+      return false
+    }
   }
 
   public isAppInstallable(): boolean {
-  return this.isInstallable && !this.isInstalled
-}
+    return this.isInstallable && !this.isInstalled
+  }
 
   public isAppInstalled(): boolean {
-  return this.isInstalled
-}
+    return this.isInstalled
+  }
 
   private showInstallButton() {
-  // Dispatch custom event for components to listen to
-  window.dispatchEvent(new CustomEvent('pwa-installable'))
-}
+    // Dispatch custom event for components to listen to
+    window.dispatchEvent(new CustomEvent('pwa-installable'))
+  }
 
   private hideInstallButton() {
-  // Dispatch custom event for components to listen to
-  window.dispatchEvent(new CustomEvent('pwa-installed'))
-}
+    // Dispatch custom event for components to listen to
+    window.dispatchEvent(new CustomEvent('pwa-installed'))
+  }
 }
 
 // Background sync for offline functionality
@@ -199,7 +200,7 @@ export async function registerBackgroundSync(tag: string): Promise<void> {
   try {
     const registration = await navigator.serviceWorker.ready
     if ('sync' in registration) {
-      await registration.sync.register(tag)
+      await (registration as any).sync.register(tag)
       console.log('Background sync registered:', tag)
     }
   } catch (error) {

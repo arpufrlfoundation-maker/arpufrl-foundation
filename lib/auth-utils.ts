@@ -2,6 +2,7 @@ import { auth } from './auth'
 import { UserRole, UserStatus, UserRoleType } from '../models/User'
 import { NextRequest } from 'next/server'
 import { Session } from 'next-auth'
+import { isDemoAdmin, isDemoAdminById } from './demo-admin'
 
 // Type definitions for role checking
 export type RequiredRole = UserRoleType | UserRoleType[]
@@ -59,6 +60,20 @@ export const authUtils = {
   },
 
   /**
+   * Check if user is demo admin by email
+   */
+  isDemoAdmin: (email: string): boolean => {
+    return isDemoAdmin(email)
+  },
+
+  /**
+   * Check if user is demo admin by ID
+   */
+  isDemoAdminById: (userId: string): boolean => {
+    return isDemoAdminById(userId)
+  },
+
+  /**
    * Get redirect URL based on user role
    */
   getRedirectUrl: (userRole: string): string => {
@@ -94,8 +109,10 @@ export function withAuth(
         )
       }
 
-      // Check if user is active (if required)
-      if (options.requireActive !== false && !authUtils.isActiveUser(session.user.status)) {
+      // Check if user is active (if required) - skip for demo admin
+      if (options.requireActive !== false &&
+        !session.user.isDemoAccount &&
+        !authUtils.isActiveUser(session.user.status)) {
         return new Response(
           JSON.stringify({ error: 'Account is not active' }),
           { status: 403, headers: { 'Content-Type': 'application/json' } }
@@ -178,5 +195,12 @@ export const sessionUtils = {
    */
   isActiveUser: (session: Session | null): boolean => {
     return session?.user?.status === UserStatus.ACTIVE
+  },
+
+  /**
+   * Check if current user is demo admin (client-side)
+   */
+  isDemoAdmin: (session: Session | null): boolean => {
+    return session?.user?.isDemoAccount === true
   }
 }

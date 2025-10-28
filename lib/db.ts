@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { env, isDevelopment } from './env'
+import { envConfig as env, isDevelopment } from './env-config'
 
 // Connection state tracking
 interface ConnectionState {
@@ -17,8 +17,8 @@ const connection: ConnectionState = {
 // MongoDB connection options with connection pooling
 const mongooseOptions: mongoose.ConnectOptions = {
   // Connection pooling settings
-  maxPoolSize: isDevelopment ? 5 : 10, // Maximum number of connections
-  minPoolSize: isDevelopment ? 1 : 2,  // Minimum number of connections
+  maxPoolSize: isDevelopment() ? 5 : 10, // Maximum number of connections
+  minPoolSize: isDevelopment() ? 1 : 2,  // Minimum number of connections
   maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
   serverSelectionTimeoutMS: 5000, // How long to try selecting a server
   socketTimeoutMS: 45000, // How long a send or receive on a socket can take
@@ -75,13 +75,13 @@ async function connectWithRetry(maxRetries = 5, baseDelay = 1000): Promise<typeo
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      if (isDevelopment) {
+      if (isDevelopment()) {
         console.log(`Attempting to connect to MongoDB (attempt ${attempt}/${maxRetries})`)
       }
 
       const mongooseInstance = await mongoose.connect(env.MONGODB_URI, mongooseOptions)
 
-      if (isDevelopment) {
+      if (isDevelopment()) {
         console.log('Successfully connected to MongoDB')
       }
 
@@ -89,7 +89,7 @@ async function connectWithRetry(maxRetries = 5, baseDelay = 1000): Promise<typeo
     } catch (error) {
       lastError = error as Error
 
-      if (isDevelopment) {
+      if (isDevelopment()) {
         console.error(`MongoDB connection attempt ${attempt} failed:`, error)
       }
 
@@ -101,7 +101,7 @@ async function connectWithRetry(maxRetries = 5, baseDelay = 1000): Promise<typeo
       // Calculate delay with exponential backoff
       const delay = baseDelay * Math.pow(2, attempt - 1)
 
-      if (isDevelopment) {
+      if (isDevelopment()) {
         console.log(`Retrying in ${delay}ms...`)
       }
 
@@ -121,7 +121,7 @@ export async function disconnectFromDatabase(): Promise<void> {
     connection.isConnected = false
     connection.connectionPromise = null
 
-    if (isDevelopment) {
+    if (isDevelopment()) {
       console.log('Disconnected from MongoDB')
     }
   }
@@ -211,7 +211,7 @@ function setupConnectionHandlers() {
   // Only set up handlers once
   if (mongoose.connection.listenerCount('connected') === 0) {
     mongoose.connection.on('connected', () => {
-      if (isDevelopment) {
+      if (isDevelopment()) {
         console.log('Mongoose connected to MongoDB')
       }
     })
@@ -222,7 +222,7 @@ function setupConnectionHandlers() {
     })
 
     mongoose.connection.on('disconnected', () => {
-      if (isDevelopment) {
+      if (isDevelopment()) {
         console.log('Mongoose disconnected from MongoDB')
       }
       connection.isConnected = false

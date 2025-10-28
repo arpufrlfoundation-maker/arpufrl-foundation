@@ -40,6 +40,33 @@ export const donationFormSchema = z.object({
     .optional()
     .or(z.literal('')),
 
+  // Privacy preferences
+  isAnonymous: z.boolean().default(false).optional(),
+
+  hideFromPublicDisplay: z.boolean().default(false).optional(),
+
+  displayName: z.string()
+    .max(100, 'Display name must not exceed 100 characters')
+    .optional()
+    .or(z.literal('')),
+
+  allowPublicRecognition: z.boolean().default(true).optional(),
+
+  showAmountPublicly: z.boolean().default(true).optional(),
+
+  showDatePublicly: z.boolean().default(false).optional(),
+
+  preferredDisplayFormat: z.enum(['name_amount', 'name_only', 'amount_only', 'anonymous']).default('name_amount').optional(),
+
+  // Consent fields
+  privacyConsentGiven: z.boolean()
+    .refine(val => val === true, 'You must consent to data processing'),
+
+  dataProcessingConsent: z.boolean()
+    .refine(val => val === true, 'You must consent to data processing'),
+
+  marketingConsent: z.boolean().default(false).optional(),
+
   // Terms acceptance
   acceptTerms: z.boolean()
     .refine(val => val === true, 'You must accept the terms and conditions'),

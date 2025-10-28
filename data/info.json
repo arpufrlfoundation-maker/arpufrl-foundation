@@ -1,0 +1,477 @@
+{
+  "organization": {
+    "name": "ARPU",
+    "email": "arpufrlfoundation@gmail.com",
+    "head_office_address": "B-17 3/F, FLAT 8, MANDWALI, FAZALPUR EAST DELHI",
+    "phone_numbers": [
+      "+91 9919003332",
+      "9956913332",
+      "7052872280"
+    ],
+    "copyright_year": 2025,
+    "logo_image": "https://arpufrl.in/ARPU.png",
+    "social_links": {
+      "facebook": "https://www.facebook.com/profile.php?id=61580192438544&mibextid=ZbWKwL",
+      "youtube": "https://www.youtube.com/@ARPUFUTURERISELIFEFOUNDATION",
+      "instagram": "https://www.instagram.com/arpufuture?igsh=N2N0M2NhM3p2d3lz"
+    }
+  },
+  "navigation": [
+    {
+      "id": 0,
+      "label": "HOME",
+      "link": "/"
+    },
+    {
+      "id": 1,
+      "label": "ABOUT",
+      "link": "/about"
+    },
+    {
+      "id": 2,
+      "label": "PROGRAMS",
+      "link": "/programs"
+    },
+    {
+      "id": 3,
+      "label": "STORIES",
+      "link": "/stories"
+    },
+    {
+      "id": 4,
+      "label": "CONTACT",
+      "link": "/contact"
+    }
+  ],
+  "hero_section": {
+    "title": "WELCOME TO ARPU Future Rise Life Foundation",
+    "subtitle": "A CHARITY UNIT",
+    "motto": {
+      "A": "Awareness",
+      "R": "Relief",
+      "P": "Progress",
+      "U": "Upliftment"
+    },
+    "buttons": [
+      {
+        "label": "JOIN US",
+        "link": null
+      },
+      {
+        "label": "CHARITY",
+        "link": null
+      }
+    ],
+    "image": null
+  },
+  "highlight_cards": [
+    {
+      "title": "CHILDREN'S CARE",
+      "description": "Broadly speaking, you can think of any crowdfunding campaign in which there is no financial return..",
+      "image": null
+    },
+    {
+      "title": "DONATE FUND",
+      "description": "Broadly speaking, you can think of any crowdfunding campaign in which there is no financial return..",
+      "image": null
+    },
+    {
+      "title": "DONATION PLAN",
+      "description": "Broadly speaking, you can think of any crowdfunding campaign in which there is no financial return..",
+      "image": null
+    }
+  ],
+  "mission_section": {
+    "heading": "Welcome to ARPU Future Rise Life Foundation",
+    "text": "Welcome to Community, where our mission is to connect peoples who donate worldwide to collaborate, innovate, and amplify their impact on global causes. Our Mission: At Community, we believe in the power of collaboration to drive meaningful change. Our mission is to provide a platform where peoples can come together to share resources, expertise, and best practices. By fostering partnerships and facilitating connections, we aim to strengthen the collective effort towards addressing pressing global challenges.",
+    "button": {
+      "label": "Read More...",
+      "link": null
+    },
+    "image": null
+  },
+  "call_to_action": {
+    "heading": "You Can Make A Difference in The World",
+    "text": "We are an organization that helps the differently able individuals realize their hopes, dreams and ambitions and help those who need just a little extra support.",
+    "button": {
+      "label": "Donate Now With Love",
+      "link": null
+    },
+    "image": null
+  },
+  "achievements_section": {
+    "heading": "The ARPU Future Rise Life Foundation Achievement",
+    "text": "ARPU Future Rise Life Foundation believes in making small difference in lives of every human being who is less privileged. The committed team of the trust has built over time a system that ensures personal attention",
+    "cards": [
+      {
+        "title": "Child & Women Welfare",
+        "description": "Programs for safety, health, and growth initiated for women and children Uplifting lives with care and empowerment.",
+        "image": null
+      },
+      {
+        "title": "Community Development",
+        "description": "Infrastructure, training, and sanitation efforts extended for underdeveloped regions Ensuring dignity, progress, and basic human rights.",
+        "image": null
+      },
+      {
+        "title": "Environmental Sustainability",
+        "description": "Tree planting and clean-up drives conducted for eco-awareness Dedicated work for a greener, cleaner environment.",
+        "image": null
+      },
+      {
+        "title": "Senior Citizen Engagement",
+        "description": "Wellness checkups and social activities arranged for elders Ensuring a joyful, active, and respected life ahead.",
+        "image": null
+      },
+      {
+        "title": "Education & Empowerment",
+        "description": "Workshops and classes conducted for youth and women Boosting confidence, knowledge, and future independence together.",
+        "image": null
+      },
+      {
+        "title": "Research & Innovation",
+        "description": "Innovation hubs and science labs promoted for future leaders Inspiring minds to solve real-world issues creatively.",
+        "image": null
+      },
+      {
+        "title": "Support for Differently-Abled",
+        "description": "Skill-building and mobility aid provided for differently-abled individuals Promoting accessibility, equality, and personal dignity.",
+        "image": null
+      },
+      {
+        "title": "Employment & Livelihood",
+        "description": "Vocational training and placement support offered for youth Creating sustainable income sources and boosting rural employment potential.",
+        "image": null
+      },
+      {
+        "title": "Health & Hygiene",
+        "description": "Awareness campaigns and health camps conducted regularly Ensuring basic hygiene practices and improved community well-being always.",
+        "image": null
+      },
+      {
+        "title": "Youth & Sports",
+        "description": "Athletic programs and leadership training for youth Supporting teamwork, confidence, and physical fitness for all participants.",
+        "image": null
+      },
+      {
+        "title": "Animal Welfare",
+        "description": "Rescue operations and medical care arranged for animals Promoting kindness, compassion, and ethical treatment across communities.",
+        "image": null
+      },
+      {
+        "title": "Disaster Response",
+        "description": "Emergency kits, relief aid, and shelter provided during crises Rapid, coordinated response to safeguard lives and livelihoods.",
+        "image": null
+      }
+    ]
+  },
+  "about_section": {
+    "heading": "About ARPU Future Rise Life Foundation Organization",
+    "text": "ARPU Future Rise Life Foundation believes in making small difference in lives of every human being who is less privileged. The committed team of the trust has built over time a system that ensures personal attention. ARPU Future Rise Life Foundation believes in a growth mechanism in the society that is inclusive. We strongly believe that civilization’s growth story should include all sections especially the less privileged ones. Without their growth there is no growth. Not being a very traditional organization, ARPU Future Rise Life Foundation is run by very young, dynamic and energetic youngsters who are always open to learn new ways to make the world a better place to stay in.",
+    "image": null
+  },
+  "blog_section": {
+    "heading": "Blog",
+    "description": "Explore our latest blog posts featuring real stories, useful insights, and updates from ARPU Future Rise Life Foundation. From community growth to social change, discover how we’re working to uplift lives and inspire action.",
+    "posts": [
+      {
+        "title": "How to Start a Business with Little or N…",
+        "link": null,
+        "image": null
+      },
+      {
+        "title": "10 Hard Lessons Every New Entrepreneur M…",
+        "link": null,
+        "image": null
+      },
+      {
+        "title": "From Idea to Empire: The Journey of a Su…",
+        "link": null,
+        "image": null
+      }
+    ]
+  },
+  "team_section": {
+    "heading": "Teams",
+    "members": [
+      {
+        "name": "Ankit Yadav",
+        "role": "Team Coordinator",
+        "profile_image": null
+      },
+      {
+        "name": "Rakesh Kumar Tripathi",
+        "role": "State Coordinator Uttar Pradesh",
+        "profile_image": null
+      },
+      {
+        "name": "Vikash Pal",
+        "role": "Field Survey Coordinator",
+        "profile_image": null
+      },
+      {
+        "name": "Himanshu Pandey",
+        "role": "National Treasurer",
+        "profile_image": null
+      },
+      {
+        "name": "Prashant Mishra",
+        "role": "Maharashtra State President",
+        "profile_image": null
+      },
+      {
+        "name": "Dhaneshwar Shukla",
+        "role": "Uttar Pradesh State President",
+        "profile_image": null
+      },
+      {
+        "name": "Pranshu Mishra",
+        "role": "Documentation Officer",
+        "profile_image": null
+      },
+      {
+        "name": "Rahul Tiwari",
+        "role": "Social Media Coordinator",
+        "profile_image": null
+      },
+      {
+        "name": "Ashutosh Shukla",
+        "role": "Public Relations Officer",
+        "profile_image": null
+      },
+      {
+        "name": "Abhinav Shukla",
+        "role": "Research & Development Head",
+        "profile_image": null
+      },
+      {
+        "name": "Abhishek Pandey",
+        "role": "Social Work Head",
+        "profile_image": null
+      },
+      {
+        "name": "Raj Kishor Yadav",
+        "role": "Child Care Head",
+        "profile_image": null
+      },
+      {
+        "name": "Prashant Yadav",
+        "role": "Environment Head",
+        "profile_image": null
+      },
+      {
+        "name": "Ankur Tipathi",
+        "role": "Education Head",
+        "profile_image": null
+      },
+      {
+        "name": "Dr. Brijesh Singh",
+        "role": "Medical Advisor",
+        "profile_image": null
+      },
+      {
+        "name": "Advocate Rohit Mishra",
+        "role": "Legal Advisor",
+        "profile_image": null
+      },
+      {
+        "name": "Ujjwal Shukla",
+        "role": "Youth Cell President",
+        "profile_image": null
+      },
+      {
+        "name": "Pratima Pandey",
+        "role": "Women Cell President",
+        "profile_image": null
+      },
+      {
+        "name": "Santosh Mishra",
+        "role": "Program Coordinator",
+        "profile_image": null
+      },
+      {
+        "name": "Sateesh Kumar Vishwakarma",
+        "role": "IT Head",
+        "profile_image": null
+      },
+      {
+        "name": "Ravi Shankar Tiwari",
+        "role": "Event Planning Coordinator",
+        "profile_image": null
+      },
+      {
+        "name": "AMIT MISHRA",
+        "role": "Campaign Coordinator",
+        "profile_image": null
+      },
+      {
+        "name": "Sudhindra Shukla",
+        "role": "Training Head",
+        "profile_image": null
+      },
+      {
+        "name": "Prem Nath Pandey",
+        "role": "National Media Incharge",
+        "profile_image": null
+      },
+      {
+        "name": "Abhishek Shukla",
+        "role": "National Organization Minister",
+        "profile_image": null
+      },
+      {
+        "name": "Abhishek Dube",
+        "role": "National Secretary",
+        "profile_image": null
+      },
+      {
+        "name": "SHIKHA MISHRA",
+        "role": "National General Secretary",
+        "profile_image": null
+      },
+      {
+        "name": "SWETA TIWARI",
+        "role": "National Vice President",
+        "profile_image": null
+      },
+      {
+        "name": "PRAJJWAL SHUKLA",
+        "role": "National President",
+        "profile_image": null
+      }
+    ]
+  },
+  "footer": {
+    "quick_links": [
+      {
+        "label": "Home",
+        "link": null
+      },
+      {
+        "label": "Blog",
+        "link": null
+      },
+      {
+        "label": "About Us",
+        "link": null
+      },
+      {
+        "label": "Our Plan",
+        "link": null
+      },
+      {
+        "label": "Gallery",
+        "link": null
+      }
+    ],
+    "contact": {
+      "head_office": "B-17 3/F, FLAT 8, MANDWALI, FAZALPUR EAST DELHI",
+      "phone": [
+        "+91 9919003332",
+        "9956913332",
+        "7052872280"
+      ],
+      "email": "arpufrlfoundation@gmail.com"
+    },
+    "copyright": "© 2025 ARPU Future Rise Life Foundation All rights reserved."
+  },
+  "about_page": {
+    "page": "About",
+    "organization": {
+      "name": "ARPU Future Rise Life Foundation",
+      "email": "arpufrlfoundation@gmail.com",
+      "social_links": {
+        "facebook": "https://www.facebook.com/profile.php?id=61580192438544&mibextid=ZbWKwL",
+        "youtube": "https://www.youtube.com/@ARPUFUTURERISELIFEFOUNDATION",
+        "instagram": "https://www.instagram.com/arpufuture?igsh=N2N0M2NhM3p2d3lz"
+      },
+      "logo_image": "https://arpufrl.in/ARPU.png",
+      "header_image": "https://arpufrl.in/about.jpg"
+    },
+    "navigation": [
+      {
+        "label": "HOME",
+        "link": "https://arpufrl.in/index.aspx"
+      },
+      {
+        "label": "ABOUT",
+        "link": "https://arpufrl.in/about.aspx"
+      },
+      {
+        "label": "OUR PLAN",
+        "link": "https://arpufrl.in/ARPU.pdf"
+      },
+      {
+        "label": "LEGALS",
+        "link": "https://arpufrl.in/legal-documents.aspx"
+      },
+      {
+        "label": "REGISTRATION",
+        "link": "https://arpufrl.in/joinus.aspx"
+      },
+      {
+        "label": "TEAM",
+        "link": "https://arpufrl.in/teams.aspx"
+      },
+      {
+        "label": "CONTEST",
+        "link": "https://arpufrl.in/contest.aspx"
+      },
+      {
+        "label": "AWARD",
+        "link": "https://arpufrl.in/Award.aspx"
+      }
+    ],
+    "content": {
+      "heading": "About ARPU Future Rise Life Foundation",
+      "description": "ARPU Future Rise Life Foundation is a registered non-profit organization committed to driving inclusive, equitable, and sustainable development across India. With a foundation built on compassion, integrity, and social responsibility, the organization envisions a future where every individual has the opportunity to thrive, regardless of their socio-economic background.",
+      "details": "Our multi-dimensional approach addresses the most critical challenges faced by marginalized and underserved communities. From ensuring the health and nutrition of children, to empowering women through education and skill-building, we work across a wide spectrum of social issues to create long-lasting impact."
+    },
+    "mission": {
+      "title": "Our Mission",
+      "points": [
+        "To empower marginalized groups, especially women, children, differently-abled, and the elderly.",
+        "To promote sustainable and inclusive community development.",
+        "To facilitate education, awareness, and social innovations that lead to long-term impact."
+      ]
+    },
+    "vision": {
+      "title": "Our Vision",
+      "description": "To create a self-reliant and inclusive society where every individual—regardless of age, gender, or ability—can live with dignity, access opportunities, and contribute meaningfully."
+    },
+    "footer": {
+      "quick_links": [
+        {
+          "label": "Home",
+          "link": "https://arpufrl.in/index.aspx"
+        },
+        {
+          "label": "Blog",
+          "link": "https://arpufrl.in/blog.aspx"
+        },
+        {
+          "label": "About Us",
+          "link": "https://arpufrl.in/about.aspx"
+        },
+        {
+          "label": "Our Plan",
+          "link": "https://arpufrl.in/ARPU.pdf"
+        },
+        {
+          "label": "Gallery",
+          "link": "https://arpufrl.in/gallery.aspx"
+        }
+      ],
+      "contact": {
+        "head_office": "B-17 3/F, FLAT 8, MANDWALI, FAZALPUR EAST DELHI",
+        "phone_numbers": [
+          "+91 9919003332",
+          "9956913332",
+          "7052872280"
+        ],
+        "email": "arpufrlfoundation@gmail.com"
+      },
+      "copyright": "© 2025 ARPU Future Rise Life Foundation All rights reserved."
+    }
+  }
+}

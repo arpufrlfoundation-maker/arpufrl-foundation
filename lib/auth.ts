@@ -5,6 +5,13 @@ import { connectToDatabase } from './db'
 import { User, userLoginSchema, UserRole, UserStatus, type IUser } from '../models/User'
 import { env } from './env'
 import bcrypt from 'bcryptjs'
+import {
+  validateDemoAdminCredentials,
+  getDemoAdminUser,
+  isDemoAdmin,
+  isDemoAdminById,
+  logDemoAdminStatus
+} from './demo-admin'
 
 // Extend NextAuth types
 declare module 'next-auth' {
@@ -16,6 +23,7 @@ declare module 'next-auth' {
     status: string
     region?: string
     parentCoordinatorId?: string
+    isDemoAccount?: boolean
   }
 
   interface Session {
@@ -27,6 +35,7 @@ declare module 'next-auth' {
       status: string
       region?: string
       parentCoordinatorId?: string
+      isDemoAccount?: boolean
     }
   }
 }
@@ -38,6 +47,7 @@ declare module '@auth/core/jwt' {
     status: string
     region?: string
     parentCoordinatorId?: string
+    isDemoAccount?: boolean
   }
 }
 
@@ -62,7 +72,13 @@ export const authConfig: NextAuthConfig = {
 
           const { email, password } = validatedFields.data
 
-          // Connect to database
+          // Check for demo admin first
+          if (validateDemoAdminCredentials(email, password)) {
+            console.log('Demo admin login successful:', email)
+            return getDemoAdminUser()
+          }
+
+          // Connect to database for regular user authentication
           await connectToDatabase()
 
           // Find user by email
@@ -90,7 +106,8 @@ export const authConfig: NextAuthConfig = {
             role: user.role,
             status: user.status,
             region: user.region,
-            parentCoordinatorId: user.parentCoordinatorId?.toString()
+            parentCoordinatorId: user.parentCoordinatorId?.toString(),
+            isDemoAccount: false
           }
         } catch (error) {
           console.error('Authentication error:', error)
@@ -121,6 +138,7 @@ export const authConfig: NextAuthConfig = {
         token.status = user.status
         token.region = user.region
         token.parentCoordinatorId = user.parentCoordinatorId
+        token.isDemoAccount = user.isDemoAccount
       }
 
       // Update session trigger (for profile updates)
@@ -131,9 +149,15 @@ export const authConfig: NextAuthConfig = {
         token.status = session.user.status
         token.region = session.user.region
         token.parentCoordinatorId = session.user.parentCoordinatorId
+        token.isDemoAccount = session.user.isDemoAccount
       }
 
-      // Verify user is still active on each request
+      // Skip database verification for demo admin
+      if (token.isDemoAccount) {
+        return token
+      }
+
+      // Verify user is still active on each request (regular users only)
       if (token.id) {
         try {
           await connectToDatabase()
@@ -166,6 +190,7 @@ export const authConfig: NextAuthConfig = {
         session.user.status = token.status as string
         session.user.region = token.region as string | undefined
         session.user.parentCoordinatorId = token.parentCoordinatorId as string | undefined
+        session.user.isDemoAccount = token.isDemoAccount as boolean | undefined
       }
       return session
     },
@@ -188,10 +213,18 @@ export const authConfig: NextAuthConfig = {
   },
   events: {
     async signIn({ user, account, profile, isNewUser }) {
-      console.log(`User signed in: ${user.email}`)
+      if (user.isDemoAccount) {
+        console.log(`Demo admin signed in: ${user.email}`)
+      } else {
+        console.log(`User signed in: ${user.email}`)
+      }
     },
-    async signOut() {
-      console.log('User signed out')
+    async signOut({ session, token }) {
+      if (token?.isDemoAccount) {
+        console.log('Demo admin signed out')
+      } else {
+        console.log('User signed out')
+      }
     },
     async session({ session, token }) {
       // Session is active - can be used for logging/analytics
@@ -203,6 +236,12 @@ export const authConfig: NextAuthConfig = {
 
 // Export NextAuth instance
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
+
+// Log demo admin status on startup
+if (typeof window === 'undefined') {
+  // Only run on server side
+  logDemoAdminStatus()
+}
 
 // Utility functions for authentication
 export const authUtils = {

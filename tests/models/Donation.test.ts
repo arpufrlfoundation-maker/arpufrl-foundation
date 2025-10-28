@@ -44,7 +44,9 @@ describe('Donation Model', () => {
         amount: 1000,
         currency: Currency.INR,
         razorpayOrderId: 'order_test123',
-        paymentStatus: PaymentStatus.PENDING
+        paymentStatus: PaymentStatus.PENDING,
+        privacyConsentGiven: true,
+        dataProcessingConsent: true
       }
 
       const donation = new Donation(donationData)
@@ -63,7 +65,9 @@ describe('Donation Model', () => {
         donorName: 'John Donor',
         amount: 1000,
         razorpayOrderId: 'order_duplicate123',
-        paymentStatus: PaymentStatus.PENDING
+        paymentStatus: PaymentStatus.PENDING,
+        privacyConsentGiven: true,
+        dataProcessingConsent: true
       }
 
       await new Donation(donationData).save()
@@ -121,7 +125,9 @@ describe('Donation Model', () => {
         donorEmail: 'donor@example.com',
         amount: 1000,
         razorpayOrderId: 'order_test123',
-        paymentStatus: PaymentStatus.PENDING
+        paymentStatus: PaymentStatus.PENDING,
+        privacyConsentGiven: true,
+        dataProcessingConsent: true
       })
     })
 
@@ -171,20 +177,26 @@ describe('Donation Model', () => {
           paymentStatus: PaymentStatus.SUCCESS,
           programId: testProgram._id,
           referralCodeId: testReferralCode._id,
-          attributedToUserId: testUser._id
+          attributedToUserId: testUser._id,
+          privacyConsentGiven: true,
+          dataProcessingConsent: true
         },
         {
           donorName: 'Jane Donor',
           amount: 2000,
           razorpayOrderId: 'order_2',
           paymentStatus: PaymentStatus.SUCCESS,
-          programId: testProgram._id
+          programId: testProgram._id,
+          privacyConsentGiven: true,
+          dataProcessingConsent: true
         },
         {
           donorName: 'Bob Donor',
           amount: 1500,
           razorpayOrderId: 'order_3',
-          paymentStatus: PaymentStatus.FAILED
+          paymentStatus: PaymentStatus.FAILED,
+          privacyConsentGiven: true,
+          dataProcessingConsent: true
         }
       ])
     })
@@ -193,14 +205,14 @@ describe('Donation Model', () => {
       const donation = await Donation.findByRazorpayOrderId('order_1')
 
       expect(donation).toBeDefined()
-      expect(donation?.donorName).toBe('Donor 1')
+      expect(donation?.donorName).toBe('John Donor')
     })
 
     it('should find donations by referral code', async () => {
       const donations = await Donation.findByReferralCode(testReferralCode._id.toString())
 
       expect(donations).toHaveLength(1)
-      expect(donations[0].donorName).toBe('Donor 1')
+      expect(donations[0].donorName).toBe('John Donor')
     })
 
     it('should find donations by program', async () => {
@@ -247,7 +259,9 @@ describe('Donation Model', () => {
         amount: 1000,
         razorpayOrderId: 'order_attribution_test',
         paymentStatus: PaymentStatus.PENDING,
-        referralCodeId: testReferralCode._id
+        referralCodeId: testReferralCode._id,
+        privacyConsentGiven: true,
+        dataProcessingConsent: true
       })
 
       expect(donation.attributedToUserId?.toString()).toBe(testUser._id.toString())
@@ -262,7 +276,9 @@ describe('Donation Model', () => {
         amount: 1000,
         currency: Currency.INR,
         razorpayOrderId: 'order_test123',
-        paymentStatus: PaymentStatus.PENDING
+        paymentStatus: PaymentStatus.PENDING,
+        privacyConsentGiven: true,
+        dataProcessingConsent: true
       }
 
       const invalidData = {
@@ -291,12 +307,14 @@ describe('Donation Model', () => {
       expect(netAmount).toBe(expectedNet)
     })
 
-    it('should generate receipt number', () => {
-      const donation = new Donation({
+    it('should generate receipt number', async () => {
+      const donation = await Donation.create({
         donorName: 'John Donor',
         amount: 1000,
-        razorpayOrderId: 'order_test123',
-        paymentStatus: PaymentStatus.SUCCESS
+        razorpayOrderId: 'order_receipt_test',
+        paymentStatus: PaymentStatus.SUCCESS,
+        privacyConsentGiven: true,
+        dataProcessingConsent: true
       })
 
       const receiptNumber = donationUtils.generateReceiptNumber(donation)

@@ -51,7 +51,16 @@ export default function DonationForm({
     defaultValues: {
       programId: selectedProgramId || '',
       referralCode: referralCode || '',
-      acceptTerms: false
+      acceptTerms: false,
+      isAnonymous: false,
+      hideFromPublicDisplay: false,
+      allowPublicRecognition: true,
+      showAmountPublicly: true,
+      showDatePublicly: false,
+      preferredDisplayFormat: 'name_amount',
+      privacyConsentGiven: false,
+      dataProcessingConsent: false,
+      marketingConsent: false
     }
   })
 
@@ -287,6 +296,194 @@ export default function DonationForm({
           <p className="text-gray-500 text-sm">
             If you were referred by a coordinator, enter their code here
           </p>
+        </div>
+
+        {/* Privacy Preferences */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Privacy Preferences
+          </h3>
+
+          {/* Anonymous Donation */}
+          <div className="space-y-3">
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                {...register('isAnonymous')}
+                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Make this donation anonymous
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Your name will not be displayed publicly. You will appear as "Anonymous Donor"
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Display Name (only if not anonymous) */}
+          {!watch('isAnonymous') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Public Display Name (Optional)
+              </label>
+              <input
+                type="text"
+                {...register('displayName')}
+                className={cn(
+                  'w-full px-4 py-3 border-2 rounded-lg',
+                  'focus:border-blue-500 focus:outline-none',
+                  errors.displayName ? 'border-red-500' : 'border-gray-200'
+                )}
+                placeholder="Leave blank to use your full name"
+              />
+              {errors.displayName && (
+                <p className="text-red-600 text-sm mt-1">{errors.displayName.message}</p>
+              )}
+              <p className="text-gray-500 text-sm mt-1">
+                This name will be shown in donor highlights instead of your full name
+              </p>
+            </div>
+          )}
+
+          {/* Public Recognition */}
+          <div className="space-y-3">
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                {...register('allowPublicRecognition')}
+                defaultChecked={true}
+                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Allow public recognition
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Include my donation in public donor highlights and recognition displays
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Display Options (only if public recognition is allowed) */}
+          {watch('allowPublicRecognition') && !watch('isAnonymous') && (
+            <div className="space-y-3 pl-7">
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  {...register('showAmountPublicly')}
+                  defaultChecked={true}
+                  className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label className="text-sm text-gray-700">
+                  Show donation amount publicly
+                </label>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  {...register('showDatePublicly')}
+                  className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label className="text-sm text-gray-700">
+                  Show donation date publicly
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Hide from Public Display */}
+          <div className="space-y-3">
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                {...register('hideFromPublicDisplay')}
+                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Keep my donation completely private
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Do not include my donation in any public displays or statistics
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Marketing Consent */}
+          <div className="space-y-3">
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                {...register('marketingConsent')}
+                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Send me updates about programs and impact
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Receive newsletters and updates about how your donation is making a difference
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Required Consents */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Required Consents
+          </h3>
+
+          {/* Privacy Consent */}
+          <div className="space-y-3">
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                {...register('privacyConsentGiven')}
+                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  I consent to the processing of my personal data *
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Required for donation processing, receipt generation, and tax compliance
+                </p>
+              </div>
+            </div>
+            {errors.privacyConsentGiven && (
+              <p className="text-red-600 text-sm">{errors.privacyConsentGiven.message}</p>
+            )}
+          </div>
+
+          {/* Data Processing Consent */}
+          <div className="space-y-3">
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                {...register('dataProcessingConsent')}
+                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  I consent to data processing for donation management *
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Allows us to process your donation, send receipts, and maintain donation records
+                </p>
+              </div>
+            </div>
+            {errors.dataProcessingConsent && (
+              <p className="text-red-600 text-sm">{errors.dataProcessingConsent.message}</p>
+            )}
+          </div>
         </div>
 
         {/* Terms and Conditions */}

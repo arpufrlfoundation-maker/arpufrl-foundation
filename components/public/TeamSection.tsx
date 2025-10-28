@@ -1,37 +1,49 @@
+'use client'
+
+import { useContent } from '@/lib/content-provider'
+
 export default function TeamSection() {
-  const teamMembers = [
-    {
-      name: 'Dr. Rajesh Kumar',
-      position: 'Founder & Chairman',
-      bio: 'With over 20 years of experience in social work and community development, Dr. Kumar leads our vision of creating sustainable change.',
-      image: '/images/team-member-1.jpg'
-    },
-    {
-      name: 'Priya Sharma',
-      position: 'Executive Director',
-      bio: 'Priya brings extensive experience in program management and has been instrumental in scaling our operations across multiple states.',
-      image: '/images/team-member-2.jpg'
-    },
-    {
-      name: 'Amit Patel',
-      position: 'Program Manager - Education',
-      bio: 'Former educator with a passion for making quality education accessible to all children, regardless of their socio-economic background.',
-      image: '/images/team-member-3.jpg'
-    },
-    {
-      name: 'Dr. Sunita Reddy',
-      position: 'Healthcare Director',
-      bio: 'Medical professional dedicated to improving healthcare access in rural and underserved communities through innovative delivery models.',
-      image: '/images/team-member-4.jpg'
-    }
-  ]
+  const { content, loading, error } = useContent()
+
+  if (loading) {
+    return (
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <div className="w-1/2 h-8 bg-gray-200 animate-pulse rounded mx-auto mb-4"></div>
+            <div className="w-3/4 h-4 bg-gray-200 animate-pulse rounded mx-auto"></div>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="text-center group">
+                <div className="w-48 h-48 bg-gray-200 animate-pulse rounded-full mx-auto mb-6"></div>
+                <div className="w-3/4 h-6 bg-gray-200 animate-pulse rounded mx-auto mb-2"></div>
+                <div className="w-full h-4 bg-gray-200 animate-pulse rounded mx-auto mb-4"></div>
+                <div className="w-full h-3 bg-gray-200 animate-pulse rounded mx-auto mb-1"></div>
+                <div className="w-2/3 h-3 bg-gray-200 animate-pulse rounded mx-auto"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (error || !content) {
+    return null
+  }
+
+  const { team_section } = content
+
+  // Show only first 8 members for homepage, or all if less than 8
+  const displayMembers = team_section.members.slice(0, 8)
 
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Meet Our Team
+            {team_section.heading || 'Meet Our Team'}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Dedicated professionals working tirelessly to create positive change in communities
@@ -39,13 +51,13 @@ export default function TeamSection() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-          {teamMembers.map((member, index) => (
+          {displayMembers.map((member, index) => (
             <div key={index} className="text-center group">
               {/* Profile Image */}
               <div className="relative w-48 h-48 mx-auto mb-6 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-blue-200">
-                {member.image ? (
+                {member.profile_image ? (
                   <img
-                    src={member.image}
+                    src={member.profile_image}
                     alt={member.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
@@ -62,11 +74,7 @@ export default function TeamSection() {
               </h3>
 
               <p className="text-blue-600 font-medium mb-4">
-                {member.position}
-              </p>
-
-              <p className="text-gray-600 text-sm leading-relaxed">
-                {member.bio}
+                {member.role}
               </p>
             </div>
           ))}

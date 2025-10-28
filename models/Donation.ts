@@ -64,7 +64,34 @@ export const donationValidationSchema = z.object({
 
   razorpayPaymentId: z.string().optional(),
 
-  razorpaySignature: z.string().optional()
+  razorpaySignature: z.string().optional(),
+
+  // Privacy settings
+  isAnonymous: z.boolean().default(false).optional(),
+
+  hideFromPublicDisplay: z.boolean().default(false).optional(),
+
+  displayName: z.string()
+    .max(100, 'Display name must not exceed 100 characters')
+    .optional(),
+
+  // Enhanced privacy controls
+  allowPublicRecognition: z.boolean().default(true).optional(),
+
+  privacyConsentGiven: z.boolean().default(false),
+
+  privacyConsentDate: z.date().optional(),
+
+  dataProcessingConsent: z.boolean().default(false),
+
+  marketingConsent: z.boolean().default(false).optional(),
+
+  // Display preferences
+  showAmountPublicly: z.boolean().default(true).optional(),
+
+  showDatePublicly: z.boolean().default(false).optional(),
+
+  preferredDisplayFormat: z.enum(['name_amount', 'name_only', 'amount_only', 'anonymous']).default('name_amount').optional()
 })
 
 export const donationCreationSchema = donationValidationSchema.pick({
@@ -74,7 +101,17 @@ export const donationCreationSchema = donationValidationSchema.pick({
   amount: true,
   currency: true,
   programId: true,
-  referralCode: true
+  referralCode: true,
+  isAnonymous: true,
+  hideFromPublicDisplay: true,
+  displayName: true,
+  allowPublicRecognition: true,
+  privacyConsentGiven: true,
+  dataProcessingConsent: true,
+  marketingConsent: true,
+  showAmountPublicly: true,
+  showDatePublicly: true,
+  preferredDisplayFormat: true
 })
 
 // TypeScript interface for Donation document
@@ -97,6 +134,23 @@ export interface IDonation extends Document {
   referralCodeId?: mongoose.Types.ObjectId
   attributedToUserId?: mongoose.Types.ObjectId
 
+  // Privacy settings
+  isAnonymous?: boolean
+  hideFromPublicDisplay?: boolean
+  displayName?: string
+
+  // Enhanced privacy controls
+  allowPublicRecognition?: boolean
+  privacyConsentGiven: boolean
+  privacyConsentDate?: Date
+  dataProcessingConsent: boolean
+  marketingConsent?: boolean
+
+  // Display preferences
+  showAmountPublicly?: boolean
+  showDatePublicly?: boolean
+  preferredDisplayFormat?: 'name_amount' | 'name_only' | 'amount_only' | 'anonymous'
+
   // Metadata
   ipAddress?: string
   userAgent?: string
@@ -110,6 +164,12 @@ export interface IDonation extends Document {
   markAsFailed(reason?: string): Promise<IDonation>
   calculateFees(): number
   toReceiptData(): DonationReceiptData
+
+  // Privacy methods
+  isEligibleForPublicDisplay(): boolean
+  getPublicDisplayName(): string
+  getPublicDisplayData(): PublicDonationDisplay
+  updatePrivacyPreferences(preferences: PrivacyPreferences): Promise<IDonation>
 }
 
 // Static methods interface
@@ -121,6 +181,11 @@ export interface IDonationModel extends Model<IDonation> {
   getTotalAmountByProgram(programId: mongoose.Types.ObjectId): Promise<number>
   getTotalAmountByReferral(userId: mongoose.Types.ObjectId): Promise<number>
   getDonationStats(startDate?: Date, endDate?: Date): Promise<DonationStats>
+
+  // Privacy-related static methods
+  getPublicDonations(limit?: number): Promise<PublicDonationDisplay[]>
+  findDonationsForHighlights(): Promise<IDonation[]>
+  updatePrivacyConsent(donorEmail: string, consent: boolean): Promise<number>
 }
 
 // Helper interfaces
@@ -133,6 +198,26 @@ export interface DonationReceiptData {
   programName?: string
   paymentId?: string
   donationDate: Date
+}
+
+export interface PrivacyPreferences {
+  isAnonymous?: boolean
+  hideFromPublicDisplay?: boolean
+  displayName?: string
+  allowPublicRecognition?: boolean
+  marketingConsent?: boolean
+  showAmountPublicly?: boolean
+  showDatePublicly?: boolean
+  preferredDisplayFormat?: 'name_amount' | 'name_only' | 'amount_only' | 'anonymous'
+}
+
+export interface PublicDonationDisplay {
+  id: string
+  displayName: string
+  amount?: number
+  donationDate?: Date
+  isAnonymous: boolean
+  displayFormat: string
 }
 
 export interface DonationStats {
@@ -241,6 +326,72 @@ const donationSchema = new Schema<IDonation>({
     index: true
   },
 
+  // Privacy settings
+  isAnonymous: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+
+  hideFromPublicDisplay: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+
+  displayName: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Display name must not exceed 100 characters']
+  },
+
+  // Enhanced privacy controls
+  allowPublicRecognition: {
+    type: Boolean,
+    default: true,
+    index: true
+  },
+
+  privacyConsentGiven: {
+    type: Boolean,
+    required: [true, 'Privacy consent is required'],
+    default: false
+  },
+
+  privacyConsentDate: {
+    type: Date,
+    default: Date.now
+  },
+
+  dataProcessingConsent: {
+    type: Boolean,
+    required: [true, 'Data processing consent is required'],
+    default: false
+  },
+
+  marketingConsent: {
+    type: Boolean,
+    default: false
+  },
+
+  // Display preferences
+  showAmountPublicly: {
+    type: Boolean,
+    default: true,
+    index: true
+  },
+
+  showDatePublicly: {
+    type: Boolean,
+    default: false
+  },
+
+  preferredDisplayFormat: {
+    type: String,
+    enum: ['name_amount', 'name_only', 'amount_only', 'anonymous'],
+    default: 'name_amount'
+  },
+
   // Metadata
   ipAddress: {
     type: String,
@@ -310,6 +461,49 @@ donationSchema.methods.toReceiptData = function (): DonationReceiptData {
     paymentId: this.razorpayPaymentId,
     donationDate: this.createdAt
   }
+}
+
+// Privacy-related instance methods
+donationSchema.methods.isEligibleForPublicDisplay = function (): boolean {
+  return this.paymentStatus === PaymentStatus.SUCCESS &&
+    !this.hideFromPublicDisplay &&
+    this.allowPublicRecognition &&
+    this.privacyConsentGiven
+}
+
+donationSchema.methods.getPublicDisplayName = function (): string {
+  if (this.isAnonymous || this.preferredDisplayFormat === 'anonymous') {
+    return 'Anonymous Donor'
+  }
+
+  if (this.displayName && this.displayName.trim()) {
+    return this.displayName.trim()
+  }
+
+  return this.donorName
+}
+
+donationSchema.methods.getPublicDisplayData = function (): PublicDonationDisplay {
+  const displayName = this.getPublicDisplayName()
+
+  return {
+    id: this._id.toString(),
+    displayName,
+    amount: this.showAmountPublicly && !this.isAnonymous ? this.amount : undefined,
+    donationDate: this.showDatePublicly ? this.createdAt : undefined,
+    isAnonymous: this.isAnonymous || this.preferredDisplayFormat === 'anonymous',
+    displayFormat: this.preferredDisplayFormat || 'name_amount'
+  }
+}
+
+donationSchema.methods.updatePrivacyPreferences = async function (preferences: PrivacyPreferences): Promise<IDonation> {
+  Object.keys(preferences).forEach(key => {
+    if (preferences[key as keyof PrivacyPreferences] !== undefined) {
+      (this as any)[key] = preferences[key as keyof PrivacyPreferences]
+    }
+  })
+
+  return await this.save()
 }
 
 // Static methods
@@ -445,8 +639,45 @@ donationSchema.statics.getDonationStats = async function (startDate?: Date, endD
   }
 }
 
-// Pre-save middleware for referral attribution
+// Privacy-related static methods
+donationSchema.statics.getPublicDonations = async function (limit: number = 50): Promise<PublicDonationDisplay[]> {
+  const donations = await this.find({
+    paymentStatus: PaymentStatus.SUCCESS,
+    hideFromPublicDisplay: { $ne: true },
+    allowPublicRecognition: { $ne: false },
+    privacyConsentGiven: true
+  })
+    .sort({ amount: -1, createdAt: -1 })
+    .limit(limit)
+
+  return donations.map((donation: IDonation) => donation.getPublicDisplayData())
+}
+
+donationSchema.statics.findDonationsForHighlights = function () {
+  return this.find({
+    paymentStatus: PaymentStatus.SUCCESS,
+    hideFromPublicDisplay: { $ne: true },
+    allowPublicRecognition: { $ne: false },
+    privacyConsentGiven: true
+  }).sort({ amount: -1, createdAt: -1 })
+}
+
+donationSchema.statics.updatePrivacyConsent = async function (donorEmail: string, consent: boolean): Promise<number> {
+  const result = await this.updateMany(
+    { donorEmail: donorEmail.toLowerCase() },
+    {
+      privacyConsentGiven: consent,
+      privacyConsentDate: new Date(),
+      ...(consent ? {} : { hideFromPublicDisplay: true, allowPublicRecognition: false })
+    }
+  )
+
+  return result.modifiedCount
+}
+
+// Pre-save middleware for referral attribution and privacy handling
 donationSchema.pre('save', async function (next) {
+  // Handle referral attribution
   if (this.isNew && this.referralCodeId && !this.attributedToUserId) {
     try {
       const ReferralCode = mongoose.model('ReferralCode')
@@ -459,6 +690,16 @@ donationSchema.pre('save', async function (next) {
       // Log error but don't fail the save
       console.error('Error attributing donation to referral:', error)
     }
+  }
+
+  // Handle privacy consent date
+  if (this.isNew && this.privacyConsentGiven && !this.privacyConsentDate) {
+    this.privacyConsentDate = new Date()
+  }
+
+  // Auto-set privacy flags based on preferences
+  if (this.isAnonymous) {
+    this.preferredDisplayFormat = 'anonymous'
   }
 
   next()
@@ -518,5 +759,33 @@ export const donationUtils = {
     const id = donation._id.toString().slice(-6).toUpperCase()
 
     return `ARPU-${year}${month}${day}-${id}`
+  },
+
+  /**
+   * Validate privacy preferences
+   */
+  validatePrivacyPreferences: (preferences: PrivacyPreferences): boolean => {
+    // If hiding from public display, ensure other privacy settings are consistent
+    if (preferences.hideFromPublicDisplay) {
+      return !preferences.allowPublicRecognition
+    }
+
+    // If anonymous, ensure display format is consistent
+    if (preferences.isAnonymous && preferences.preferredDisplayFormat) {
+      return preferences.preferredDisplayFormat === 'anonymous'
+    }
+
+    return true
+  },
+
+  /**
+   * Get privacy-compliant display data
+   */
+  getPrivacyCompliantDisplay: (donation: IDonation): PublicDonationDisplay | null => {
+    if (!donation.isEligibleForPublicDisplay()) {
+      return null
+    }
+
+    return donation.getPublicDisplayData()
   }
 }

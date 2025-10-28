@@ -4,6 +4,8 @@ import "./globals.css";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import PWAProvider from "@/components/common/PWAProvider";
+import { ContentProvider } from "@/lib/content-provider";
+import { SessionProvider } from "@/components/auth/SessionProvider";
 import { generateMetadata, pageMetadata, generateOrganizationStructuredData } from "@/lib/seo";
 
 const geistSans = Geist({
@@ -57,13 +59,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <PWAProvider>
-          <Header />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </PWAProvider>
+        <SessionProvider>
+          <PWAProvider>
+            <ContentProvider>
+              <Header />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </ContentProvider>
+          </PWAProvider>
+        </SessionProvider>
       </body>
     </html>
   );

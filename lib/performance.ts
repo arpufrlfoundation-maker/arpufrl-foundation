@@ -1,146 +1,184 @@
-import React, { lazy, ComponentType } from 'react'
+// Performance monitoring utilities
+import { useCallback, useEffect, useRef } from 'react'
 
-// Lazy loading utility with better error handling
-export function lazyLoad<T extends ComponentType<any>>(
-  importFunc: () => Promise<{ default: T }>,
-  fallback?: ComponentType
-) {
-  const LazyComponent = lazy(importFunc)
-
-  return LazyComponent
+interface PerformanceMetric {
+  loadTime: number
+  renderTime: number
+  networkLatency?: number
+  timestamp: number
 }
 
-// Intersection Observer hook for lazy loading
-export function useIntersectionObserver(
-  elementRef: React.RefObject<Element>,
-  options: IntersectionObserverInit = {}
-) {
-  const [isIntersecting, setIsIntersecting] = React.useState(false)
+interface OptimizationSettings {
+  enableAnimations: boolean
+  prefetchContent: boolean
+  enableLazyLoading: boolean
+  maxConcurrentRequests: number
+}
 
-  React.useEffect(() => {
-    const element = elementRef.current
-    if (!element) return
+class PerformanceMonitor {
+  private measurements: Map<string, number> = new Map()
+  private metrics: Map<string, PerformanceMetric[]> = new Map()
+  private optimizationSettings: OptimizationSettings
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsIntersecting(entry.isIntersecting)
-      },
-      {
-        threshold: 0.1,
-        rootMargin: '50px',
-        ...options,
-      }
-    )
+  constructor() {
+    this.optimizationSettings = this.detectOptimizationSettings()
+  }
 
-    observer.observe(element)
+  private detectOptimizationSettings(): OptimizationSettings {
+    const isMobile = this.isMobileDevice()
+    const isLowEnd = this.isLowEndDevice()
 
-    return () => {
-      observer.unobserve(element)
+    return {
+      enableAnimations: !isLowEnd && !this.prefersReducedMotion(),
+      prefetchContent: !isMobile || !isLowEnd,
+      enableLazyLoading: true,
+      maxConcurrentRequests: isMobile ? 3 : 6
     }
-  }, [elementRef, options])
+  }
 
-  return isIntersecting
-}
+  isMobileDevice(): boolean {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  }
 
-// Preload critical resources
-export function preloadResource(href: string, as: string, type?: string) {
-  if (typeof window === 'undefined') return
+  private isLowEndDevice(): boolean {
+    if (typeof navigator === 'undefined') return false
+    // @ts-ignore - deviceMemory is experimental
+    const deviceMemory = navigator.deviceMemory
+    // @ts-ignore - hardwareConcurrency
+    const cores = navigator.hardwareConcurrency
 
-  const link = document.createElement('link')
-  link.rel = 'preload'
-  link.href = href
-  link.as = as
-  if (type) link.type = type
+    return deviceMemory ? deviceMemory <= 2 : cores ? cores <= 2 : false
+  }
 
-  document.head.appendChild(link)
-}
+  private prefersReducedMotion(): boolean {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  }
 
-// Prefetch resources for better navigation
-export function prefetchResource(href: string) {
-  if (typeof window === 'undefined') return
+  startMeasurement(key: string): void {
+    this.measurements.set(key, performance.now())
+  }
 
-  const link = document.createElement('link')
-  link.rel = 'prefetch'
-  link.href = href
+  endMeasurement(key: string): number {
+    const startTime = this.measurements.get(key)
+    if (!startTime) return 0
 
-  document.head.appendChild(link)
-}
+    const duration = performance.now() - startTime
+    this.measurements.delete(key)
+    return duration
+  }
 
-// Image optimization utilities
-export function getOptimizedImageProps(
-  src: string,
-  alt: string,
-  width?: number,
-  height?: number
-) {
-  return {
-    src,
-    alt,
-    width,
-    height,
-    loading: 'lazy' as const,
-    decoding: 'async' as const,
-    style: {
-      maxWidth: '100%',
-      height: 'auto',
-    },
+  recordMetric(key: string, metric: PerformanceMetric): void {
+    if (!this.metrics.has(key)) {
+      this.metrics.set(key, [])
+    }
+
+    const metrics = this.metrics.get(key)!
+    metrics.push(metric)
+
+    // Keep only last 100 metrics
+    if (metrics.length > 100) {
+      metrics.shift()
+    }
+  }
+
+  getOptimizationSettings(): OptimizationSettings {
+    return { ...this.optimizationSettings }
+  }
+
+  getNetworkQuality(): 'slow' | 'medium' | 'fast' {
+    if (typeof navigator === 'undefined') return 'medium'
+
+    // @ts-ignore - connection is experimental
+    const connection = navigator.connection
+    if (!connection) return 'medium'
+
+    const effectiveType = connection.effectiveType
+    if (effectiveType === 'slow-2g' || effectiveType === '2g') return 'slow'
+    if (effectiveType === '3g') return 'medium'
+    return 'fast'
+  }
+
+  getMemoryUsage(): number | null {
+    if (typeof performance === 'undefined' || !('memory' in performance)) return null
+
+    // @ts-ignore - memory is experimental
+    const memory = performance.memory
+    return memory ? Math.round(memory.usedJSHeapSize / 1024 / 1024) : null
   }
 }
 
-// Critical CSS inlining utility
-export function inlineCriticalCSS(css: string) {
-  if (typeof window === 'undefined') return
+export const performanceMonitor = new PerformanceMonitor()
 
-  const style = document.createElement('style')
-  style.textContent = css
-  document.head.appendChild(style)
+// React hook for performance monitoring
+export const usePerformanceMonitor = (componentName: string) => {
+  const metricsRef = useRef<PerformanceMetric[]>([])
+
+  const startMeasurement = useCallback((key: string) => {
+    performanceMonitor.startMeasurement(`${componentName}-${key}`)
+  }, [componentName])
+
+  const endMeasurement = useCallback((key: string) => {
+    return performanceMonitor.endMeasurement(`${componentName}-${key}`)
+  }, [componentName])
+
+  const recordMetric = useCallback((metric: PerformanceMetric) => {
+    metricsRef.current.push(metric)
+    performanceMonitor.recordMetric(componentName, metric)
+  }, [componentName])
+
+  return {
+    startMeasurement,
+    endMeasurement,
+    recordMetric,
+    metrics: metricsRef.current
+  }
 }
 
-// Web Vitals measurement
-export function measureWebVitals() {
-  if (typeof window === 'undefined') return
+// Performance utilities
+export const performanceUtils = {
+  throttle: <T extends (...args: any[]) => any>(func: T, delay: number): T => {
+    let timeoutId: NodeJS.Timeout | null = null
+    let lastExecTime = 0
 
-  // Measure Core Web Vitals
-  import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-    getCLS(console.log)
-    getFID(console.log)
-    getFCP(console.log)
-    getLCP(console.log)
-    getTTFB(console.log)
-  })
-}
+    return ((...args: any[]) => {
+      const currentTime = Date.now()
 
-// Resource hints for better performance
-export function addResourceHints() {
-  if (typeof window === 'undefined') return
+      if (currentTime - lastExecTime > delay) {
+        func(...args)
+        lastExecTime = currentTime
+      } else {
+        if (timeoutId) clearTimeout(timeoutId)
+        timeoutId = setTimeout(() => {
+          func(...args)
+          lastExecTime = Date.now()
+        }, delay - (currentTime - lastExecTime))
+      }
+    }) as T
+  },
 
-  // Preconnect to external domains
-  const preconnectDomains = [
-    'https://fonts.googleapis.com',
-    'https://fonts.gstatic.com',
-    'https://checkout.razorpay.com',
-  ]
+  debounce: <T extends (...args: any[]) => any>(func: T, delay: number): T => {
+    let timeoutId: NodeJS.Timeout | null = null
 
-  preconnectDomains.forEach(domain => {
-    const link = document.createElement('link')
-    link.rel = 'preconnect'
-    link.href = domain
-    if (domain.includes('gstatic')) {
-      link.crossOrigin = 'anonymous'
-    }
-    document.head.appendChild(link)
-  })
+    return ((...args: any[]) => {
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => func(...args), delay)
+    }) as T
+  },
 
-  // DNS prefetch for analytics
-  const dnsPrefetchDomains = [
-    'https://www.google-analytics.com',
-    'https://www.googletagmanager.com',
-  ]
+  prefersReducedMotion: (): boolean => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  },
 
-  dnsPrefetchDomains.forEach(domain => {
-    const link = document.createElement('link')
-    link.rel = 'dns-prefetch'
-    link.href = domain
-    document.head.appendChild(link)
-  })
+  isInViewport: (element: Element): boolean => {
+    const rect = element.getBoundingClientRect()
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    )
+  }
 }
