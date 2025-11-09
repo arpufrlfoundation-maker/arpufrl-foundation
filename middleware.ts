@@ -6,9 +6,33 @@ import { UserRole } from './models/User'
 // Define protected routes and their required roles
 const protectedRoutes = {
   '/dashboard/admin': [UserRole.ADMIN],
-  '/dashboard/coordinator': [UserRole.ADMIN, UserRole.COORDINATOR, UserRole.SUB_COORDINATOR],
+  '/dashboard/coordinator': [
+    UserRole.ADMIN,
+    UserRole.NATIONAL_LEVEL,
+    UserRole.STATE_ADHYAKSH,
+    UserRole.STATE_COORDINATOR,
+    UserRole.MANDAL_COORDINATOR,
+    UserRole.JILA_ADHYAKSH,
+    UserRole.JILA_COORDINATOR,
+    UserRole.BLOCK_COORDINATOR,
+    UserRole.NODEL,
+    UserRole.PRERAK,
+    UserRole.PRERNA_SAKHI
+  ],
   '/api/admin': [UserRole.ADMIN],
-  '/api/coordinator': [UserRole.ADMIN, UserRole.COORDINATOR, UserRole.SUB_COORDINATOR],
+  '/api/coordinator': [
+    UserRole.ADMIN,
+    UserRole.NATIONAL_LEVEL,
+    UserRole.STATE_ADHYAKSH,
+    UserRole.STATE_COORDINATOR,
+    UserRole.MANDAL_COORDINATOR,
+    UserRole.JILA_ADHYAKSH,
+    UserRole.JILA_COORDINATOR,
+    UserRole.BLOCK_COORDINATOR,
+    UserRole.NODEL,
+    UserRole.PRERAK,
+    UserRole.PRERNA_SAKHI
+  ],
 } as const
 
 // Public routes that don't require authentication
@@ -21,6 +45,7 @@ const publicRoutes = [
   '/stories',
   '/login',
   '/register',
+  '/signup',
   '/api/auth',
   '/api/content',
   '/api/donations',
@@ -29,7 +54,7 @@ const publicRoutes = [
 ]
 
 // Auth routes that should redirect if already authenticated
-const authRoutes = ['/login', '/register']
+const authRoutes = ['/login', '/register', '/signup']
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -88,8 +113,16 @@ function getRedirectUrl(userRole: string): string {
   switch (userRole) {
     case UserRole.ADMIN:
       return '/dashboard/admin'
-    case UserRole.COORDINATOR:
-    case UserRole.SUB_COORDINATOR:
+    case UserRole.NATIONAL_LEVEL:
+    case UserRole.STATE_ADHYAKSH:
+    case UserRole.STATE_COORDINATOR:
+    case UserRole.MANDAL_COORDINATOR:
+    case UserRole.JILA_ADHYAKSH:
+    case UserRole.JILA_COORDINATOR:
+    case UserRole.BLOCK_COORDINATOR:
+    case UserRole.NODEL:
+    case UserRole.PRERAK:
+    case UserRole.PRERNA_SAKHI:
       return '/dashboard/coordinator'
     default:
       return '/'

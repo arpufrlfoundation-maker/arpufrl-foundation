@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/common/Header";
-import Footer from "@/components/common/Footer";
+import LayoutWrapper from "@/components/common/LayoutWrapper";
 import PWAProvider from "@/components/common/PWAProvider";
 import { ContentProvider } from "@/lib/content-provider";
 import { SessionProvider } from "@/components/auth/SessionProvider";
@@ -62,11 +61,9 @@ export default function RootLayout({
         <SessionProvider>
           <PWAProvider>
             <ContentProvider>
-              <Header />
-              <main className="flex-1">
+              <LayoutWrapper>
                 {children}
-              </main>
-              <Footer />
+              </LayoutWrapper>
             </ContentProvider>
           </PWAProvider>
         </SessionProvider>

@@ -125,14 +125,6 @@ export default function Header() {
                 </span>
               </div>
             )}
-            {/* <div className="hidden sm:block">
-              <div className="font-bold text-gray-900 text-lg">
-                {content.organization.name}
-              </div>
-              <div className="text-xs text-gray-600">
-                Future Rise Life
-              </div>
-            </div> */}
           </Link>
 
           {/* Desktop Navigation */}
