@@ -110,7 +110,17 @@ export class RazorpayService {
         notes: validatedInput.notes || {},
       })
 
-      return order
+      return {
+        ...order,
+        amount: typeof order.amount === 'string' ? parseInt(order.amount) : order.amount,
+        amount_paid: typeof order.amount_paid === 'string' ? parseInt(order.amount_paid) : order.amount_paid,
+        amount_due: typeof order.amount_due === 'string' ? parseInt(order.amount_due) : order.amount_due,
+        receipt: order.receipt || null,
+        offer_id: order.offer_id || null,
+        notes: order.notes ? Object.fromEntries(
+          Object.entries(order.notes).map(([k, v]) => [k, String(v)])
+        ) : {},
+      }
     } catch (error) {
       console.error('Error creating Razorpay order:', error)
       throw new Error(`Failed to create order: ${error instanceof Error ? error.message : 'Unknown error'}`)

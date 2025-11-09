@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import DonationForm from '@/components/forms/DonationForm'
 import { donationFormSchema } from '@/lib/validations'
@@ -20,7 +20,7 @@ interface Program {
   active: boolean
 }
 
-export default function DonatePage() {
+function DonatePageContent() {
   const [programs, setPrograms] = useState<Program[]>([])
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -250,5 +250,26 @@ export default function DonatePage() {
         </div>
       </div>
     </>
+  )
+}
+
+export default function DonatePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Make a Donation
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Loading donation form...
+            </p>
+          </div>
+        </div>
+      </div>
+    }>
+      <DonatePageContent />
+    </Suspense>
   )
 }

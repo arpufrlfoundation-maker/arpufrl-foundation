@@ -2,19 +2,44 @@ import mongoose, { Document, Schema, Model } from 'mongoose'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 
-// User role and status enums
+// User role and status enums with 10-level hierarchy
 export const UserRole = {
   ADMIN: 'ADMIN',
-  COORDINATOR: 'COORDINATOR',
-  SUB_COORDINATOR: 'SUB_COORDINATOR',
+  NATIONAL_LEVEL: 'NATIONAL_LEVEL',
+  STATE_ADHYAKSH: 'STATE_ADHYAKSH',
+  STATE_COORDINATOR: 'STATE_COORDINATOR',
+  MANDAL_COORDINATOR: 'MANDAL_COORDINATOR',
+  JILA_ADHYAKSH: 'JILA_ADHYAKSH',
+  JILA_COORDINATOR: 'JILA_COORDINATOR',
+  BLOCK_COORDINATOR: 'BLOCK_COORDINATOR',
+  NODEL: 'NODEL',
+  PRERAK: 'PRERAK',
+  PRERNA_SAKHI: 'PRERNA_SAKHI',
   DONOR: 'DONOR'
 } as const
 
 export const UserStatus = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE',
-  PENDING: 'PENDING'
+  PENDING: 'PENDING',
+  SUSPENDED: 'SUSPENDED'
 } as const
+
+// Hierarchy mapping - defines the hierarchical level of each role
+export const RoleHierarchy: Record<UserRoleType, number> = {
+  ADMIN: 0,
+  NATIONAL_LEVEL: 1,
+  STATE_ADHYAKSH: 2,
+  STATE_COORDINATOR: 3,
+  MANDAL_COORDINATOR: 4,
+  JILA_ADHYAKSH: 5,
+  JILA_COORDINATOR: 6,
+  BLOCK_COORDINATOR: 7,
+  NODEL: 8,
+  PRERAK: 9,
+  PRERNA_SAKHI: 10,
+  DONOR: 11
+}
 
 export type UserRoleType = typeof UserRole[keyof typeof UserRole]
 export type UserStatusType = typeof UserStatus[keyof typeof UserStatus]
@@ -36,9 +61,22 @@ export const userValidationSchema = z.object({
     .max(15, 'Phone number must not exceed 15 digits')
     .optional(),
 
-  role: z.enum([UserRole.ADMIN, UserRole.COORDINATOR, UserRole.SUB_COORDINATOR, UserRole.DONOR]),
+  role: z.enum([
+    UserRole.ADMIN,
+    UserRole.NATIONAL_LEVEL,
+    UserRole.STATE_ADHYAKSH,
+    UserRole.STATE_COORDINATOR,
+    UserRole.MANDAL_COORDINATOR,
+    UserRole.JILA_ADHYAKSH,
+    UserRole.JILA_COORDINATOR,
+    UserRole.BLOCK_COORDINATOR,
+    UserRole.NODEL,
+    UserRole.PRERAK,
+    UserRole.PRERNA_SAKHI,
+    UserRole.DONOR
+  ]),
 
-  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.PENDING]),
+  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.PENDING, UserStatus.SUSPENDED]),
 
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
@@ -52,7 +90,19 @@ export const userValidationSchema = z.object({
 
   parentCoordinatorId: z.string()
     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId format')
-    .optional()
+    .optional(),
+
+  // Referral code for tracking donations
+  referralCode: z.string()
+    .min(3, 'Referral code must be at least 3 characters')
+    .max(50, 'Referral code must not exceed 50 characters')
+    .optional(),
+
+  // Location hierarchy
+  state: z.string().max(50).optional(),
+  mandal: z.string().max(50).optional(),
+  jila: z.string().max(50).optional(),
+  block: z.string().max(50).optional()
 })
 
 export const userRegistrationSchema = userValidationSchema.extend({
@@ -94,6 +144,19 @@ export interface IUser extends Document {
   region?: string
   parentCoordinatorId?: mongoose.Types.ObjectId
 
+  // Referral tracking
+  referralCode?: string
+
+  // Location hierarchy
+  state?: string
+  mandal?: string
+  jila?: string
+  block?: string
+
+  // Performance tracking
+  totalDonationsReferred?: number
+  totalAmountReferred?: number
+
   // Timestamps
   createdAt: Date
   updatedAt: Date
@@ -102,6 +165,9 @@ export interface IUser extends Document {
   comparePassword(candidatePassword: string): Promise<boolean>
   hashPassword(password: string): Promise<void>
   toJSON(): Partial<IUser>
+  getHierarchyPath(): Promise<IUser[]>
+  getSubordinates(): Promise<IUser[]>
+  canManageUser(targetUserId: mongoose.Types.ObjectId): Promise<boolean>
 }
 
 // Static methods interface
@@ -111,6 +177,8 @@ export interface IUserModel extends Model<IUser> {
   findActiveUsers(): Promise<IUser[]>
   createUser(userData: Partial<IUser>, password?: string): Promise<IUser>
   validatePassword(password: string): { isValid: boolean; errors: string[] }
+  findByReferralCode(code: string): Promise<IUser | null>
+  getHierarchyTree(userId: mongoose.Types.ObjectId): Promise<any>
 }
 
 // Mongoose schema definition
@@ -214,10 +282,62 @@ const userSchema = new Schema<IUser>({
 
         // Validate that parent coordinator exists and has appropriate role
         const parentUser = await mongoose.model('User').findById(value)
-        return parentUser && (parentUser.role === UserRole.ADMIN || parentUser.role === UserRole.COORDINATOR)
+        if (!parentUser) return false
+
+        // Check if parent is higher in hierarchy
+        const parentLevel = RoleHierarchy[parentUser.role as UserRoleType]
+        const currentLevel = RoleHierarchy[this.role]
+        return parentLevel < currentLevel
       },
-      message: 'Parent coordinator must be an admin or coordinator'
+      message: 'Parent must be higher in hierarchy'
     }
+  },
+
+  // Referral tracking
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    index: true
+  },
+
+  // Location hierarchy
+  state: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'State must not exceed 50 characters']
+  },
+
+  mandal: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Mandal must not exceed 50 characters']
+  },
+
+  jila: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Jila must not exceed 50 characters']
+  },
+
+  block: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Block must not exceed 50 characters']
+  },
+
+  // Performance tracking
+  totalDonationsReferred: {
+    type: Number,
+    default: 0,
+    min: [0, 'Total donations cannot be negative']
+  },
+
+  totalAmountReferred: {
+    type: Number,
+    default: 0,
+    min: [0, 'Total amount cannot be negative']
   }
 }, {
   timestamps: true,
@@ -323,18 +443,107 @@ userSchema.statics.validatePassword = function (password: string) {
   }
 }
 
+userSchema.statics.findByReferralCode = function (code: string) {
+  return this.findOne({ referralCode: code, status: UserStatus.ACTIVE })
+}
+
+userSchema.statics.getHierarchyTree = async function (userId: mongoose.Types.ObjectId) {
+  const user = await this.findById(userId)
+  if (!user) return null
+
+  const buildTree = async (parentId: mongoose.Types.ObjectId): Promise<any> => {
+    const children = await this.find({ parentCoordinatorId: parentId, status: UserStatus.ACTIVE })
+
+    return Promise.all(
+      children.map(async (child: IUser) => ({
+        ...child.toJSON(),
+        children: await buildTree(child._id)
+      }))
+    )
+  }
+
+  return {
+    ...user.toJSON(),
+    children: await buildTree(user._id)
+  }
+}
+
+// Instance methods for hierarchy management
+userSchema.methods.getHierarchyPath = async function (this: IUser): Promise<IUser[]> {
+  const path: IUser[] = [this]
+  let currentParent = this.parentCoordinatorId
+
+  while (currentParent) {
+    const parent = await User.findById(currentParent)
+    if (!parent) break
+    path.unshift(parent)
+    currentParent = parent.parentCoordinatorId
+  }
+
+  return path
+}
+
+userSchema.methods.getSubordinates = async function (this: IUser): Promise<IUser[]> {
+  return await User.find({
+    parentCoordinatorId: this._id,
+    status: UserStatus.ACTIVE
+  })
+}
+
+userSchema.methods.canManageUser = async function (this: IUser, targetUserId: mongoose.Types.ObjectId): Promise<boolean> {
+  const target = await User.findById(targetUserId)
+  if (!target) return false
+
+  // Admins can manage everyone
+  if (this.role === UserRole.ADMIN) return true
+
+  // Check if this user is higher in hierarchy
+  const thisLevel = RoleHierarchy[this.role as UserRoleType]
+  const targetLevel = RoleHierarchy[target.role as UserRoleType]
+
+  if (thisLevel >= targetLevel) return false
+
+  // Check if target is a direct subordinate or in the hierarchy tree
+  let current = target
+  while (current.parentCoordinatorId) {
+    if (current.parentCoordinatorId.toString() === this._id.toString()) {
+      return true
+    }
+    const parent = await User.findById(current.parentCoordinatorId)
+    if (!parent) break
+    current = parent
+  }
+
+  return false
+}
+
 // Validation middleware
 userSchema.pre('validate', function (next) {
-  // Ensure coordinator-specific fields are set for coordinators
-  if (this.role === UserRole.COORDINATOR || this.role === UserRole.SUB_COORDINATOR) {
-    if (!this.region) {
-      this.invalidate('region', 'Region is required for coordinators')
+  // Ensure coordinator-specific fields are set for non-donor roles
+  const hierarchyRoles: UserRoleType[] = [
+    UserRole.NATIONAL_LEVEL,
+    UserRole.STATE_ADHYAKSH,
+    UserRole.STATE_COORDINATOR,
+    UserRole.MANDAL_COORDINATOR,
+    UserRole.JILA_ADHYAKSH,
+    UserRole.JILA_COORDINATOR,
+    UserRole.BLOCK_COORDINATOR,
+    UserRole.NODEL,
+    UserRole.PRERAK,
+    UserRole.PRERNA_SAKHI
+  ]
+
+  if (hierarchyRoles.includes(this.role)) {
+    if (!this.region && this.role !== UserRole.NATIONAL_LEVEL) {
+      this.invalidate('region', 'Region is required for this role')
     }
   }
 
-  // Ensure sub-coordinators have a parent coordinator
-  if (this.role === UserRole.SUB_COORDINATOR && !this.parentCoordinatorId) {
-    this.invalidate('parentCoordinatorId', 'Parent coordinator is required for sub-coordinators')
+  // Ensure non-top-level roles have a parent
+  if (this.role !== UserRole.ADMIN && this.role !== UserRole.NATIONAL_LEVEL && this.role !== UserRole.DONOR) {
+    if (!this.parentCoordinatorId) {
+      this.invalidate('parentCoordinatorId', 'Parent coordinator is required for this role')
+    }
   }
 
   next()
@@ -368,7 +577,7 @@ export const userUtils = {
   },
 
   /**
-   * Check if user can manage another user
+   * Check if user can manage another user based on hierarchy
    */
   canManageUser: (manager: IUser, target: IUser): boolean => {
     // Admins can manage everyone
@@ -376,12 +585,16 @@ export const userUtils = {
       return true
     }
 
-    // Coordinators can manage their sub-coordinators
-    if (manager.role === UserRole.COORDINATOR && target.role === UserRole.SUB_COORDINATOR) {
-      return target.parentCoordinatorId?.toString() === manager._id.toString()
+    // Check if manager is higher in hierarchy
+    const managerLevel = RoleHierarchy[manager.role]
+    const targetLevel = RoleHierarchy[target.role]
+
+    if (managerLevel >= targetLevel) {
+      return false
     }
 
-    return false
+    // Check if target is in manager's hierarchy path
+    return target.parentCoordinatorId?.toString() === manager._id.toString()
   },
 
   /**
@@ -389,7 +602,7 @@ export const userUtils = {
    */
   getHierarchyPath: async (userId: mongoose.Types.ObjectId): Promise<IUser[]> => {
     const path: IUser[] = []
-    let currentUser = await User.findById(userId).populate('parentCoordinatorId')
+    let currentUser = await User.findById(userId).populate('parentCoordinatorId') as IUser | null
 
     while (currentUser) {
       path.unshift(currentUser)

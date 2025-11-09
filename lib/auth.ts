@@ -219,12 +219,8 @@ export const authConfig: NextAuthConfig = {
         console.log(`User signed in: ${user.email}`)
       }
     },
-    async signOut({ session, token }) {
-      if (token?.isDemoAccount) {
-        console.log('Demo admin signed out')
-      } else {
-        console.log('User signed out')
-      }
+    async signOut() {
+      console.log('User signed out')
     },
     async session({ session, token }) {
       // Session is active - can be used for logging/analytics

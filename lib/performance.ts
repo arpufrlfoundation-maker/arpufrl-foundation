@@ -1,5 +1,5 @@
 // Performance monitoring utilities
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface PerformanceMetric {
   loadTime: number
@@ -104,7 +104,7 @@ class PerformanceMonitor {
     if (typeof performance === 'undefined' || !('memory' in performance)) return null
 
     // @ts-ignore - memory is experimental
-    const memory = performance.memory
+    const memory = (performance as any).memory
     return memory ? Math.round(memory.usedJSHeapSize / 1024 / 1024) : null
   }
 }
@@ -181,4 +181,36 @@ export const performanceUtils = {
       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     )
   }
+}
+
+// Intersection Observer hook for lazy loading
+export const useIntersectionObserver = (
+  elementRef: React.RefObject<Element | null>,
+  options: IntersectionObserverInit = {}
+): boolean => {
+  const [isIntersecting, setIsIntersecting] = useState(false)
+
+  useEffect(() => {
+    const element = elementRef.current
+    if (!element) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsIntersecting(entry.isIntersecting)
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px',
+        ...options
+      }
+    )
+
+    observer.observe(element)
+
+    return () => {
+      observer.unobserve(element)
+    }
+  }, [elementRef, options])
+
+  return isIntersecting
 }

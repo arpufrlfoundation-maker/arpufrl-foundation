@@ -283,14 +283,19 @@ referralCodeSchema.methods.activate = async function (): Promise<IReferralCode> 
 
 referralCodeSchema.methods.getHierarchy = async function (): Promise<IReferralCode[]> {
   const hierarchy: IReferralCode[] = []
-  let currentCode: IReferralCode = this
+  let currentCode: IReferralCode = this as IReferralCode
 
   // Go up the hierarchy
   while (currentCode) {
     hierarchy.unshift(currentCode)
 
     if (currentCode.parentCodeId) {
-      currentCode = await mongoose.model('ReferralCode').findById(currentCode.parentCodeId)
+      const parentCode = await mongoose.model('ReferralCode').findById(currentCode.parentCodeId)
+      if (parentCode) {
+        currentCode = parentCode as IReferralCode
+      } else {
+        break
+      }
     } else {
       break
     }
@@ -377,13 +382,13 @@ referralCodeSchema.statics.createForUser = async function (
   }
 
   // Check if user already has an active referral code
-  const existingCode = await this.findActiveByOwner(userId)
+  const existingCode = await (this as IReferralCodeModel).findActiveByOwner(userId)
   if (existingCode) {
     throw new Error('User already has an active referral code')
   }
 
   // Generate unique code
-  const code = await this.generateUniqueCode(user.name, user.region)
+  const code = await (this as IReferralCodeModel).generateUniqueCode(user.name, user.region)
 
   // Create referral code
   const referralCode = new this({

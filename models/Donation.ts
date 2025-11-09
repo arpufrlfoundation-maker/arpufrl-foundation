@@ -162,6 +162,7 @@ export interface IDonation extends Document {
   // Instance methods
   markAsSuccessful(paymentId: string, signature: string): Promise<IDonation>
   markAsFailed(reason?: string): Promise<IDonation>
+  updateHierarchyProgress(): Promise<void>
   calculateFees(): number
   toReceiptData(): DonationReceiptData
 
@@ -435,7 +436,45 @@ donationSchema.methods.markAsSuccessful = async function (paymentId: string, sig
   this.paymentStatus = PaymentStatus.SUCCESS
   this.razorpayPaymentId = paymentId
   this.razorpaySignature = signature
+
+  // Update hierarchy progress when donation is successful
+  await this.updateHierarchyProgress()
+
   return await this.save()
+}
+
+donationSchema.methods.updateHierarchyProgress = async function (this: IDonation): Promise<void> {
+  if (!this.attributedToUserId) return
+
+  try {
+    // Import User model dynamically to avoid circular dependency
+    const { User } = await import('./User')
+
+    // Get the user who received attribution for this donation
+    const user = await User.findById(this.attributedToUserId)
+    if (!user) return
+
+    // Update the user's donation stats
+    user.totalDonationsReferred = (user.totalDonationsReferred || 0) + 1
+    user.totalAmountReferred = (user.totalAmountReferred || 0) + this.amount
+    await user.save()
+
+    // Update all users in the hierarchy path
+    let currentParent = user.parentCoordinatorId
+    while (currentParent) {
+      const parent = await User.findById(currentParent)
+      if (!parent) break
+
+      parent.totalDonationsReferred = (parent.totalDonationsReferred || 0) + 1
+      parent.totalAmountReferred = (parent.totalAmountReferred || 0) + this.amount
+      await parent.save()
+
+      currentParent = parent.parentCoordinatorId
+    }
+  } catch (error) {
+    console.error('Error updating hierarchy progress:', error)
+    // Don't throw error to prevent donation save from failing
+  }
 }
 
 donationSchema.methods.markAsFailed = async function (reason?: string): Promise<IDonation> {

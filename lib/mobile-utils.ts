@@ -46,7 +46,7 @@ export const useResponsive = (): ResponsiveData => {
         top: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-top') || '0'),
         bottom: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0'),
         left: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-left') || '0'),
-        right: parseInt(getComputedStyle(document.doement).getPropertyValue('--safe-area-inset-right') || '0')
+        right: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-right') || '0')
       }
 
       setResponsiveData({

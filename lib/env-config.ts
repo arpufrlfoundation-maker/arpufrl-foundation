@@ -6,7 +6,7 @@ export const envConfig = {
   RAZORPAY_KEY_ID: 'rzp_test_1234567890',
   RAZORPAY_KEY_SECRET: 'test_secret_1234567890',
   RAZORPAY_WEBHOOK_SECRET: 'webhook_secret_1234567890',
-  NODE_ENV: 'development' as const,
+  NODE_ENV: (process.env.NODE_ENV || 'development') as 'development' | 'production' | 'test',
   APP_URL: 'http://localhost:3000',
   EMAIL_SERVER_HOST: undefined,
   EMAIL_SERVER_PORT: undefined,

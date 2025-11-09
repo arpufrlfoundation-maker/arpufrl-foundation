@@ -265,9 +265,9 @@ export async function GET(request: NextRequest) {
         donorName: donation.donorName,
         amount: donation.amount,
         createdAt: donation.createdAt.toISOString(),
-        programName: donation.programId?.name,
-        referralCode: donation.referralCodeId?.code || 'N/A',
-        attributedTo: donation.attributedToUserId?.name || 'Unknown'
+        programName: (donation.programId as any)?.name || 'Unknown Program',
+        referralCode: (donation.referralCodeId as any)?.code || 'N/A',
+        attributedTo: (donation.attributedToUserId as any)?.name || 'Unknown'
       })),
       codeUsage
     }

@@ -114,8 +114,8 @@ export default function Header() {
               <Image
                 src={content.organization.logo_image}
                 alt={content.organization.name}
-                width={40}
-                height={40}
+                width={120}
+                height={100}
                 className="rounded-lg object-cover"
               />
             ) : (
@@ -125,14 +125,14 @@ export default function Header() {
                 </span>
               </div>
             )}
-            <div className="hidden sm:block">
+            {/* <div className="hidden sm:block">
               <div className="font-bold text-gray-900 text-lg">
                 {content.organization.name}
               </div>
               <div className="text-xs text-gray-600">
                 Future Rise Life
               </div>
-            </div>
+            </div> */}
           </Link>
 
           {/* Desktop Navigation */}
