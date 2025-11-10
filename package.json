@@ -13,7 +13,8 @@
     "migrate": "node scripts/migrate-hierarchy.js",
     "db:backup": "mongodump --uri=$MONGODB_URI --out=./backups/backup-$(date +%Y%m%d)",
     "db:restore": "mongorestore --uri=$MONGODB_URI",
-    "generate:codes": "node scripts/generate-referral-codes.js"
+    "generate:codes": "node scripts/generate-referral-codes.js",
+    "seed": "node scripts/seed-users.js"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.1",

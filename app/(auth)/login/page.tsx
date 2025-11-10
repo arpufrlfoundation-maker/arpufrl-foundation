@@ -6,7 +6,7 @@ import { signIn } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react'
+import { Eye, EyeOff, Loader2, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
 // Validation schema
@@ -26,6 +26,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showPendingScreen, setShowPendingScreen] = useState(false)
+  const [userInfo, setUserInfo] = useState<{ name: string; email: string; role: string } | null>(null)
 
   const {
     register,
@@ -38,8 +40,54 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     setError(null)
+    setShowPendingScreen(false)
 
     try {
+      // First, check user status
+      const statusCheckResponse = await fetch('/api/auth/check-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      })
+
+      const statusResult = await statusCheckResponse.json()
+
+      if (!statusCheckResponse.ok) {
+        if (statusResult.status === 'PENDING') {
+          // Show pending approval screen
+          setShowPendingScreen(true)
+          setUserInfo({
+            name: statusResult.user.name,
+            email: statusResult.user.email,
+            role: statusResult.user.role,
+          })
+          setIsLoading(false)
+          return
+        }
+
+        if (statusResult.status === 'SUSPENDED') {
+          setError('Your account has been suspended. Please contact support.')
+          setIsLoading(false)
+          return
+        }
+
+        if (statusResult.status === 'INACTIVE') {
+          setError('Your account is inactive. Please contact your coordinator.')
+          setIsLoading(false)
+          return
+        }
+
+        setError(statusResult.error || 'Invalid email or password')
+        setIsLoading(false)
+        return
+      }
+
+      // If status is ACTIVE, proceed with NextAuth sign in
       const result = await signIn('credentials', {
         email: data.email,
         password: data.password,
@@ -53,14 +101,88 @@ export default function LoginPage() {
       }
 
       if (result?.ok) {
-        // Successful login - redirect to dashboard
-        router.push('/dashboard/admin')
-        router.refresh()
+        // Successful login - redirect to dashboard based on role
+        const role = statusResult.user.role
+        const redirectUrl = role === 'ADMIN' 
+          ? '/dashboard/admin' 
+          : '/dashboard/coordinator'
+        
+        // Use window.location for hard redirect to ensure proper navigation
+        console.log('Login successful, redirecting to:', redirectUrl)
+        window.location.href = redirectUrl
+        return
       }
+      
+      setError('Login failed. Please try again.')
+      setIsLoading(false)
     } catch (err) {
       setError('An error occurred during login')
       setIsLoading(false)
     }
+  }
+
+  // Pending Approval Screen
+  if (showPendingScreen && userInfo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 px-4 py-8">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-lg border border-blue-200">
+            {/* Icon Header */}
+            <div className="px-8 py-6 border-b border-blue-100 bg-blue-50">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Clock className="w-8 h-8 text-blue-600" />
+                </div>
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 text-center">Account Pending Approval</h1>
+            </div>
+
+            {/* Content */}
+            <div className="px-8 py-6">
+              <div className="text-center space-y-4">
+                <p className="text-gray-700">
+                  Hello <span className="font-semibold">{userInfo.name}</span>!
+                </p>
+                <p className="text-gray-600">
+                  Your account has been created successfully, but it is currently waiting for approval from your higher coordinator.
+                </p>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                  <p className="text-sm text-blue-900 font-semibold mb-2">Account Details:</p>
+                  <div className="space-y-1 text-sm text-blue-800">
+                    <p><span className="font-medium">Email:</span> {userInfo.email}</p>
+                    <p><span className="font-medium">Role:</span> {userInfo.role.replace(/_/g, ' ')}</p>
+                    <p><span className="font-medium">Status:</span> Pending Approval</p>
+                  </div>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-yellow-800">
+                      Please wait for your superior to approve your account. You will be able to log in once approved.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-8 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+              <button
+                onClick={() => {
+                  setShowPendingScreen(false)
+                  setUserInfo(null)
+                }}
+                className="w-full px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Back to Login
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

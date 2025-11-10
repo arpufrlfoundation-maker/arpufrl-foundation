@@ -61,6 +61,18 @@ export const userValidationSchema = z.object({
     .max(15, 'Phone number must not exceed 15 digits')
     .optional(),
 
+  fatherPhone: z.string()
+    .regex(/^[+]?[\d\s-()]+$/, 'Invalid phone number format')
+    .min(10, 'Phone number must be at least 10 digits')
+    .max(15, 'Phone number must not exceed 15 digits')
+    .optional(),
+
+  motherPhone: z.string()
+    .regex(/^[+]?[\d\s-()]+$/, 'Invalid phone number format')
+    .min(10, 'Phone number must be at least 10 digits')
+    .max(15, 'Phone number must not exceed 15 digits')
+    .optional(),
+
   role: z.enum([
     UserRole.ADMIN,
     UserRole.NATIONAL_LEVEL,
@@ -76,7 +88,7 @@ export const userValidationSchema = z.object({
     UserRole.DONOR
   ]),
 
-  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.PENDING, UserStatus.SUSPENDED]),
+  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.PENDING, UserStatus.SUSPENDED]).optional().default(UserStatus.PENDING),
 
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
@@ -126,6 +138,8 @@ export interface IUser extends Document {
   name: string
   email: string
   phone?: string
+  fatherPhone?: string
+  motherPhone?: string
   role: UserRoleType
   status: UserStatusType
   hashedPassword?: string
@@ -203,6 +217,23 @@ const userSchema = new Schema<IUser>({
   },
 
   phone: {
+    type: String,
+    trim: true,
+    match: [/^[+]?[\d\s-()]+$/, 'Invalid phone number format'],
+    minlength: [10, 'Phone number must be at least 10 digits'],
+    maxlength: [15, 'Phone number must not exceed 15 digits']
+  },
+
+  // Emergency contact phone numbers
+  fatherPhone: {
+    type: String,
+    trim: true,
+    match: [/^[+]?[\d\s-()]+$/, 'Invalid phone number format'],
+    minlength: [10, 'Phone number must be at least 10 digits'],
+    maxlength: [15, 'Phone number must not exceed 15 digits']
+  },
+
+  motherPhone: {
     type: String,
     trim: true,
     match: [/^[+]?[\d\s-()]+$/, 'Invalid phone number format'],

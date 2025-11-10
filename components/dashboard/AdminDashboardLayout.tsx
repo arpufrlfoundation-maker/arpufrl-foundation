@@ -37,6 +37,12 @@ const navigation: NavItem[] = [
     description: 'Dashboard overview and key metrics'
   },
   {
+    name: 'Approvals',
+    href: '/dashboard/admin/approvals',
+    icon: UserCheck,
+    description: 'Approve pending user registrations'
+  },
+  {
     name: 'Donations',
     href: '/dashboard/admin/donations',
     icon: DollarSign,

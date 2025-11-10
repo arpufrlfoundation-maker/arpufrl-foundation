@@ -88,6 +88,11 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
+  // Check if user account is active (before role checks)
+  if (session.user.status !== 'ACTIVE') {
+    return NextResponse.redirect(new URL('/account-inactive', request.url))
+  }
+
   // Check role-based access for protected routes
   for (const [route, allowedRoles] of Object.entries(protectedRoutes)) {
     if (pathname.startsWith(route)) {
@@ -98,11 +103,6 @@ export default async function middleware(request: NextRequest) {
       }
       break
     }
-  }
-
-  // Check if user account is active
-  if (session.user.status !== 'ACTIVE') {
-    return NextResponse.redirect(new URL('/account-inactive', request.url))
   }
 
   return NextResponse.next()

@@ -35,7 +35,20 @@ export const authUtils = {
    * Check if user is coordinator (including admin)
    */
   isCoordinator: (userRole: string): boolean => {
-    return userRole === UserRole.ADMIN || userRole === UserRole.COORDINATOR
+    const coordinatorRoles = [
+      UserRole.ADMIN,
+      UserRole.NATIONAL_LEVEL,
+      UserRole.STATE_ADHYAKSH,
+      UserRole.STATE_COORDINATOR,
+      UserRole.MANDAL_COORDINATOR,
+      UserRole.JILA_ADHYAKSH,
+      UserRole.JILA_COORDINATOR,
+      UserRole.BLOCK_COORDINATOR,
+      UserRole.NODEL,
+      UserRole.PRERAK,
+      UserRole.PRERNA_SAKHI
+    ]
+    return coordinatorRoles.includes(userRole as any)
   },
 
   /**
@@ -49,7 +62,20 @@ export const authUtils = {
    * Check if user can access coordinator features
    */
   canAccessCoordinator: (userRole: string): boolean => {
-    return userRole === UserRole.ADMIN || userRole === UserRole.COORDINATOR || userRole === UserRole.SUB_COORDINATOR
+    const coordinatorRoles = [
+      UserRole.ADMIN,
+      UserRole.NATIONAL_LEVEL,
+      UserRole.STATE_ADHYAKSH,
+      UserRole.STATE_COORDINATOR,
+      UserRole.MANDAL_COORDINATOR,
+      UserRole.JILA_ADHYAKSH,
+      UserRole.JILA_COORDINATOR,
+      UserRole.BLOCK_COORDINATOR,
+      UserRole.NODEL,
+      UserRole.PRERAK,
+      UserRole.PRERNA_SAKHI
+    ]
+    return coordinatorRoles.includes(userRole as any)
   },
 
   /**
@@ -80,8 +106,16 @@ export const authUtils = {
     switch (userRole) {
       case UserRole.ADMIN:
         return '/dashboard/admin'
-      case UserRole.COORDINATOR:
-      case UserRole.SUB_COORDINATOR:
+      case UserRole.NATIONAL_LEVEL:
+      case UserRole.STATE_ADHYAKSH:
+      case UserRole.STATE_COORDINATOR:
+      case UserRole.MANDAL_COORDINATOR:
+      case UserRole.JILA_ADHYAKSH:
+      case UserRole.JILA_COORDINATOR:
+      case UserRole.BLOCK_COORDINATOR:
+      case UserRole.NODEL:
+      case UserRole.PRERAK:
+      case UserRole.PRERNA_SAKHI:
         return '/dashboard/coordinator'
       default:
         return '/'
@@ -145,7 +179,21 @@ export const requireAdmin = (handler: (request: NextRequest, session: Session) =
   withAuth(handler, { requiredRoles: UserRole.ADMIN })
 
 export const requireCoordinator = (handler: (request: NextRequest, session: Session) => Promise<Response>) =>
-  withAuth(handler, { requiredRoles: [UserRole.ADMIN, UserRole.COORDINATOR, UserRole.SUB_COORDINATOR] })
+  withAuth(handler, {
+    requiredRoles: [
+      UserRole.ADMIN,
+      UserRole.NATIONAL_LEVEL,
+      UserRole.STATE_ADHYAKSH,
+      UserRole.STATE_COORDINATOR,
+      UserRole.MANDAL_COORDINATOR,
+      UserRole.JILA_ADHYAKSH,
+      UserRole.JILA_COORDINATOR,
+      UserRole.BLOCK_COORDINATOR,
+      UserRole.NODEL,
+      UserRole.PRERAK,
+      UserRole.PRERNA_SAKHI
+    ]
+  })
 
 export const requireAuth = (handler: (request: NextRequest, session: Session) => Promise<Response>) =>
   withAuth(handler)

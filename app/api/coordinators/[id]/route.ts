@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/db'
 import { User, UserRole, UserStatus } from '@/models/User'
 import { ReferralCode } from '@/models/ReferralCode'
 import { Donation, PaymentStatus } from '@/models/Donation'
+import { ALL_COORDINATOR_ROLES, PARENT_COORDINATOR_ROLES, isCoordinatorRole } from '@/lib/role-utils'
 import mongoose from 'mongoose'
 import { z } from 'zod'
 
@@ -42,11 +43,12 @@ export async function GET(
       return NextResponse.json({ error: 'Coordinator not found' }, { status: 404 })
     }
 
-    if (coordinator.role !== UserRole.COORDINATOR && coordinator.role !== UserRole.SUB_COORDINATOR) {
+    // Check if user is a coordinator role (any level except DONOR)
+    if (!isCoordinatorRole(coordinator.role)) {
       return NextResponse.json({ error: 'User is not a coordinator' }, { status: 400 })
     }
 
-    // Check permissions
+    // Check permissions - user can access their own data or admin can access all
     const currentUser = await User.findById(session.user.id)
     if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -54,9 +56,7 @@ export async function GET(
 
     const canAccess =
       currentUser.role === UserRole.ADMIN ||
-      coordinator._id.toString() === currentUser._id.toString() ||
-      (currentUser.role === UserRole.COORDINATOR &&
-        coordinator.parentCoordinatorId?.toString() === currentUser._id.toString())
+      coordinator._id.toString() === currentUser._id.toString()
 
     if (!canAccess) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
@@ -68,7 +68,7 @@ export async function GET(
 
       User.find({
         parentCoordinatorId: coordinator._id,
-        role: UserRole.SUB_COORDINATOR
+        role: { $in: ALL_COORDINATOR_ROLES }
       }).select('-hashedPassword'),
 
       Donation.aggregate([
@@ -172,20 +172,18 @@ export async function PATCH(
       return NextResponse.json({ error: 'Coordinator not found' }, { status: 404 })
     }
 
-    if (coordinator.role !== UserRole.COORDINATOR && coordinator.role !== UserRole.SUB_COORDINATOR) {
+    // Check if user is a coordinator role
+    if (!isCoordinatorRole(coordinator.role)) {
       return NextResponse.json({ error: 'User is not a coordinator' }, { status: 400 })
     }
 
-    // Check permissions
+    // Check permissions - only admin can modify
     const currentUser = await User.findById(session.user.id)
     if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const canModify =
-      currentUser.role === UserRole.ADMIN ||
-      (currentUser.role === UserRole.COORDINATOR &&
-        coordinator.parentCoordinatorId?.toString() === currentUser._id.toString())
+    const canModify = currentUser.role === UserRole.ADMIN
 
     if (!canModify) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
@@ -203,8 +201,7 @@ export async function PATCH(
     if (parentCoordinatorId !== undefined) {
       if (parentCoordinatorId) {
         const parentCoordinator = await User.findById(parentCoordinatorId)
-        if (!parentCoordinator ||
-          (parentCoordinator.role !== UserRole.ADMIN && parentCoordinator.role !== UserRole.COORDINATOR)) {
+        if (!parentCoordinator || !PARENT_COORDINATOR_ROLES.includes(parentCoordinator.role as any)) {
           return NextResponse.json({ error: 'Invalid parent coordinator' }, { status: 400 })
         }
         coordinator.parentCoordinatorId = new mongoose.Types.ObjectId(parentCoordinatorId)
@@ -262,7 +259,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Coordinator not found' }, { status: 404 })
     }
 
-    if (coordinator.role !== UserRole.COORDINATOR && coordinator.role !== UserRole.SUB_COORDINATOR) {
+    // Check if user is a coordinator role
+    if (!isCoordinatorRole(coordinator.role)) {
       return NextResponse.json({ error: 'User is not a coordinator' }, { status: 400 })
     }
 

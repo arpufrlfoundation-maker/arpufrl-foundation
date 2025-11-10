@@ -84,7 +84,7 @@ export default function SignupPage() {
     setError(null)
 
     try {
-      const response = await fetch('/api/auth', {
+      const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,6 +97,9 @@ export default function SignupPage() {
           role: data.role,
           region: data.region,
           referralCode: generatedReferralCode,
+          // Optional parent phone numbers
+          ...(data.fatherPhone && { fatherPhone: data.fatherPhone }),
+          ...(data.motherPhone && { motherPhone: data.motherPhone }),
         }),
       })
 

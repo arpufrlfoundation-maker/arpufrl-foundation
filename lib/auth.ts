@@ -152,32 +152,9 @@ export const authConfig: NextAuthConfig = {
         token.isDemoAccount = session.user.isDemoAccount
       }
 
-      // Skip database verification for demo admin
-      if (token.isDemoAccount) {
-        return token
-      }
-
-      // Verify user is still active on each request (regular users only)
-      if (token.id) {
-        try {
-          await connectToDatabase()
-          const user = await User.findById(token.id)
-          if (!user || user.status !== UserStatus.ACTIVE) {
-            return {}
-          }
-
-          // Update token with latest user data
-          token.name = user.name
-          token.email = user.email
-          token.role = user.role
-          token.status = user.status
-          token.region = user.region
-          token.parentCoordinatorId = user.parentCoordinatorId?.toString()
-        } catch (error) {
-          console.error('JWT callback error:', error)
-          return {}
-        }
-      }
+      // Note: We don't verify user status in the database on every request
+      // because the JWT callback runs in Edge Runtime (middleware context)
+      // which doesn't support Mongoose. Status verification happens during login.
 
       return token
     },
@@ -256,10 +233,22 @@ export const authUtils = {
   },
 
   /**
-   * Check if user is coordinator or above
+   * Check if user is coordinator or above (any coordinator level)
    */
   isCoordinator: (userRole: string): boolean => {
-    return [UserRole.ADMIN, UserRole.COORDINATOR].includes(userRole as any)
+    return [
+      UserRole.ADMIN,
+      UserRole.NATIONAL_LEVEL,
+      UserRole.STATE_ADHYAKSH,
+      UserRole.STATE_COORDINATOR,
+      UserRole.MANDAL_COORDINATOR,
+      UserRole.JILA_ADHYAKSH,
+      UserRole.JILA_COORDINATOR,
+      UserRole.BLOCK_COORDINATOR,
+      UserRole.NODEL,
+      UserRole.PRERAK,
+      UserRole.PRERNA_SAKHI
+    ].includes(userRole as any)
   },
 
   /**
@@ -273,7 +262,19 @@ export const authUtils = {
    * Check if user can access coordinator features
    */
   canAccessCoordinator: (userRole: string): boolean => {
-    return [UserRole.ADMIN, UserRole.COORDINATOR, UserRole.SUB_COORDINATOR].includes(userRole as any)
+    return [
+      UserRole.ADMIN,
+      UserRole.NATIONAL_LEVEL,
+      UserRole.STATE_ADHYAKSH,
+      UserRole.STATE_COORDINATOR,
+      UserRole.MANDAL_COORDINATOR,
+      UserRole.JILA_ADHYAKSH,
+      UserRole.JILA_COORDINATOR,
+      UserRole.BLOCK_COORDINATOR,
+      UserRole.NODEL,
+      UserRole.PRERAK,
+      UserRole.PRERNA_SAKHI
+    ].includes(userRole as any)
   },
 
   /**
@@ -283,8 +284,16 @@ export const authUtils = {
     switch (userRole) {
       case UserRole.ADMIN:
         return '/dashboard/admin'
-      case UserRole.COORDINATOR:
-      case UserRole.SUB_COORDINATOR:
+      case UserRole.NATIONAL_LEVEL:
+      case UserRole.STATE_ADHYAKSH:
+      case UserRole.STATE_COORDINATOR:
+      case UserRole.MANDAL_COORDINATOR:
+      case UserRole.JILA_ADHYAKSH:
+      case UserRole.JILA_COORDINATOR:
+      case UserRole.BLOCK_COORDINATOR:
+      case UserRole.NODEL:
+      case UserRole.PRERAK:
+      case UserRole.PRERNA_SAKHI:
         return '/dashboard/coordinator'
       default:
         return '/'

@@ -208,12 +208,23 @@ export async function checkDatabaseHealth(): Promise<{
  * Setup connection event handlers
  */
 function setupConnectionHandlers() {
+  // Safely check if connection exists and has listenerCount method
+  if (!mongoose.connection) {
+    return
+  }
+
+  // Check listener count with null safety
+  const hasConnectedListener = typeof mongoose.connection.listenerCount === 'function'
+    ? mongoose.connection.listenerCount('connected') > 0
+    : false
+
   // Only set up handlers once
-  if (mongoose.connection.listenerCount('connected') === 0) {
+  if (!hasConnectedListener) {
     mongoose.connection.on('connected', () => {
       if (isDevelopment()) {
         console.log('Mongoose connected to MongoDB')
       }
+      connection.isConnected = true
     })
 
     mongoose.connection.on('error', (error) => {

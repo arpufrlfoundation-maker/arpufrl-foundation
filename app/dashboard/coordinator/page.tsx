@@ -32,9 +32,23 @@ export default function CoordinatorDashboard() {
       redirect('/login')
     }
 
-    // Check if user is a coordinator
-    if (session.user.role !== 'COORDINATOR' && session.user.role !== 'SUB_COORDINATOR') {
-      redirect('/dashboard')
+    // Check if user is a coordinator (any coordinator role or admin)
+    const coordinatorRoles = [
+      'ADMIN',
+      'NATIONAL_LEVEL',
+      'STATE_ADHYAKSH',
+      'STATE_COORDINATOR',
+      'MANDAL_COORDINATOR',
+      'JILA_ADHYAKSH',
+      'JILA_COORDINATOR',
+      'BLOCK_COORDINATOR',
+      'NODEL',
+      'PRERAK',
+      'PRERNA_SAKHI'
+    ]
+
+    if (!coordinatorRoles.includes(session.user.role)) {
+      redirect('/')
     }
 
     fetchReferralCode()
