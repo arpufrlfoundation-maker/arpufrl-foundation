@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Only ADMIN and coordinators can view pending users
-    if (session.user.role === UserRole.DONOR) {
+    if (session.user.role === UserRole.VOLUNTEER) {
       return NextResponse.json(
         { error: 'You do not have permission to view pending users' },
         { status: 403 }

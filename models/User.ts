@@ -2,20 +2,20 @@ import mongoose, { Document, Schema, Model } from 'mongoose'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 
-// User role and status enums with 10-level hierarchy
+// User role and status enums with 11-level hierarchy (National to Village)
 export const UserRole = {
-  ADMIN: 'ADMIN',
-  NATIONAL_LEVEL: 'NATIONAL_LEVEL',
-  STATE_ADHYAKSH: 'STATE_ADHYAKSH',
-  STATE_COORDINATOR: 'STATE_COORDINATOR',
-  MANDAL_COORDINATOR: 'MANDAL_COORDINATOR',
-  JILA_ADHYAKSH: 'JILA_ADHYAKSH',
-  JILA_COORDINATOR: 'JILA_COORDINATOR',
-  BLOCK_COORDINATOR: 'BLOCK_COORDINATOR',
-  NODEL: 'NODEL',
-  PRERAK: 'PRERAK',
-  PRERNA_SAKHI: 'PRERNA_SAKHI',
-  DONOR: 'DONOR'
+  ADMIN: 'ADMIN', // Super admin for system management
+  CENTRAL_PRESIDENT: 'CENTRAL_PRESIDENT', // National President - Level 1
+  STATE_PRESIDENT: 'STATE_PRESIDENT', // State President - Level 2
+  STATE_COORDINATOR: 'STATE_COORDINATOR', // State Coordinator - Level 3
+  ZONE_COORDINATOR: 'ZONE_COORDINATOR', // Zone/Mandal Coordinator - Level 4
+  DISTRICT_PRESIDENT: 'DISTRICT_PRESIDENT', // District President (DP) - Level 5
+  DISTRICT_COORDINATOR: 'DISTRICT_COORDINATOR', // District Coordinator (DC) - Level 6
+  BLOCK_COORDINATOR: 'BLOCK_COORDINATOR', // Block Coordinator (BC) - Level 7
+  NODAL_OFFICER: 'NODAL_OFFICER', // Nyay Panchayat Officer - Level 8
+  PRERAK: 'PRERAK', // Gram Sabha Coordinator - Level 9
+  PRERNA_SAKHI: 'PRERNA_SAKHI', // Revenue Village Representative - Level 10
+  VOLUNTEER: 'VOLUNTEER' // Member/Supporter - Level 11
 } as const
 
 export const UserStatus = {
@@ -27,18 +27,34 @@ export const UserStatus = {
 
 // Hierarchy mapping - defines the hierarchical level of each role
 export const RoleHierarchy: Record<UserRoleType, number> = {
-  ADMIN: 0,
-  NATIONAL_LEVEL: 1,
-  STATE_ADHYAKSH: 2,
-  STATE_COORDINATOR: 3,
-  MANDAL_COORDINATOR: 4,
-  JILA_ADHYAKSH: 5,
-  JILA_COORDINATOR: 6,
-  BLOCK_COORDINATOR: 7,
-  NODEL: 8,
-  PRERAK: 9,
-  PRERNA_SAKHI: 10,
-  DONOR: 11
+  ADMIN: 0, // System administrator
+  CENTRAL_PRESIDENT: 1, // National President
+  STATE_PRESIDENT: 2, // State President
+  STATE_COORDINATOR: 3, // State Coordinator
+  ZONE_COORDINATOR: 4, // Zone Coordinator
+  DISTRICT_PRESIDENT: 5, // District President
+  DISTRICT_COORDINATOR: 6, // District Coordinator
+  BLOCK_COORDINATOR: 7, // Block Coordinator
+  NODAL_OFFICER: 8, // Nodal Officer
+  PRERAK: 9, // Prerak
+  PRERNA_SAKHI: 10, // Prerna Sakhi
+  VOLUNTEER: 11 // Volunteer
+}
+
+// Role display names for UI
+export const RoleDisplayNames: Record<UserRoleType, string> = {
+  ADMIN: 'System Administrator',
+  CENTRAL_PRESIDENT: 'Central President',
+  STATE_PRESIDENT: 'State President',
+  STATE_COORDINATOR: 'State Coordinator',
+  ZONE_COORDINATOR: 'Zone Coordinator',
+  DISTRICT_PRESIDENT: 'District President (DP)',
+  DISTRICT_COORDINATOR: 'District Coordinator (DC)',
+  BLOCK_COORDINATOR: 'Block Coordinator (BC)',
+  NODAL_OFFICER: 'Nodal Officer',
+  PRERAK: 'Prerak',
+  PRERNA_SAKHI: 'Prerna Sakhi',
+  VOLUNTEER: 'Volunteer'
 }
 
 export type UserRoleType = typeof UserRole[keyof typeof UserRole]
@@ -75,17 +91,17 @@ export const userValidationSchema = z.object({
 
   role: z.enum([
     UserRole.ADMIN,
-    UserRole.NATIONAL_LEVEL,
-    UserRole.STATE_ADHYAKSH,
+    UserRole.CENTRAL_PRESIDENT,
+    UserRole.STATE_PRESIDENT,
     UserRole.STATE_COORDINATOR,
-    UserRole.MANDAL_COORDINATOR,
-    UserRole.JILA_ADHYAKSH,
-    UserRole.JILA_COORDINATOR,
+    UserRole.ZONE_COORDINATOR,
+    UserRole.DISTRICT_PRESIDENT,
+    UserRole.DISTRICT_COORDINATOR,
     UserRole.BLOCK_COORDINATOR,
-    UserRole.NODEL,
+    UserRole.NODAL_OFFICER,
     UserRole.PRERAK,
     UserRole.PRERNA_SAKHI,
-    UserRole.DONOR
+    UserRole.VOLUNTEER
   ]),
 
   status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.PENDING, UserStatus.SUSPENDED]).optional().default(UserStatus.PENDING),
@@ -110,11 +126,14 @@ export const userValidationSchema = z.object({
     .max(50, 'Referral code must not exceed 50 characters')
     .optional(),
 
-  // Location hierarchy
+  // Location hierarchy - enhanced for complete geographical tracking
   state: z.string().max(50).optional(),
-  mandal: z.string().max(50).optional(),
-  jila: z.string().max(50).optional(),
-  block: z.string().max(50).optional()
+  zone: z.string().max(50).optional(), // Zone/Mandal
+  district: z.string().max(50).optional(), // Jila
+  block: z.string().max(50).optional(),
+  panchayat: z.string().max(50).optional(), // Nyay Panchayat
+  gramSabha: z.string().max(50).optional(), // Gram Sabha
+  revenueVillage: z.string().max(50).optional() // Revenue Village
 })
 
 export const userRegistrationSchema = userValidationSchema.extend({
@@ -161,11 +180,14 @@ export interface IUser extends Document {
   // Referral tracking
   referralCode?: string
 
-  // Location hierarchy
+  // Location hierarchy - enhanced for complete geographical tracking
   state?: string
-  mandal?: string
-  jila?: string
+  zone?: string // Zone/Mandal
+  district?: string // Jila
   block?: string
+  panchayat?: string // Nyay Panchayat
+  gramSabha?: string // Gram Sabha
+  revenueVillage?: string // Revenue Village
 
   // Performance tracking
   totalDonationsReferred?: number
@@ -245,7 +267,7 @@ const userSchema = new Schema<IUser>({
     type: String,
     enum: Object.values(UserRole),
     required: [true, 'Role is required'],
-    default: UserRole.DONOR,
+    default: UserRole.VOLUNTEER,
     index: true
   },
 
@@ -340,22 +362,40 @@ const userSchema = new Schema<IUser>({
     maxlength: [50, 'State must not exceed 50 characters']
   },
 
-  mandal: {
+  zone: {
     type: String,
     trim: true,
-    maxlength: [50, 'Mandal must not exceed 50 characters']
+    maxlength: [50, 'Zone must not exceed 50 characters']
   },
 
-  jila: {
+  district: {
     type: String,
     trim: true,
-    maxlength: [50, 'Jila must not exceed 50 characters']
+    maxlength: [50, 'District must not exceed 50 characters']
   },
 
   block: {
     type: String,
     trim: true,
     maxlength: [50, 'Block must not exceed 50 characters']
+  },
+
+  panchayat: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Panchayat must not exceed 50 characters']
+  },
+
+  gramSabha: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Gram Sabha must not exceed 50 characters']
+  },
+
+  revenueVillage: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Revenue Village must not exceed 50 characters']
   },
 
   // Performance tracking
@@ -550,28 +590,28 @@ userSchema.methods.canManageUser = async function (this: IUser, targetUserId: mo
 
 // Validation middleware
 userSchema.pre('validate', function (next) {
-  // Ensure coordinator-specific fields are set for non-donor roles
+  // Ensure coordinator-specific fields are set for non-volunteer roles
   const hierarchyRoles: UserRoleType[] = [
-    UserRole.NATIONAL_LEVEL,
-    UserRole.STATE_ADHYAKSH,
+    UserRole.CENTRAL_PRESIDENT,
+    UserRole.STATE_PRESIDENT,
     UserRole.STATE_COORDINATOR,
-    UserRole.MANDAL_COORDINATOR,
-    UserRole.JILA_ADHYAKSH,
-    UserRole.JILA_COORDINATOR,
+    UserRole.ZONE_COORDINATOR,
+    UserRole.DISTRICT_PRESIDENT,
+    UserRole.DISTRICT_COORDINATOR,
     UserRole.BLOCK_COORDINATOR,
-    UserRole.NODEL,
+    UserRole.NODAL_OFFICER,
     UserRole.PRERAK,
     UserRole.PRERNA_SAKHI
   ]
 
   if (hierarchyRoles.includes(this.role)) {
-    if (!this.region && this.role !== UserRole.NATIONAL_LEVEL) {
+    if (!this.region && this.role !== UserRole.CENTRAL_PRESIDENT) {
       this.invalidate('region', 'Region is required for this role')
     }
   }
 
   // Ensure non-top-level roles have a parent
-  if (this.role !== UserRole.ADMIN && this.role !== UserRole.NATIONAL_LEVEL && this.role !== UserRole.DONOR) {
+  if (this.role !== UserRole.ADMIN && this.role !== UserRole.CENTRAL_PRESIDENT && this.role !== UserRole.VOLUNTEER) {
     if (!this.parentCoordinatorId) {
       this.invalidate('parentCoordinatorId', 'Parent coordinator is required for this role')
     }

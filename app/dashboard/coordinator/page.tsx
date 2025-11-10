@@ -35,14 +35,14 @@ export default function CoordinatorDashboard() {
     // Check if user is a coordinator (any coordinator role or admin)
     const coordinatorRoles = [
       'ADMIN',
-      'NATIONAL_LEVEL',
-      'STATE_ADHYAKSH',
+      'CENTRAL_PRESIDENT',
+      'STATE_PRESIDENT',
       'STATE_COORDINATOR',
-      'MANDAL_COORDINATOR',
-      'JILA_ADHYAKSH',
-      'JILA_COORDINATOR',
+      'ZONE_COORDINATOR',
+      'DISTRICT_PRESIDENT',
+      'DISTRICT_COORDINATOR',
       'BLOCK_COORDINATOR',
-      'NODEL',
+      'NODAL_OFFICER',
       'PRERAK',
       'PRERNA_SAKHI'
     ]

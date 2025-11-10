@@ -103,16 +103,16 @@ export default function LoginPage() {
       if (result?.ok) {
         // Successful login - redirect to dashboard based on role
         const role = statusResult.user.role
-        const redirectUrl = role === 'ADMIN' 
-          ? '/dashboard/admin' 
+        const redirectUrl = role === 'ADMIN'
+          ? '/dashboard/admin'
           : '/dashboard/coordinator'
-        
+
         // Use window.location for hard redirect to ensure proper navigation
         console.log('Login successful, redirecting to:', redirectUrl)
         window.location.href = redirectUrl
         return
       }
-      
+
       setError('Login failed. Please try again.')
       setIsLoading(false)
     } catch (err) {

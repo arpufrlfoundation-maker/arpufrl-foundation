@@ -39,7 +39,20 @@ export async function POST(request: NextRequest) {
     // Validate parent coordinator if provided
     if (parentCoordinatorId) {
       const parentCoordinator = await User.findById(parentCoordinatorId)
-      if (!parentCoordinator || (parentCoordinator.role !== UserRole.ADMIN && parentCoordinator.role !== UserRole.COORDINATOR)) {
+      const coordinatorRoles = [
+        UserRole.ADMIN,
+        UserRole.CENTRAL_PRESIDENT,
+        UserRole.STATE_PRESIDENT,
+        UserRole.STATE_COORDINATOR,
+        UserRole.ZONE_COORDINATOR,
+        UserRole.DISTRICT_PRESIDENT,
+        UserRole.DISTRICT_COORDINATOR,
+        UserRole.BLOCK_COORDINATOR,
+        UserRole.NODAL_OFFICER,
+        UserRole.PRERAK,
+        UserRole.PRERNA_SAKHI
+      ]
+      if (!parentCoordinator || !coordinatorRoles.includes(parentCoordinator.role as any)) {
         return NextResponse.json(
           { error: 'Invalid parent coordinator' },
           { status: 400 }
@@ -52,8 +65,8 @@ export async function POST(request: NextRequest) {
       name,
       email,
       phone,
-      role: role || UserRole.DONOR,
-      status: role === UserRole.DONOR ? UserStatus.ACTIVE : UserStatus.PENDING,
+      role: role || UserRole.VOLUNTEER,
+      status: role === UserRole.VOLUNTEER ? UserStatus.ACTIVE : UserStatus.PENDING,
       region,
       parentCoordinatorId: parentCoordinatorId ? new mongoose.Types.ObjectId(parentCoordinatorId) : undefined
     }

@@ -120,7 +120,7 @@ export default function UserApprovalDashboard() {
       setPendingUsers(prev => prev.filter(u => u._id !== userId))
       setFilteredUsers(prev => prev.filter(u => u._id !== userId))
       setShowDetailsModal(false)
-      
+
       // Show success message
       alert(`✅ User approved successfully! ${data.user?.name || 'User'} can now log in.`)
     } catch (err) {
@@ -151,7 +151,7 @@ export default function UserApprovalDashboard() {
       setPendingUsers(prev => prev.filter(u => u._id !== userId))
       setFilteredUsers(prev => prev.filter(u => u._id !== userId))
       setShowDetailsModal(false)
-      
+
       // Show success message
       alert(`❌ User rejected. ${data.user?.name || 'User'} has been set to INACTIVE status.`)
     } catch (err) {
@@ -259,14 +259,14 @@ export default function UserApprovalDashboard() {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="ALL">All Roles</option>
-            <option value="NATIONAL_LEVEL">National Level</option>
-            <option value="STATE_ADHYAKSH">State Adhyaksh</option>
+            <option value="CENTRAL_PRESIDENT">Central President</option>
+            <option value="STATE_PRESIDENT">State President</option>
             <option value="STATE_COORDINATOR">State Coordinator</option>
-            <option value="MANDAL_COORDINATOR">Mandal Coordinator</option>
-            <option value="JILA_ADHYAKSH">Jila Adhyaksh</option>
-            <option value="JILA_COORDINATOR">Jila Coordinator</option>
+            <option value="ZONE_COORDINATOR">Zone Coordinator</option>
+            <option value="DISTRICT_PRESIDENT">District President</option>
+            <option value="DISTRICT_COORDINATOR">District Coordinator</option>
             <option value="BLOCK_COORDINATOR">Block Coordinator</option>
-            <option value="NODEL">Nodel</option>
+            <option value="NODAL_OFFICER">Nodal Officer</option>
             <option value="PRERAK">Prerak</option>
             <option value="PRERNA_SAKHI">Prerna Sakhi</option>
           </select>

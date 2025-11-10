@@ -47,17 +47,17 @@ export async function generateReferralCode(
 function getRolePrefix(role: UserRoleType): string {
   const prefixes: Record<UserRoleType, string> = {
     ADMIN: 'AD',
-    NATIONAL_LEVEL: 'NL',
-    STATE_ADHYAKSH: 'SA',
+    CENTRAL_PRESIDENT: 'CP',
+    STATE_PRESIDENT: 'SP',
     STATE_COORDINATOR: 'SC',
-    MANDAL_COORDINATOR: 'MC',
-    JILA_ADHYAKSH: 'JA',
-    JILA_COORDINATOR: 'JC',
+    ZONE_COORDINATOR: 'ZC',
+    DISTRICT_PRESIDENT: 'DP',
+    DISTRICT_COORDINATOR: 'DC',
     BLOCK_COORDINATOR: 'BC',
-    NODEL: 'ND',
+    NODAL_OFFICER: 'NO',
     PRERAK: 'PR',
     PRERNA_SAKHI: 'PS',
-    DONOR: 'DN'
+    VOLUNTEER: 'VL'
   }
   return prefixes[role] || 'GN'
 }
@@ -119,17 +119,17 @@ export function getHierarchyLevelFromCode(code: string): number | null {
 
   const prefixToRole: Record<string, UserRoleType> = {
     AD: 'ADMIN',
-    NL: 'NATIONAL_LEVEL',
-    SA: 'STATE_ADHYAKSH',
+    CP: 'CENTRAL_PRESIDENT',
+    SP: 'STATE_PRESIDENT',
     SC: 'STATE_COORDINATOR',
-    MC: 'MANDAL_COORDINATOR',
-    JA: 'JILA_ADHYAKSH',
-    JC: 'JILA_COORDINATOR',
+    ZC: 'ZONE_COORDINATOR',
+    DP: 'DISTRICT_PRESIDENT',
+    DC: 'DISTRICT_COORDINATOR',
     BC: 'BLOCK_COORDINATOR',
-    ND: 'NODEL',
+    NO: 'NODAL_OFFICER',
     PR: 'PRERAK',
     PS: 'PRERNA_SAKHI',
-    DN: 'DONOR'
+    VL: 'VOLUNTEER'
   }
 
   const role = prefixToRole[rolePrefix]

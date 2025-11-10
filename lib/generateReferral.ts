@@ -5,16 +5,17 @@
 export function generateReferralCode(role: string): string {
   // Map roles to prefixes
   const rolePrefix: Record<string, string> = {
-    'NATIONAL_LEVEL': 'NL',
-    'STATE_ADHYAKSH': 'SA',
+    'CENTRAL_PRESIDENT': 'CP',
+    'STATE_PRESIDENT': 'SP',
     'STATE_COORDINATOR': 'SC',
-    'MANDAL_COORDINATOR': 'MC',
-    'JILA_ADHYAKSH': 'JA',
-    'JILA_COORDINATOR': 'JC',
+    'ZONE_COORDINATOR': 'ZC',
+    'DISTRICT_PRESIDENT': 'DP',
+    'DISTRICT_COORDINATOR': 'DC',
     'BLOCK_COORDINATOR': 'BC',
-    'NODEL': 'ND',
+    'NODAL_OFFICER': 'NO',
     'PRERAK': 'PR',
-    'PRERNA_SAKHI': 'PS'
+    'PRERNA_SAKHI': 'PS',
+    'VOLUNTEER': 'VL'
   }
 
   const prefix = rolePrefix[role] || role.slice(0, 3).toUpperCase()

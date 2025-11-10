@@ -37,14 +37,14 @@ export const authUtils = {
   isCoordinator: (userRole: string): boolean => {
     const coordinatorRoles = [
       UserRole.ADMIN,
-      UserRole.NATIONAL_LEVEL,
-      UserRole.STATE_ADHYAKSH,
+      UserRole.CENTRAL_PRESIDENT,
+      UserRole.STATE_PRESIDENT,
       UserRole.STATE_COORDINATOR,
-      UserRole.MANDAL_COORDINATOR,
-      UserRole.JILA_ADHYAKSH,
-      UserRole.JILA_COORDINATOR,
+      UserRole.ZONE_COORDINATOR,
+      UserRole.DISTRICT_PRESIDENT,
+      UserRole.DISTRICT_COORDINATOR,
       UserRole.BLOCK_COORDINATOR,
-      UserRole.NODEL,
+      UserRole.NODAL_OFFICER,
       UserRole.PRERAK,
       UserRole.PRERNA_SAKHI
     ]
@@ -64,14 +64,14 @@ export const authUtils = {
   canAccessCoordinator: (userRole: string): boolean => {
     const coordinatorRoles = [
       UserRole.ADMIN,
-      UserRole.NATIONAL_LEVEL,
-      UserRole.STATE_ADHYAKSH,
+      UserRole.CENTRAL_PRESIDENT,
+      UserRole.STATE_PRESIDENT,
       UserRole.STATE_COORDINATOR,
-      UserRole.MANDAL_COORDINATOR,
-      UserRole.JILA_ADHYAKSH,
-      UserRole.JILA_COORDINATOR,
+      UserRole.ZONE_COORDINATOR,
+      UserRole.DISTRICT_PRESIDENT,
+      UserRole.DISTRICT_COORDINATOR,
       UserRole.BLOCK_COORDINATOR,
-      UserRole.NODEL,
+      UserRole.NODAL_OFFICER,
       UserRole.PRERAK,
       UserRole.PRERNA_SAKHI
     ]
@@ -106,14 +106,14 @@ export const authUtils = {
     switch (userRole) {
       case UserRole.ADMIN:
         return '/dashboard/admin'
-      case UserRole.NATIONAL_LEVEL:
-      case UserRole.STATE_ADHYAKSH:
+      case UserRole.CENTRAL_PRESIDENT:
+      case UserRole.STATE_PRESIDENT:
       case UserRole.STATE_COORDINATOR:
-      case UserRole.MANDAL_COORDINATOR:
-      case UserRole.JILA_ADHYAKSH:
-      case UserRole.JILA_COORDINATOR:
+      case UserRole.ZONE_COORDINATOR:
+      case UserRole.DISTRICT_PRESIDENT:
+      case UserRole.DISTRICT_COORDINATOR:
       case UserRole.BLOCK_COORDINATOR:
-      case UserRole.NODEL:
+      case UserRole.NODAL_OFFICER:
       case UserRole.PRERAK:
       case UserRole.PRERNA_SAKHI:
         return '/dashboard/coordinator'
@@ -182,14 +182,14 @@ export const requireCoordinator = (handler: (request: NextRequest, session: Sess
   withAuth(handler, {
     requiredRoles: [
       UserRole.ADMIN,
-      UserRole.NATIONAL_LEVEL,
-      UserRole.STATE_ADHYAKSH,
+      UserRole.CENTRAL_PRESIDENT,
+      UserRole.STATE_PRESIDENT,
       UserRole.STATE_COORDINATOR,
-      UserRole.MANDAL_COORDINATOR,
-      UserRole.JILA_ADHYAKSH,
-      UserRole.JILA_COORDINATOR,
+      UserRole.ZONE_COORDINATOR,
+      UserRole.DISTRICT_PRESIDENT,
+      UserRole.DISTRICT_COORDINATOR,
       UserRole.BLOCK_COORDINATOR,
-      UserRole.NODEL,
+      UserRole.NODAL_OFFICER,
       UserRole.PRERAK,
       UserRole.PRERNA_SAKHI
     ]

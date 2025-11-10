@@ -75,7 +75,7 @@ async function updateUserRoles() {
 async function generateMissingReferralCodes() {
   const usersWithoutCodes = await User.find({
     referralCode: { $exists: false },
-    role: { $ne: UserRole.DONOR }
+    role: { $ne: UserRole.VOLUNTEER }
   })
 
   console.log(`  Found ${usersWithoutCodes.length} users without referral codes`)
@@ -125,7 +125,7 @@ async function updateDonationAttribution() {
 
 async function initializePerformanceTracking() {
   const users = await User.find({
-    role: { $ne: UserRole.DONOR }
+    role: { $ne: UserRole.VOLUNTEER }
   })
 
   console.log(`  Initializing tracking for ${users.length} users`)

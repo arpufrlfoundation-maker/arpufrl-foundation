@@ -11,17 +11,17 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/arpufr
 // User role and status enums
 const UserRole = {
   ADMIN: 'ADMIN',
-  NATIONAL_LEVEL: 'NATIONAL_LEVEL',
-  STATE_ADHYAKSH: 'STATE_ADHYAKSH',
+  CENTRAL_PRESIDENT: 'CENTRAL_PRESIDENT',
+  STATE_PRESIDENT: 'STATE_PRESIDENT',
   STATE_COORDINATOR: 'STATE_COORDINATOR',
-  MANDAL_COORDINATOR: 'MANDAL_COORDINATOR',
-  JILA_ADHYAKSH: 'JILA_ADHYAKSH',
-  JILA_COORDINATOR: 'JILA_COORDINATOR',
+  ZONE_COORDINATOR: 'ZONE_COORDINATOR',
+  DISTRICT_PRESIDENT: 'DISTRICT_PRESIDENT',
+  DISTRICT_COORDINATOR: 'DISTRICT_COORDINATOR',
   BLOCK_COORDINATOR: 'BLOCK_COORDINATOR',
-  NODEL: 'NODEL',
+  NODAL_OFFICER: 'NODAL_OFFICER',
   PRERAK: 'PRERAK',
   PRERNA_SAKHI: 'PRERNA_SAKHI',
-  DONOR: 'DONOR'
+  VOLUNTEER: 'VOLUNTEER'
 }
 
 const UserStatus = {
@@ -54,7 +54,7 @@ async function seedUsers() {
   try {
     console.log('🔌 Connecting to database...')
     console.log('MongoDB URI:', MONGODB_URI.replace(/:[^:]*@/, ':****@'))
-    
+
     await mongoose.connect(MONGODB_URI)
     console.log('✅ Connected to database')
 
@@ -80,11 +80,11 @@ async function seedUsers() {
         updatedAt: new Date(),
       },
       {
-        name: 'National Coordinator',
-        email: 'national@arpufrl.org',
+        name: 'Central President',
+        email: 'central@arpufrl.org',
         hashedPassword,
         phone: '+919876543211',
-        role: UserRole.NATIONAL_LEVEL,
+        role: UserRole.CENTRAL_PRESIDENT,
         status: UserStatus.ACTIVE,
         region: 'National',
         referralCode: 'NAT001',
@@ -92,11 +92,11 @@ async function seedUsers() {
         updatedAt: new Date(),
       },
       {
-        name: 'State Adhyaksh Maharashtra',
+        name: 'State President Maharashtra',
         email: 'state.mh@arpufrl.org',
         hashedPassword,
         phone: '+919876543212',
-        role: UserRole.STATE_ADHYAKSH,
+        role: UserRole.STATE_PRESIDENT,
         status: UserStatus.ACTIVE,
         region: 'Maharashtra',
         referralCode: 'STMH001',
@@ -116,11 +116,11 @@ async function seedUsers() {
         updatedAt: new Date(),
       },
       {
-        name: 'Jila Coordinator Mumbai',
-        email: 'jila.mumbai@arpufrl.org',
+        name: 'District Coordinator Mumbai',
+        email: 'district.mumbai@arpufrl.org',
         hashedPassword,
         phone: '+919876543214',
-        role: UserRole.JILA_COORDINATOR,
+        role: UserRole.DISTRICT_COORDINATOR,
         status: UserStatus.ACTIVE,
         region: 'Mumbai',
         referralCode: 'JLMB001',
@@ -152,11 +152,11 @@ async function seedUsers() {
         updatedAt: new Date(),
       },
       {
-        name: 'Pending User',
+        name: 'Pending Nodal Officer',
         email: 'pending@arpufrl.org',
         hashedPassword,
         phone: '+919876543217',
-        role: UserRole.NODEL,
+        role: UserRole.NODAL_OFFICER,
         status: UserStatus.PENDING,
         region: 'Mumbai',
         referralCode: 'PND001',
@@ -176,11 +176,11 @@ async function seedUsers() {
         updatedAt: new Date(),
       },
       {
-        name: 'Test Donor',
-        email: 'donor@example.com',
+        name: 'Test Volunteer',
+        email: 'volunteer@example.com',
         hashedPassword,
         phone: '+919876543219',
-        role: UserRole.DONOR,
+        role: UserRole.VOLUNTEER,
         status: UserStatus.ACTIVE,
         region: 'Mumbai',
         createdAt: new Date(),

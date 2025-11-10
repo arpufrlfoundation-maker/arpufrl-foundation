@@ -1,18 +1,18 @@
 import { UserRole, UserRoleType } from '@/models/User'
 
 /**
- * All coordinator-level roles (excludes DONOR)
+ * All coordinator-level roles (excludes VOLUNTEER)
  */
 export const ALL_COORDINATOR_ROLES: readonly UserRoleType[] = [
   UserRole.ADMIN,
-  UserRole.NATIONAL_LEVEL,
-  UserRole.STATE_ADHYAKSH,
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
   UserRole.STATE_COORDINATOR,
-  UserRole.MANDAL_COORDINATOR,
-  UserRole.JILA_ADHYAKSH,
-  UserRole.JILA_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
   UserRole.BLOCK_COORDINATOR,
-  UserRole.NODEL,
+  UserRole.NODAL_OFFICER,
   UserRole.PRERAK,
   UserRole.PRERNA_SAKHI
 ] as const
@@ -22,13 +22,15 @@ export const ALL_COORDINATOR_ROLES: readonly UserRoleType[] = [
  */
 export const PARENT_COORDINATOR_ROLES: readonly UserRoleType[] = [
   UserRole.ADMIN,
-  UserRole.NATIONAL_LEVEL,
-  UserRole.STATE_ADHYAKSH,
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
   UserRole.STATE_COORDINATOR,
-  UserRole.MANDAL_COORDINATOR,
-  UserRole.JILA_ADHYAKSH,
-  UserRole.JILA_COORDINATOR,
-  UserRole.BLOCK_COORDINATOR
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK
 ] as const
 
 /**

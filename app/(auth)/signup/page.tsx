@@ -40,16 +40,17 @@ const signupSchema = z.object({
 type SignupFormData = z.infer<typeof signupSchema>
 
 const roleOptions = [
-  { value: 'NATIONAL_LEVEL', label: 'National Level' },
-  { value: 'STATE_ADHYAKSH', label: 'State Adhyaksh' },
+  { value: 'CENTRAL_PRESIDENT', label: 'Central President' },
+  { value: 'STATE_PRESIDENT', label: 'State President' },
   { value: 'STATE_COORDINATOR', label: 'State Coordinator' },
-  { value: 'MANDAL_COORDINATOR', label: 'Mandal Coordinator' },
-  { value: 'JILA_ADHYAKSH', label: 'Jila Adhyaksh' },
-  { value: 'JILA_COORDINATOR', label: 'Jila Coordinator' },
+  { value: 'ZONE_COORDINATOR', label: 'Zone Coordinator' },
+  { value: 'DISTRICT_PRESIDENT', label: 'District President' },
+  { value: 'DISTRICT_COORDINATOR', label: 'District Coordinator' },
   { value: 'BLOCK_COORDINATOR', label: 'Block Coordinator' },
-  { value: 'NODEL', label: 'Nodel' },
+  { value: 'NODAL_OFFICER', label: 'Nodal Officer' },
   { value: 'PRERAK', label: 'Prerak' },
   { value: 'PRERNA_SAKHI', label: 'Prerna Sakhi' },
+  { value: 'VOLUNTEER', label: 'Volunteer' },
 ]
 
 export default function SignupPage() {
