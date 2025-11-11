@@ -101,7 +101,7 @@ export const userValidationSchema = z.object({
     .optional(),
 
   profilePhoto: z.string().url('Invalid URL format').optional(),
-  
+
   uniqueId: z.string().optional(),
 
   role: z.enum([

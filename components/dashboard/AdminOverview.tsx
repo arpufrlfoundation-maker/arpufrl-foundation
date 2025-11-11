@@ -302,15 +302,15 @@ export default function AdminOverview() {
                     </div>
                     <div className="text-right">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-                          user.role === 'COORDINATOR' ? 'bg-blue-100 text-blue-800' :
-                            user.role === 'SUB_COORDINATOR' ? 'bg-purple-100 text-purple-800' :
-                              'bg-gray-100 text-gray-800'
+                        user.role === 'COORDINATOR' ? 'bg-blue-100 text-blue-800' :
+                          user.role === 'SUB_COORDINATOR' ? 'bg-purple-100 text-purple-800' :
+                            'bg-gray-100 text-gray-800'
                         }`}>
                         {user.role}
                       </span>
                       <p className={`text-xs mt-1 ${user.status === 'ACTIVE' ? 'text-green-600' :
-                          user.status === 'PENDING' ? 'text-yellow-600' :
-                            'text-red-600'
+                        user.status === 'PENDING' ? 'text-yellow-600' :
+                          'text-red-600'
                         }`}>
                         {user.status}
                       </p>
@@ -322,36 +322,6 @@ export default function AdminOverview() {
               <p className="text-gray-500 text-center py-4">No recent users</p>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-            <DollarSign className="w-6 h-6 text-green-600 mb-2" />
-            <p className="font-medium text-gray-900">View All Donations</p>
-            <p className="text-sm text-gray-500">Manage donation records</p>
-          </button>
-
-          <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-            <Users className="w-6 h-6 text-blue-600 mb-2" />
-            <p className="font-medium text-gray-900">Manage Users</p>
-            <p className="text-sm text-gray-500">User roles and permissions</p>
-          </button>
-
-          <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-            <FileText className="w-6 h-6 text-purple-600 mb-2" />
-            <p className="font-medium text-gray-900">Add Program</p>
-            <p className="text-sm text-gray-500">Create new program</p>
-          </button>
-
-          <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-            <UserCheck className="w-6 h-6 text-orange-600 mb-2" />
-            <p className="font-medium text-gray-900">Approve Coordinators</p>
-            <p className="text-sm text-gray-500">Review pending requests</p>
-          </button>
         </div>
       </div>
     </div>

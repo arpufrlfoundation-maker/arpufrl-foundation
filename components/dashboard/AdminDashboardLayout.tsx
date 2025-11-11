@@ -5,16 +5,15 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import {
-  BarChart3,
   Users,
   DollarSign,
-  Settings,
   Menu,
   X,
   Home,
   FileText,
   UserCheck,
   LogOut,
+  User,
   Bell
 } from 'lucide-react'
 
@@ -65,18 +64,6 @@ const navigation: NavItem[] = [
     href: '/dashboard/admin/programs',
     icon: FileText,
     description: 'Program management and analytics'
-  },
-  {
-    name: 'Analytics',
-    href: '/dashboard/admin/analytics',
-    icon: BarChart3,
-    description: 'Detailed analytics and reports'
-  },
-  {
-    name: 'Settings',
-    href: '/dashboard/admin/settings',
-    icon: Settings,
-    description: 'System settings and configuration'
   }
 ]
 
@@ -167,6 +154,13 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
                 </p>
               </div>
             </div>
+            <Link
+              href="/profile"
+              className="flex items-center w-full px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50 mb-2"
+            >
+              <User className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Link>
             <button
               onClick={handleSignOut}
               className="flex items-center w-full px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50"

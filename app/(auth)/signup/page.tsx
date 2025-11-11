@@ -10,8 +10,9 @@ import Link from 'next/link'
 import { generateReferralCode } from '@/lib/generateReferral'
 import { generateUniqueId } from '@/lib/utils'
 import { CloudinaryService } from '@/lib/cloudinary'
+import { getStateNames, getDistrictsByState } from '@/lib/indian-states-districts'
 
-// Validation schema
+// Validation schema - confirmPassword is required and must match password
 const signupSchema = z.object({
   name: z.string().min(2, 'Full name must be at least 2 characters').max(100),
   fatherName: z.string().min(2, 'Father name must be at least 2 characters').max(100),
@@ -20,22 +21,25 @@ const signupSchema = z.object({
   state: z.string().min(2, 'State is required').max(50),
   email: z.string().email('Invalid email address'),
   phone: z.string()
-    .regex(/^[+]?[\d\s-()]+$/, 'Invalid phone number')
-    .min(10, 'Phone must be at least 10 digits'),
+    .regex(/^[\d\s-()]+$/, 'Invalid phone number - only digits allowed')
+    .min(10, 'Phone must be at least 10 digits')
+    .max(10, 'Phone must be 10 digits'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and number'),
-  confirmPassword: z.string(),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
   role: z.string().min(1, 'Please select a role'),
   region: z.string().min(2, 'Region is required'),
   fatherPhone: z.string()
-    .regex(/^[+]?[\d\s-()]+$/, 'Invalid phone number')
+    .regex(/^[\d\s-()]+$/, 'Invalid phone number - only digits allowed')
     .min(10, 'Phone must be at least 10 digits')
+    .max(10, 'Phone must be 10 digits')
     .optional()
     .or(z.literal('')),
   motherPhone: z.string()
-    .regex(/^[+]?[\d\s-()]+$/, 'Invalid phone number')
+    .regex(/^[\d\s-()]+$/, 'Invalid phone number - only digits allowed')
     .min(10, 'Phone must be at least 10 digits')
+    .max(10, 'Phone must be 10 digits')
     .optional()
     .or(z.literal(''))
 }).refine((data) => data.password === data.confirmPassword, {
@@ -71,16 +75,36 @@ export default function SignupPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
+  // State and District data
+  const [statesList] = useState<string[]>(getStateNames())
+  const [districtsList, setDistrictsList] = useState<string[]>([])
+  const [selectedState, setSelectedState] = useState<string>('')
+
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+    defaultValues: {
+      confirmPassword: '', // Set default value to prevent undefined
+    }
   })
 
   const selectedRole = watch('role')
+  const watchedState = watch('state')
+
+  // Update districts when state changes
+  useEffect(() => {
+    if (watchedState && watchedState !== selectedState) {
+      setSelectedState(watchedState)
+      const districts = getDistrictsByState(watchedState)
+      setDistrictsList(districts)
+      setValue('district', '') // Reset district when state changes
+    }
+  }, [watchedState, selectedState, setValue])
 
   // Generate unique ID on mount
   useEffect(() => {
@@ -309,52 +333,66 @@ export default function SignupPage() {
                 )}
               </div>
 
-              {/* District and State */}
+              {/* State and District */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-1.5">
-                    District *
-                  </label>
-                  <input
-                    id="district"
-                    type="text"
-                    {...register('district')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., Mumbai"
-                  />
-                  {errors.district && (
-                    <p className="mt-1 text-sm text-red-600">{errors.district.message}</p>
-                  )}
-                </div>
-
                 <div>
                   <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1.5">
                     State *
                   </label>
-                  <input
+                  <select
                     id="state"
-                    type="text"
                     {...register('state')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., Maharashtra"
-                  />
+                  >
+                    <option value="">Select State</option>
+                    {statesList.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
                   {errors.state && (
                     <p className="mt-1 text-sm text-red-600">{errors.state.message}</p>
                   )}
                 </div>
+
+                <div>
+                  <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-1.5">
+                    District *
+                  </label>
+                  <select
+                    id="district"
+                    {...register('district')}
+                    disabled={!selectedState || districtsList.length === 0}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {selectedState ? 'Select District' : 'Select State First'}
+                    </option>
+                    {districtsList.map((district) => (
+                      <option key={district} value={district}>
+                        {district}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.district && (
+                    <p className="mt-1 text-sm text-red-600">{errors.district.message}</p>
+                  )}
+                </div>
               </div>
 
-              {/* Mobile Number (Phone) */}
+              {/* Mobile Number (Phone) - India only, no +91 */}
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Mobile Number *
+                  Mobile Number * <span className="text-gray-500 text-xs">(10 digits)</span>
                 </label>
                 <input
                   id="phone"
                   type="tel"
                   {...register('phone')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="+91 1234567890"
+                  placeholder="9876543210"
+                  maxLength={10}
                 />
                 {errors.phone && (
                   <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
@@ -488,14 +526,15 @@ export default function SignupPage() {
                   {/* Father's Phone */}
                   <div>
                     <label htmlFor="fatherPhone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Father's Phone Number
+                      Father's Phone Number <span className="text-gray-500 text-xs">(Optional, 10 digits)</span>
                     </label>
                     <input
                       id="fatherPhone"
                       type="tel"
                       {...register('fatherPhone')}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="+91 1234567890"
+                      placeholder="9876543210"
+                      maxLength={10}
                     />
                     {errors.fatherPhone && (
                       <p className="mt-1 text-sm text-red-600">{errors.fatherPhone.message}</p>
@@ -505,14 +544,15 @@ export default function SignupPage() {
                   {/* Mother's Phone */}
                   <div>
                     <label htmlFor="motherPhone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Mother's Phone Number
+                      Mother's Phone Number <span className="text-gray-500 text-xs">(Optional, 10 digits)</span>
                     </label>
                     <input
                       id="motherPhone"
                       type="tel"
                       {...register('motherPhone')}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="+91 1234567890"
+                      placeholder="9876543210"
+                      maxLength={10}
                     />
                     {errors.motherPhone && (
                       <p className="mt-1 text-sm text-red-600">{errors.motherPhone.message}</p>

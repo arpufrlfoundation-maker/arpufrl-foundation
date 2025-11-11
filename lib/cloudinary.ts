@@ -15,14 +15,38 @@ export class CloudinaryService {
   private static API_URL = `https://api.cloudinary.com/v1_1/${CloudinaryService.CLOUD_NAME}/image/upload`
 
   /**
+   * Check if Cloudinary is properly configured
+   */
+  private static isConfigured(): boolean {
+    return !!(this.CLOUD_NAME && this.UPLOAD_PRESET)
+  }
+
+  /**
+   * Get configuration error message
+   */
+  private static getConfigError(): string {
+    if (!this.CLOUD_NAME && !this.UPLOAD_PRESET) {
+      return 'Cloudinary is not configured. Please add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET to your .env.local file. See .env.local.example for instructions.'
+    }
+    if (!this.CLOUD_NAME) {
+      return 'Cloudinary Cloud Name is missing. Please add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME to your .env.local file.'
+    }
+    return 'Cloudinary Upload Preset is missing. Please add NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET to your .env.local file.'
+  }
+
+  /**
    * Upload a profile photo to Cloudinary
    * @param file - File object from input
    * @returns Promise with upload result
    */
   static async uploadProfilePhoto(file: File): Promise<CloudinaryUploadResponse> {
     try {
-      if (!this.CLOUD_NAME || !this.UPLOAD_PRESET) {
-        throw new Error('Cloudinary configuration missing')
+      if (!this.isConfigured()) {
+        console.error('Cloudinary Configuration Error:', this.getConfigError())
+        return {
+          success: false,
+          error: this.getConfigError()
+        }
       }
 
       // Validate file type

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       UserRole.PRERAK,
       UserRole.PRERNA_SAKHI
     ]
-    
+
     const filter: any = {
       role: { $in: coordinatorRoles }
     }

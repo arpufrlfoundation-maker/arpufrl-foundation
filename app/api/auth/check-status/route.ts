@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/db'
 import { User } from '@/models/User'
 import bcrypt from 'bcryptjs'
+import { isDemoAdmin, validateDemoAdminCredentials, getDemoAdminUser } from '@/lib/demo-admin'
 
 /**
  * Check user status before attempting login
@@ -19,7 +20,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Connect to database
+    // Check if this is a demo admin login attempt
+    if (isDemoAdmin(email)) {
+      const isValidDemoAdmin = validateDemoAdminCredentials(email, password)
+
+      if (!isValidDemoAdmin) {
+        return NextResponse.json(
+          { error: 'Invalid email or password' },
+          { status: 401 }
+        )
+      }
+
+      // Demo admin is always active
+      const demoAdmin = getDemoAdminUser()
+      return NextResponse.json(
+        {
+          status: 'ACTIVE',
+          message: 'Demo admin can proceed to login',
+          user: {
+            id: demoAdmin.id,
+            name: demoAdmin.name,
+            email: demoAdmin.email,
+            role: demoAdmin.role,
+          }
+        },
+        { status: 200 }
+      )
+    }
+
+    // Connect to database for regular users
     await connectToDatabase()
 
     // Find user by email

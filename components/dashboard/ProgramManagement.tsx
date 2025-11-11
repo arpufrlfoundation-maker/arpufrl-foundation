@@ -245,8 +245,8 @@ export default function ProgramManagement() {
   const getStatusBadge = (active: boolean) => {
     return (
       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${active
-          ? 'bg-green-100 text-green-800'
-          : 'bg-red-100 text-red-800'
+        ? 'bg-green-100 text-green-800'
+        : 'bg-red-100 text-red-800'
         }`}>
         {active ? 'Active' : 'Inactive'}
       </span>
@@ -567,8 +567,8 @@ export default function ProgramManagement() {
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-2 text-sm rounded-lg ${currentPage === pageNum
-                            ? 'bg-blue-600 text-white'
-                            : 'border border-gray-300 hover:bg-gray-50'
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-300 hover:bg-gray-50'
                           }`}
                       >
                         {pageNum}
@@ -676,8 +676,8 @@ export default function ProgramManagement() {
                       <label className="block text-sm font-medium text-gray-700">Featured</label>
                       <div className="mt-1">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedProgram.featured
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-800'
                           }`}>
                           {selectedProgram.featured ? 'Featured' : 'Not Featured'}
                         </span>
@@ -732,8 +732,8 @@ export default function ProgramManagement() {
                       setShowDetailsModal(false)
                     }}
                     className={`px-4 py-2 text-sm rounded-lg ${selectedProgram.active
-                        ? 'bg-red-600 text-white hover:bg-red-700'
-                        : 'bg-green-600 text-white hover:bg-green-700'
+                      ? 'bg-red-600 text-white hover:bg-red-700'
+                      : 'bg-green-600 text-white hover:bg-green-700'
                       }`}
                   >
                     {selectedProgram.active ? 'Deactivate' : 'Activate'}
@@ -744,12 +744,66 @@ export default function ProgramManagement() {
                       setShowDetailsModal(false)
                     }}
                     className={`px-4 py-2 text-sm rounded-lg ${selectedProgram.featured
-                        ? 'bg-gray-600 text-white hover:bg-gray-700'
-                        : 'bg-yellow-600 text-white hover:bg-yellow-700'
+                      ? 'bg-gray-600 text-white hover:bg-gray-700'
+                      : 'bg-yellow-600 text-white hover:bg-yellow-700'
                       }`}
                   >
                     {selectedProgram.featured ? 'Remove Featured' : 'Make Featured'}
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Program Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setShowCreateModal(false)} />
+
+            <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Create New Program</h3>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="mt-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  To create a new program, please use the admin API or contact a system administrator.
+                </p>
+                <p className="text-sm text-gray-600 mb-4">
+                  Program creation requires:
+                </p>
+                <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 mb-6">
+                  <li>Program name (unique)</li>
+                  <li>Short description (10-500 characters)</li>
+                  <li>Long description (optional, 50-5000 characters)</li>
+                  <li>Target amount (optional)</li>
+                  <li>Images and gallery photos (optional)</li>
+                </ul>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowCreateModal(false)}
+                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Close
+                  </button>
+                  <a
+                    href="/api/admin/programs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    View API Documentation
+                  </a>
                 </div>
               </div>
             </div>

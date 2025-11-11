@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import {
-  BarChart3,
   Users,
   DollarSign,
   Menu,
@@ -14,8 +13,7 @@ import {
   Share2,
   LogOut,
   Bell,
-  Copy,
-  TrendingUp
+  User
 } from 'lucide-react'
 
 interface CoordinatorDashboardLayoutProps {
@@ -47,12 +45,6 @@ const navigation: NavItem[] = [
     href: '/dashboard/coordinator/sub-coordinators',
     icon: Users,
     description: 'Manage your sub-coordinators'
-  },
-  {
-    name: 'Analytics',
-    href: '/dashboard/coordinator/analytics',
-    icon: BarChart3,
-    description: 'Performance analytics and reports'
   },
   {
     name: 'Donations',
@@ -152,6 +144,13 @@ export default function CoordinatorDashboardLayout({ children }: CoordinatorDash
                 </p>
               </div>
             </div>
+            <Link
+              href="/profile"
+              className="flex items-center w-full px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50 mb-2"
+            >
+              <User className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Link>
             <button
               onClick={handleSignOut}
               className="flex items-center w-full px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50"

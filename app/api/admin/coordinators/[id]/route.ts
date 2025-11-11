@@ -52,7 +52,7 @@ export async function PATCH(
       UserRole.PRERAK,
       UserRole.PRERNA_SAKHI
     ]
-    
+
     if (!coordinatorRoles.includes(coordinator.role as any)) {
       return NextResponse.json(
         { error: 'User is not a coordinator' },

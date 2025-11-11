@@ -365,6 +365,49 @@ export const DonorHighlights: React.FC = () => {
     fetchDonors()
   }
 
+  // Memoized performance optimizations - MUST be before any conditional returns
+  const optimizationSettings = useMemo(() =>
+    performanceMonitor.getOptimizationSettings(),
+    [animationKey]
+  )
+
+  // Mobile-responsive virtualized donor display with performance optimization
+  const displaySettings = useMemo(() => {
+    const prefersReducedMotion = performanceUtils.prefersReducedMotion()
+
+    // Adjust display count based on screen size and device capabilities
+    let maxDisplayDonors: number
+    let animationDuration: number
+    let itemsPerPage: number
+    let cardSpacing: number
+
+    if (isMobile) {
+      maxDisplayDonors = 15
+      animationDuration = prefersReducedMotion ? 0 : 25
+      itemsPerPage = 3
+      cardSpacing = 12 // Compact spacing for mobile
+    } else if (isTablet) {
+      maxDisplayDonors = 20
+      animationDuration = prefersReducedMotion ? 0 : 20
+      itemsPerPage = 4
+      cardSpacing = 16
+    } else {
+      maxDisplayDonors = 30
+      animationDuration = prefersReducedMotion ? 0 : 15
+      itemsPerPage = 5
+      cardSpacing = 24
+    }
+
+    // Further reduce animation speed on low-end devices
+    if (!optimizationSettings.enableAnimations) {
+      animationDuration = 0
+    }
+
+    const displayDonors = donors.slice(0, maxDisplayDonors)
+
+    return { displayDonors, animationDuration, itemsPerPage, cardSpacing }
+  }, [donors, isMobile, isTablet, optimizationSettings.enableAnimations, animationKey])
+
   if (isLoading) {
     return <DonorHighlightsSkeleton />
   }
@@ -386,64 +429,8 @@ export const DonorHighlights: React.FC = () => {
     )
   }
 
-  // Memoized performance optimizations
-  const optimizationSettings = useMemo(() =>
-    performanceMonitor.getOptimizationSettings(),
-    [animationKey]
-  )
-
-  // Mobile-responsive virtualized donor display with performance optimization
-  const { displayDonors, animationDuration, itemsPerPage, cardSpacing } = useMemo(() => {
-    const prefersReducedMotion = performanceUtils.prefersReducedMotion()
-
-    // Adjust display count based on screen size and device capabilities
-    let maxDisplayDonors: number
-    let cardSpacing: string
-
-    switch (screenSize) {
-      case 'xs':
-        maxDisplayDonors = 8
-        cardSpacing = 'space-x-3'
-        break
-      case 'sm':
-        maxDisplayDonors = 10
-        cardSpacing = 'space-x-4'
-        break
-      case 'md':
-        maxDisplayDonors = 15
-        cardSpacing = 'space-x-5'
-        break
-      case 'lg':
-        maxDisplayDonors = 20
-        cardSpacing = 'space-x-6'
-        break
-      default: // xl
-        maxDisplayDonors = 25
-        cardSpacing = 'space-x-6'
-    }
-
-    // Further reduce for performance if needed
-    if (!optimizationSettings.enableAnimations || prefersReducedMotion) {
-      maxDisplayDonors = Math.min(maxDisplayDonors, 8)
-    }
-
-    // Implement pagination for large donor lists
-    const itemsPerPage = maxDisplayDonors
-    const startIndex = currentPage * itemsPerPage
-    const endIndex = Math.min(startIndex + itemsPerPage, donors.length)
-    const pageDisplayDonors = donors.slice(startIndex, endIndex)
-
-    // Calculate optimal animation duration for smooth performance
-    const baseSpeed = prefersReducedMotion ? 8 : isMobile ? 5 : 4 // seconds per donor
-    const duration = Math.max(pageDisplayDonors.length * baseSpeed, 10)
-
-    return {
-      displayDonors: pageDisplayDonors,
-      animationDuration: duration,
-      itemsPerPage,
-      cardSpacing
-    }
-  }, [donors, currentPage, optimizationSettings.enableAnimations, screenSize, isMobile])
+  // Destructure displaySettings
+  const { displayDonors, animationDuration, itemsPerPage, cardSpacing } = displaySettings
 
   // Duplicate donors for seamless scrolling (performance optimized)
   const duplicatedDonors = useMemo(() => {
