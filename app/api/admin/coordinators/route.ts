@@ -30,8 +30,21 @@ export async function GET(request: NextRequest) {
     const region = searchParams.get('region') || ''
 
     // Build filter query for coordinators only
+    const coordinatorRoles = [
+      UserRole.CENTRAL_PRESIDENT,
+      UserRole.STATE_PRESIDENT,
+      UserRole.STATE_COORDINATOR,
+      UserRole.ZONE_COORDINATOR,
+      UserRole.DISTRICT_PRESIDENT,
+      UserRole.DISTRICT_COORDINATOR,
+      UserRole.BLOCK_COORDINATOR,
+      UserRole.NODAL_OFFICER,
+      UserRole.PRERAK,
+      UserRole.PRERNA_SAKHI
+    ]
+    
     const filter: any = {
-      role: { $in: [UserRole.COORDINATOR, UserRole.SUB_COORDINATOR] }
+      role: { $in: coordinatorRoles }
     }
 
     // Search filter

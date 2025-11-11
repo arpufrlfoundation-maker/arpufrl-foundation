@@ -5,6 +5,20 @@ import { User, UserRole, UserStatus } from '../../../../../models/User'
 import { Donation } from '../../../../../models/Donation'
 import { Program } from '../../../../../models/Program'
 
+// Define coordinator roles array
+const coordinatorRoles = [
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
+  UserRole.STATE_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK,
+  UserRole.PRERNA_SAKHI
+]
+
 export async function GET(request: NextRequest) {
   try {
     // Check authentication and admin role
@@ -135,14 +149,14 @@ export async function GET(request: NextRequest) {
       pendingCoordinators
     ] = await Promise.all([
       User.countDocuments({
-        role: { $in: [UserRole.COORDINATOR, UserRole.SUB_COORDINATOR] }
+        role: { $in: coordinatorRoles }
       }),
       User.countDocuments({
-        role: { $in: [UserRole.COORDINATOR, UserRole.SUB_COORDINATOR] },
+        role: { $in: coordinatorRoles },
         status: UserStatus.ACTIVE
       }),
       User.countDocuments({
-        role: { $in: [UserRole.COORDINATOR, UserRole.SUB_COORDINATOR] },
+        role: { $in: coordinatorRoles },
         status: UserStatus.PENDING
       })
     ])

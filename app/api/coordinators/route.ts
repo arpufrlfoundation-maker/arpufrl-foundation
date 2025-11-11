@@ -7,13 +7,27 @@ import mongoose from 'mongoose'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 
+// Define coordinator roles array
+const coordinatorRoles = [
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
+  UserRole.STATE_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK,
+  UserRole.PRERNA_SAKHI
+] as const
+
 // Validation schemas
 const createCoordinatorSchema = z.object({
   name: z.string().min(2).max(100).regex(/^[a-zA-Z\s]+$/, 'Name can only contain letters and spaces'),
   email: z.string().email().toLowerCase(),
   phone: z.string().regex(/^[+]?[\d\s-()]+$/).min(10).max(15).optional(),
   region: z.string().min(2).max(50),
-  role: z.enum([UserRole.COORDINATOR, UserRole.SUB_COORDINATOR]),
+  role: z.enum(coordinatorRoles),
   parentCoordinatorId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
   password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number')
 })
@@ -52,13 +66,13 @@ export async function GET(request: NextRequest) {
 
     // Build query based on user role
     const query: any = {
-      role: { $in: [UserRole.COORDINATOR, UserRole.SUB_COORDINATOR] }
+      role: { $in: coordinatorRoles }
     }
 
     if (currentUser.role === UserRole.ADMIN) {
       // Admins can see all coordinators
-    } else if (currentUser.role === UserRole.COORDINATOR) {
-      // Coordinators can see themselves and their sub-coordinators
+    } else if (coordinatorRoles.includes(currentUser.role as any)) {
+      // Coordinators can see themselves and their subordinates
       query.$or = [
         { _id: currentUser._id },
         { parentCoordinatorId: currentUser._id }
@@ -68,7 +82,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply filters
-    if (role && [UserRole.COORDINATOR, UserRole.SUB_COORDINATOR].includes(role as any)) {
+    if (role && coordinatorRoles.includes(role as any)) {
       query.role = role
     }
     if (status) query.status = status
@@ -152,10 +166,10 @@ export async function POST(request: NextRequest) {
 
     if (currentUser.role === UserRole.ADMIN) {
       // Admins can create any coordinator
-    } else if (currentUser.role === UserRole.COORDINATOR && role === UserRole.SUB_COORDINATOR) {
-      // Coordinators can create sub-coordinators under themselves
+    } else if (coordinatorRoles.includes(currentUser.role as any)) {
+      // Coordinators can create subordinates under themselves
       if (!parentCoordinatorId || parentCoordinatorId !== currentUser._id.toString()) {
-        return NextResponse.json({ error: 'Sub-coordinators must be created under your coordination' }, { status: 400 })
+        return NextResponse.json({ error: 'Subordinates must be created under your coordination' }, { status: 400 })
       }
     } else {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
@@ -171,7 +185,7 @@ export async function POST(request: NextRequest) {
     if (parentCoordinatorId) {
       const parentCoordinator = await User.findById(parentCoordinatorId)
       if (!parentCoordinator ||
-        (parentCoordinator.role !== UserRole.ADMIN && parentCoordinator.role !== UserRole.COORDINATOR)) {
+        (parentCoordinator.role !== UserRole.ADMIN && !coordinatorRoles.includes(parentCoordinator.role as any))) {
         return NextResponse.json({ error: 'Invalid parent coordinator' }, { status: 400 })
       }
     }

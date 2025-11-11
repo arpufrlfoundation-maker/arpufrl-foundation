@@ -40,7 +40,20 @@ export async function POST(
     }
 
     // Check if user is a coordinator
-    if (![UserRole.COORDINATOR, UserRole.SUB_COORDINATOR].includes(coordinator.role as any)) {
+    const coordinatorRoles = [
+      UserRole.CENTRAL_PRESIDENT,
+      UserRole.STATE_PRESIDENT,
+      UserRole.STATE_COORDINATOR,
+      UserRole.ZONE_COORDINATOR,
+      UserRole.DISTRICT_PRESIDENT,
+      UserRole.DISTRICT_COORDINATOR,
+      UserRole.BLOCK_COORDINATOR,
+      UserRole.NODAL_OFFICER,
+      UserRole.PRERAK,
+      UserRole.PRERNA_SAKHI
+    ]
+    
+    if (!coordinatorRoles.includes(coordinator.role as any)) {
       return NextResponse.json(
         { error: 'User is not a coordinator' },
         { status: 400 }
@@ -78,7 +91,7 @@ export async function POST(
       referralCode = new ReferralCode({
         code: uniqueCode,
         ownerUserId: coordinator._id,
-        type: coordinator.role === UserRole.COORDINATOR ? 'COORDINATOR' : 'SUB_COORDINATOR',
+        type: coordinator.role, // Use the actual role
         region: coordinator.region,
         active: true,
         parentCodeId: coordinator.parentCoordinatorId ?

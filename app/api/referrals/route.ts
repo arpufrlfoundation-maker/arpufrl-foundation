@@ -6,6 +6,20 @@ import { User, UserRole } from '@/models/User'
 import mongoose from 'mongoose'
 import { z } from 'zod'
 
+// Define coordinator roles array
+const coordinatorRoles = [
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
+  UserRole.STATE_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK,
+  UserRole.PRERNA_SAKHI
+]
+
 // Validation schemas
 const createReferralCodeSchema = z.object({
   ownerUserId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid user ID format'),
@@ -48,22 +62,19 @@ export async function GET(request: NextRequest) {
     if (user.role === UserRole.ADMIN) {
       // Admins can see all referral codes
       if (ownerUserId) query.ownerUserId = ownerUserId
-    } else if (user.role === UserRole.COORDINATOR) {
-      // Coordinators can see their own codes and their sub-coordinators' codes
-      const subCoordinatorIds = await User.find({
-        parentCoordinatorId: user._id,
-        role: UserRole.SUB_COORDINATOR
+    } else if (coordinatorRoles.includes(user.role as any)) {
+      // Coordinators can see their own codes and their subordinates' codes
+      const subordinateIds = await User.find({
+        parentCoordinatorId: user._id
       }).distinct('_id')
 
       query.$or = [
         { ownerUserId: user._id },
-        { ownerUserId: { $in: subCoordinatorIds } }
+        { ownerUserId: { $in: subordinateIds } }
       ]
-    } else if (user.role === UserRole.SUB_COORDINATOR) {
-      // Sub-coordinators can only see their own codes
-      query.ownerUserId = user._id
     } else {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+      // Volunteers can only see their own codes
+      query.ownerUserId = user._id
     }
 
     // Apply filters
@@ -138,10 +149,9 @@ export async function POST(request: NextRequest) {
     // Permission checks
     if (currentUser.role === UserRole.ADMIN) {
       // Admins can create codes for anyone
-    } else if (currentUser.role === UserRole.COORDINATOR) {
-      // Coordinators can create codes for their sub-coordinators
-      if (targetUser.role !== UserRole.SUB_COORDINATOR ||
-        targetUser.parentCoordinatorId?.toString() !== currentUser._id.toString()) {
+    } else if (coordinatorRoles.includes(currentUser.role as any)) {
+      // Coordinators can create codes for their subordinates
+      if (targetUser.parentCoordinatorId?.toString() !== currentUser._id.toString()) {
         return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
       }
     } else {
@@ -156,7 +166,7 @@ export async function POST(request: NextRequest) {
       }
 
       const parentOwner = parentCode.ownerUserId as any
-      if (parentOwner.role !== UserRole.ADMIN && parentOwner.role !== UserRole.COORDINATOR) {
+      if (parentOwner.role !== UserRole.ADMIN && !coordinatorRoles.includes(parentOwner.role as any)) {
         return NextResponse.json({ error: 'Parent code must belong to admin or coordinator' }, { status: 400 })
       }
     }

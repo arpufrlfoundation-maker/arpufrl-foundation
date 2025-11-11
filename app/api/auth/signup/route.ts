@@ -26,13 +26,20 @@ export async function POST(request: NextRequest) {
 
     const {
       name,
+      fatherName,
+      address,
+      district,
+      state,
       email,
       phone,
       password,
+      confirmPassword,
       role,
       region,
       parentId,
       referralCode,
+      uniqueId,
+      profilePhoto,
       fatherPhone,
       motherPhone
     } = body
@@ -80,13 +87,19 @@ export async function POST(request: NextRequest) {
     // Create new user with status = PENDING (default for all new signups)
     const userData = {
       name,
+      fatherName: fatherName || null,
+      address: address || null,
+      district: district || null,
+      state: state || null,
       email: email.toLowerCase(),
       hashedPassword,
       phone,
-      role: role || UserRole.DONOR,
-      status: UserStatus.PENDING, // All new accounts start as PENDING
+      role: role || UserRole.VOLUNTEER,
+      status: role === UserRole.VOLUNTEER ? UserStatus.ACTIVE : UserStatus.PENDING, // Volunteers are active, others pending
       region,
       referralCode: referralCode || null,
+      uniqueId: uniqueId || null,
+      profilePhoto: profilePhoto || null,
       parentCoordinatorId,
       fatherPhone: fatherPhone || null,
       motherPhone: motherPhone || null,

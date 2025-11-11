@@ -5,23 +5,29 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Eye, EyeOff, Loader2, Shield } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Shield, Upload, X } from 'lucide-react'
 import Link from 'next/link'
 import { generateReferralCode } from '@/lib/generateReferral'
+import { generateUniqueId } from '@/lib/utils'
+import { CloudinaryService } from '@/lib/cloudinary'
 
 // Validation schema
 const signupSchema = z.object({
   name: z.string().min(2, 'Full name must be at least 2 characters').max(100),
+  fatherName: z.string().min(2, 'Father name must be at least 2 characters').max(100),
+  address: z.string().min(10, 'Address must be at least 10 characters').max(200),
+  district: z.string().min(2, 'District is required').max(50),
+  state: z.string().min(2, 'State is required').max(50),
   email: z.string().email('Invalid email address'),
+  phone: z.string()
+    .regex(/^[+]?[\d\s-()]+$/, 'Invalid phone number')
+    .min(10, 'Phone must be at least 10 digits'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and number'),
   confirmPassword: z.string(),
-  phone: z.string()
-    .regex(/^[+]?[\d\s-()]+$/, 'Invalid phone number')
-    .min(10, 'Phone must be at least 10 digits'),
   role: z.string().min(1, 'Please select a role'),
-  region: z.string().min(2, 'Region/District/State is required'),
+  region: z.string().min(2, 'Region is required'),
   fatherPhone: z.string()
     .regex(/^[+]?[\d\s-()]+$/, 'Invalid phone number')
     .min(10, 'Phone must be at least 10 digits')
@@ -60,6 +66,10 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [generatedReferralCode, setGeneratedReferralCode] = useState<string>('')
+  const [uniqueId, setUniqueId] = useState<string>('')
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
   const {
     register,
@@ -72,6 +82,11 @@ export default function SignupPage() {
 
   const selectedRole = watch('role')
 
+  // Generate unique ID on mount
+  useEffect(() => {
+    setUniqueId(generateUniqueId())
+  }, [])
+
   // Auto-generate referral code when role changes
   useEffect(() => {
     if (selectedRole) {
@@ -79,6 +94,42 @@ export default function SignupPage() {
       setGeneratedReferralCode(code)
     }
   }, [selectedRole])
+
+  // Handle profile photo upload
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      setUploadingPhoto(true)
+      setError(null)
+
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+
+      // Upload to Cloudinary
+      const result = await CloudinaryService.uploadProfilePhoto(file)
+      if (result.success && result.url) {
+        setProfilePhoto(result.url)
+      } else {
+        throw new Error(result.error || 'Upload failed')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload photo')
+      setPhotoPreview(null)
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
+  const removePhoto = () => {
+    setProfilePhoto(null)
+    setPhotoPreview(null)
+  }
 
   const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true)
@@ -92,12 +143,18 @@ export default function SignupPage() {
         },
         body: JSON.stringify({
           name: data.name,
+          fatherName: data.fatherName,
+          address: data.address,
+          district: data.district,
+          state: data.state,
           email: data.email,
           password: data.password,
           phone: data.phone,
           role: data.role,
           region: data.region,
           referralCode: generatedReferralCode,
+          uniqueId: uniqueId,
+          profilePhoto: profilePhoto,
           // Optional parent phone numbers
           ...(data.fatherPhone && { fatherPhone: data.fatherPhone }),
           ...(data.motherPhone && { motherPhone: data.motherPhone }),
@@ -139,6 +196,68 @@ export default function SignupPage() {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {/* Unique ID Display */}
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-900">
+                  <span className="font-semibold">Your Unique ID:</span>{' '}
+                  <span className="font-mono font-bold">{uniqueId}</span>
+                </p>
+                <p className="text-xs text-blue-700 mt-1">Save this ID for future reference</p>
+              </div>
+
+              {/* Profile Photo Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Profile Photo
+                </label>
+                <div className="flex items-center gap-4">
+                  {photoPreview ? (
+                    <div className="relative">
+                      <img
+                        src={photoPreview}
+                        alt="Profile preview"
+                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={removePhoto}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+                      <Upload className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                  <div>
+                    <label htmlFor="photo-upload" className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                      {uploadingPhoto ? (
+                        <>
+                          <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          {photoPreview ? 'Change Photo' : 'Upload Photo'}
+                        </>
+                      )}
+                    </label>
+                    <input
+                      id="photo-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      disabled={uploadingPhoto}
+                      className="hidden"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">JPG, PNG or WebP (max 5MB)</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Full Name */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -156,10 +275,96 @@ export default function SignupPage() {
                 )}
               </div>
 
+              {/* Father's Name */}
+              <div>
+                <label htmlFor="fatherName" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Father's Name *
+                </label>
+                <input
+                  id="fatherName"
+                  type="text"
+                  {...register('fatherName')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter father's name"
+                />
+                {errors.fatherName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.fatherName.message}</p>
+                )}
+              </div>
+
+              {/* Address */}
+              <div>
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Address *
+                </label>
+                <textarea
+                  id="address"
+                  {...register('address')}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your full address"
+                />
+                {errors.address && (
+                  <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>
+                )}
+              </div>
+
+              {/* District and State */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-1.5">
+                    District *
+                  </label>
+                  <input
+                    id="district"
+                    type="text"
+                    {...register('district')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., Mumbai"
+                  />
+                  {errors.district && (
+                    <p className="mt-1 text-sm text-red-600">{errors.district.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1.5">
+                    State *
+                  </label>
+                  <input
+                    id="state"
+                    type="text"
+                    {...register('state')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., Maharashtra"
+                  />
+                  {errors.state && (
+                    <p className="mt-1 text-sm text-red-600">{errors.state.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile Number (Phone) */}
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Mobile Number *
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  {...register('phone')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="+91 1234567890"
+                />
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+                )}
+              </div>
+
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Email Address *
+                  Email ID *
                 </label>
                 <input
                   id="email"
@@ -226,23 +431,6 @@ export default function SignupPage() {
                     <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
                   )}
                 </div>
-              </div>
-
-              {/* Phone Number */}
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Phone Number *
-                </label>
-                <input
-                  id="phone"
-                  type="tel"
-                  {...register('phone')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="+91 1234567890"
-                />
-                {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
-                )}
               </div>
 
               {/* Role Selection */}

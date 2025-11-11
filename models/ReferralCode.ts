@@ -2,6 +2,20 @@ import mongoose, { Document, Schema, Model } from 'mongoose'
 import { z } from 'zod'
 import { UserRole, UserRoleType } from './User'
 
+// Define coordinator roles array
+const coordinatorRoles = [
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
+  UserRole.STATE_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK,
+  UserRole.PRERNA_SAKHI
+]
+
 // Referral code type enum
 export const ReferralCodeType = {
   COORDINATOR: 'COORDINATOR',
@@ -134,7 +148,7 @@ const referralCodeSchema = new Schema<IReferralCode>({
         if (!parentCode) return false
 
         const parentUser = parentCode.ownerUserId as any
-        return parentUser && (parentUser.role === UserRole.ADMIN || parentUser.role === UserRole.COORDINATOR)
+        return parentUser && (parentUser.role === UserRole.ADMIN || coordinatorRoles.includes(parentUser.role))
       },
       message: 'Parent code must belong to an admin or coordinator'
     }

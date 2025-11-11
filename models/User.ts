@@ -67,6 +67,17 @@ export const userValidationSchema = z.object({
     .max(100, 'Name must not exceed 100 characters')
     .regex(/^[a-zA-Z\s]+$/, 'Name can only contain letters and spaces'),
 
+  fatherName: z.string()
+    .min(2, 'Father name must be at least 2 characters')
+    .max(100, 'Father name must not exceed 100 characters')
+    .regex(/^[a-zA-Z\s]+$/, 'Father name can only contain letters and spaces')
+    .optional(),
+
+  address: z.string()
+    .min(10, 'Address must be at least 10 characters')
+    .max(200, 'Address must not exceed 200 characters')
+    .optional(),
+
   email: z.string()
     .email('Invalid email format')
     .transform(val => val.toLowerCase()),
@@ -88,6 +99,10 @@ export const userValidationSchema = z.object({
     .min(10, 'Phone number must be at least 10 digits')
     .max(15, 'Phone number must not exceed 15 digits')
     .optional(),
+
+  profilePhoto: z.string().url('Invalid URL format').optional(),
+  
+  uniqueId: z.string().optional(),
 
   role: z.enum([
     UserRole.ADMIN,
@@ -127,9 +142,9 @@ export const userValidationSchema = z.object({
     .optional(),
 
   // Location hierarchy - enhanced for complete geographical tracking
-  state: z.string().max(50).optional(),
+  state: z.string().min(2).max(50).optional(),
   zone: z.string().max(50).optional(), // Zone/Mandal
-  district: z.string().max(50).optional(), // Jila
+  district: z.string().min(2).max(50).optional(), // Jila/District
   block: z.string().max(50).optional(),
   panchayat: z.string().max(50).optional(), // Nyay Panchayat
   gramSabha: z.string().max(50).optional(), // Gram Sabha
@@ -155,6 +170,8 @@ export const userLoginSchema = z.object({
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId
   name: string
+  fatherName?: string // Father's Name
+  address?: string // Full Address
   email: string
   phone?: string
   fatherPhone?: string
@@ -163,7 +180,9 @@ export interface IUser extends Document {
   status: UserStatusType
   hashedPassword?: string
   emailVerified?: Date
-  image?: string
+  image?: string // Profile photo URL
+  profilePhoto?: string // Cloudinary profile photo URL
+  uniqueId?: string // Auto-generated unique identifier
 
   // Password reset fields
   resetPasswordToken?: string
@@ -183,7 +202,7 @@ export interface IUser extends Document {
   // Location hierarchy - enhanced for complete geographical tracking
   state?: string
   zone?: string // Zone/Mandal
-  district?: string // Jila
+  district?: string // Jila/District
   block?: string
   panchayat?: string // Nyay Panchayat
   gramSabha?: string // Gram Sabha
@@ -226,6 +245,33 @@ const userSchema = new Schema<IUser>({
     minlength: [2, 'Name must be at least 2 characters'],
     maxlength: [100, 'Name must not exceed 100 characters'],
     match: [/^[a-zA-Z\s]+$/, 'Name can only contain letters and spaces']
+  },
+
+  fatherName: {
+    type: String,
+    trim: true,
+    minlength: [2, 'Father name must be at least 2 characters'],
+    maxlength: [100, 'Father name must not exceed 100 characters'],
+    match: [/^[a-zA-Z\s]+$/, 'Father name can only contain letters and spaces']
+  },
+
+  address: {
+    type: String,
+    trim: true,
+    minlength: [10, 'Address must be at least 10 characters'],
+    maxlength: [200, 'Address must not exceed 200 characters']
+  },
+
+  uniqueId: {
+    type: String,
+    unique: true,
+    sparse: true, // Allow multiple null values
+    index: true
+  },
+
+  profilePhoto: {
+    type: String,
+    trim: true
   },
 
   email: {

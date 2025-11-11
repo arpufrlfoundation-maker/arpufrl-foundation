@@ -17,27 +17,36 @@ export async function GET(request: NextRequest) {
 
     await connectToDatabase()
 
+    const coordinatorRoles = [
+      UserRole.CENTRAL_PRESIDENT,
+      UserRole.STATE_PRESIDENT,
+      UserRole.STATE_COORDINATOR,
+      UserRole.ZONE_COORDINATOR,
+      UserRole.DISTRICT_PRESIDENT,
+      UserRole.DISTRICT_COORDINATOR,
+      UserRole.BLOCK_COORDINATOR,
+      UserRole.NODAL_OFFICER,
+      UserRole.PRERAK,
+      UserRole.PRERNA_SAKHI
+    ]
+
     // Get coordinator statistics
     const [
       totalCoordinators,
       activeCoordinators,
       pendingCoordinators,
-      totalSubCoordinators,
       donationStats
     ] = await Promise.all([
       User.countDocuments({
-        role: { $in: [UserRole.COORDINATOR, UserRole.SUB_COORDINATOR] }
+        role: { $in: coordinatorRoles }
       }),
       User.countDocuments({
-        role: { $in: [UserRole.COORDINATOR, UserRole.SUB_COORDINATOR] },
+        role: { $in: coordinatorRoles },
         status: UserStatus.ACTIVE
       }),
       User.countDocuments({
-        role: { $in: [UserRole.COORDINATOR, UserRole.SUB_COORDINATOR] },
+        role: { $in: coordinatorRoles },
         status: UserStatus.PENDING
-      }),
-      User.countDocuments({
-        role: UserRole.SUB_COORDINATOR
       }),
       // Get donation attribution statistics
       Donation.aggregate([
@@ -74,7 +83,6 @@ export async function GET(request: NextRequest) {
       totalCoordinators,
       activeCoordinators,
       pendingCoordinators,
-      totalSubCoordinators,
       totalDonationsAttributed: attributionStats.totalDonationsAttributed,
       totalAmountAttributed: attributionStats.totalAmountAttributed
     }

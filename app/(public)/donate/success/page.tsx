@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { Loader2 } from 'lucide-react'
 
 interface DonationDetails {
   donationId: string
@@ -18,7 +19,7 @@ interface DonationDetails {
   createdAt: string
 }
 
-export default function DonationSuccessPage() {
+function DonationSuccessContent() {
   const [donation, setDonation] = useState<DonationDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -331,5 +332,13 @@ export default function DonationSuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function DonationSuccessPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+      <DonationSuccessContent />
+    </Suspense>
   )
 }

@@ -5,6 +5,20 @@ import { ReactNode } from 'react'
 import { sessionUtils } from '../../lib/auth-utils'
 import { UserRole, UserRoleType } from '../../models/User'
 
+// Define coordinator roles array
+const coordinatorRoles: UserRoleType[] = [
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
+  UserRole.STATE_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK,
+  UserRole.PRERNA_SAKHI
+]
+
 interface RoleGuardProps {
   children: ReactNode
   requiredRoles?: UserRoleType | UserRoleType[]
@@ -63,7 +77,7 @@ export function AdminOnly({ children, fallback = null }: { children: ReactNode; 
 export function CoordinatorOnly({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) {
   return (
     <RoleGuard
-      requiredRoles={[UserRole.ADMIN, UserRole.COORDINATOR, UserRole.SUB_COORDINATOR]}
+      requiredRoles={[UserRole.ADMIN, ...coordinatorRoles]}
       fallback={fallback}
     >
       {children}

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Only coordinators and admins can approve users
-    if (session.user.role === UserRole.DONOR) {
+    if (session.user.role === UserRole.VOLUNTEER) {
       return NextResponse.json(
         { error: 'You do not have permission to approve users' },
         { status: 403 }

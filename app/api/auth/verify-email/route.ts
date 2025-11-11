@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '../../../../lib/db'
-import { User, UserStatus } from '../../../../models/User'
+import { User, UserStatus, UserRole } from '../../../../models/User'
 import { z } from 'zod'
 import crypto from 'crypto'
 
@@ -123,8 +123,8 @@ export async function PUT(request: NextRequest) {
       emailVerificationExpires: undefined
     }
 
-    // Auto-activate donors upon email verification
-    if (user.role === 'DONOR' && user.status === UserStatus.PENDING) {
+    // Auto-activate volunteers upon email verification
+    if (user.role === UserRole.VOLUNTEER && user.status === UserStatus.PENDING) {
       updateData.status = UserStatus.ACTIVE
     }
 

@@ -7,6 +7,20 @@ import { Donation } from '@/models/Donation'
 import mongoose from 'mongoose'
 import { z } from 'zod'
 
+// Define coordinator roles array
+const coordinatorRoles = [
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
+  UserRole.STATE_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK,
+  UserRole.PRERNA_SAKHI
+]
+
 const updateReferralCodeSchema = z.object({
   active: z.boolean().optional(),
   region: z.string().min(2).max(50).optional()
@@ -48,7 +62,7 @@ export async function GET(
     const canAccess =
       currentUser.role === UserRole.ADMIN ||
       referralCode.ownerUserId._id.toString() === currentUser._id.toString() ||
-      (currentUser.role === UserRole.COORDINATOR &&
+      (coordinatorRoles.includes(currentUser.role as any) &&
         (referralCode.ownerUserId as any).parentCoordinatorId?.toString() === currentUser._id.toString())
 
     if (!canAccess) {
@@ -124,7 +138,7 @@ export async function PATCH(
     const canModify =
       currentUser.role === UserRole.ADMIN ||
       referralCode.ownerUserId._id.toString() === currentUser._id.toString() ||
-      (currentUser.role === UserRole.COORDINATOR &&
+      (coordinatorRoles.includes(currentUser.role as any) &&
         (referralCode.ownerUserId as any).parentCoordinatorId?.toString() === currentUser._id.toString())
 
     if (!canModify) {
@@ -196,7 +210,7 @@ export async function DELETE(
 
     const canDelete =
       currentUser.role === UserRole.ADMIN ||
-      (currentUser.role === UserRole.COORDINATOR &&
+      (coordinatorRoles.includes(currentUser.role as any) &&
         (referralCode.ownerUserId as any).parentCoordinatorId?.toString() === currentUser._id.toString())
 
     if (!canDelete) {

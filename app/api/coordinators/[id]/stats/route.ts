@@ -6,6 +6,20 @@ import { ReferralCode } from '@/models/ReferralCode'
 import { Donation } from '@/models/Donation'
 import mongoose from 'mongoose'
 
+// Define coordinator roles array
+const coordinatorRoles = [
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
+  UserRole.STATE_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK,
+  UserRole.PRERNA_SAKHI
+]
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -31,7 +45,7 @@ export async function GET(
       return NextResponse.json({ error: 'Coordinator not found' }, { status: 404 })
     }
 
-    if (coordinator.role !== UserRole.COORDINATOR && coordinator.role !== UserRole.SUB_COORDINATOR) {
+    if (!coordinatorRoles.includes(coordinator.role as any)) {
       return NextResponse.json({ error: 'User is not a coordinator' }, { status: 400 })
     }
 
@@ -42,10 +56,10 @@ export async function GET(
     }
 
     if (currentUser.role !== UserRole.ADMIN && currentUser._id.toString() !== id) {
-      // Coordinators can view their sub-coordinators' stats
-      if (currentUser.role === UserRole.COORDINATOR && coordinator.parentCoordinatorId?.toString() !== currentUser._id.toString()) {
+      // Higher level coordinators can view their subordinates' stats
+      if (coordinatorRoles.includes(currentUser.role as any) && coordinator.parentCoordinatorId?.toString() !== currentUser._id.toString()) {
         return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
-      } else if (currentUser.role === UserRole.SUB_COORDINATOR) {
+      } else if (currentUser.role === UserRole.VOLUNTEER) {
         return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
       }
     }
@@ -108,10 +122,9 @@ export async function GET(
         }
       ]),
 
-      // Sub-coordinators count
+      // Subordinates count (users under this coordinator)
       User.countDocuments({
         parentCoordinatorId: new mongoose.Types.ObjectId(id),
-        role: UserRole.SUB_COORDINATOR,
         status: 'ACTIVE'
       }),
 
@@ -120,7 +133,7 @@ export async function GET(
         {
           $match: {
             active: true,
-            type: coordinator.role === UserRole.COORDINATOR ? 'COORDINATOR' : 'SUB_COORDINATOR'
+            type: coordinator.role
           }
         },
         {

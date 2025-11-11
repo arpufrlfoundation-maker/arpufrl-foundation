@@ -5,6 +5,20 @@ import { User, UserRole } from '@/models/User'
 import { ReferralAttributionService } from '@/lib/referral-attribution'
 import mongoose from 'mongoose'
 
+// Define coordinator roles array
+const coordinatorRoles = [
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
+  UserRole.STATE_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK,
+  UserRole.PRERNA_SAKHI
+]
+
 // GET /api/referrals/hierarchy - Get referral hierarchy with performance data
 export async function GET(request: NextRequest) {
   try {
@@ -32,12 +46,11 @@ export async function GET(request: NextRequest) {
     if (userId && userId !== currentUser._id.toString()) {
       if (currentUser.role === UserRole.ADMIN) {
         // Admins can view anyone's hierarchy
-      } else if (currentUser.role === UserRole.COORDINATOR) {
-        // Coordinators can view their sub-coordinators' hierarchy
+      } else if (coordinatorRoles.includes(currentUser.role as any)) {
+        // Coordinators can view their subordinates' hierarchy
         const targetUser = await User.findById(userId)
         if (!targetUser ||
-          (targetUser.role !== UserRole.SUB_COORDINATOR ||
-            targetUser.parentCoordinatorId?.toString() !== currentUser._id.toString())) {
+          targetUser.parentCoordinatorId?.toString() !== currentUser._id.toString()) {
           return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
         }
       } else {
@@ -47,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     // Validate that user can have a hierarchy
     const targetUser = await User.findById(targetUserId)
-    if (!targetUser || (targetUser.role !== UserRole.ADMIN && targetUser.role !== UserRole.COORDINATOR)) {
+    if (!targetUser || (targetUser.role !== UserRole.ADMIN && !coordinatorRoles.includes(targetUser.role as any))) {
       return NextResponse.json({ error: 'User cannot have referral hierarchy' }, { status: 400 })
     }
 

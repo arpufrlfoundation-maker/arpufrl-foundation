@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/db'
+import { connectToDatabase } from '@/lib/db'
 import { Target, targetUtils } from '@/models/Target'
 import { User, UserRole } from '@/models/User'
 import mongoose from 'mongoose'
@@ -7,7 +7,7 @@ import mongoose from 'mongoose'
 // GET - Fetch targets for a user
 export async function GET(request: NextRequest) {
   try {
-    await connectDB()
+    await connectToDatabase()
 
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 // POST - Create a new target
 export async function POST(request: NextRequest) {
   try {
-    await connectDB()
+    await connectToDatabase()
 
     const body = await request.json()
 
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update target progress
 export async function PUT(request: NextRequest) {
   try {
-    await connectDB()
+    await connectToDatabase()
 
     const body = await request.json()
     const { targetId, currentValue, status, notes } = body
@@ -175,7 +175,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete a target
 export async function DELETE(request: NextRequest) {
   try {
-    await connectDB()
+    await connectToDatabase()
 
     const { searchParams } = new URL(request.url)
     const targetId = searchParams.get('targetId')

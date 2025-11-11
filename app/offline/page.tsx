@@ -1,10 +1,13 @@
+'use client'
+
 import { generateMetadata } from '@/lib/seo'
 
-export const metadata = generateMetadata({
-  title: 'Offline - ARPU Future Rise Life Foundation',
-  description: 'You are currently offline. Please check your internet connection.',
-  url: '/offline',
-})
+// Note: metadata export doesn't work in client components, metadata should be in layout or parent
+// export const metadata = generateMetadata({
+//   title: 'Offline - ARPU Future Rise Life Foundation',
+//   description: 'You are currently offline. Please check your internet connection.',
+//   url: '/offline',
+// })
 
 export default function OfflinePage() {
   return (

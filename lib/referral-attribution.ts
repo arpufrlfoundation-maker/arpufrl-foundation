@@ -3,6 +3,20 @@ import { ReferralCode, IReferralCode, ReferralHierarchy } from '@/models/Referra
 import { User, IUser, UserRole } from '@/models/User'
 import { Donation, IDonation, PaymentStatus } from '@/models/Donation'
 
+// Define coordinator roles array
+const coordinatorRoles = [
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
+  UserRole.STATE_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK,
+  UserRole.PRERNA_SAKHI
+]
+
 export interface AttributionResult {
   referralCodeId: mongoose.Types.ObjectId
   attributedToUserId: mongoose.Types.ObjectId
@@ -187,7 +201,7 @@ export class ReferralAttributionService {
     // Get user's referral codes
     let referralCodeIds: mongoose.Types.ObjectId[] = []
 
-    if (includeHierarchy && (user.role === UserRole.ADMIN || user.role === UserRole.COORDINATOR)) {
+    if (includeHierarchy && (user.role === UserRole.ADMIN || coordinatorRoles.includes(user.role as any))) {
       // Include subordinate referral codes
       const subordinateUserIds = await User.find({
         $or: [
@@ -378,7 +392,7 @@ export class ReferralAttributionService {
     dateFilter: any
   ): Promise<HierarchyPerformance[]> {
     const user = await User.findById(userId)
-    if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.COORDINATOR)) {
+    if (!user || (user.role !== UserRole.ADMIN && !coordinatorRoles.includes(user.role as any))) {
       return []
     }
 

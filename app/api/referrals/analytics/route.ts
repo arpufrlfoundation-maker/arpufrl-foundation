@@ -7,6 +7,20 @@ import { ReferralCode } from '@/models/ReferralCode'
 import { Program } from '@/models/Program'
 import mongoose from 'mongoose'
 
+// Define coordinator roles array
+const coordinatorRoles = [
+  UserRole.CENTRAL_PRESIDENT,
+  UserRole.STATE_PRESIDENT,
+  UserRole.STATE_COORDINATOR,
+  UserRole.ZONE_COORDINATOR,
+  UserRole.DISTRICT_PRESIDENT,
+  UserRole.DISTRICT_COORDINATOR,
+  UserRole.BLOCK_COORDINATOR,
+  UserRole.NODAL_OFFICER,
+  UserRole.PRERAK,
+  UserRole.PRERNA_SAKHI
+]
+
 // GET /api/referrals/analytics - Get referral analytics data
 export async function GET(request: NextRequest) {
   try {
@@ -40,7 +54,7 @@ export async function GET(request: NextRequest) {
     const canAccess =
       currentUser.role === UserRole.ADMIN ||
       currentUser._id.toString() === userId ||
-      (currentUser.role === UserRole.COORDINATOR &&
+      (coordinatorRoles.includes(currentUser.role as any) &&
         targetUser.parentCoordinatorId?.toString() === currentUser._id.toString())
 
     if (!canAccess) {
@@ -52,16 +66,15 @@ export async function GET(request: NextRequest) {
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
 
-    // Get all users in the hierarchy (user + sub-coordinators)
+    // Get all users in the hierarchy (user + subordinates)
     const hierarchyUserIds = [new mongoose.Types.ObjectId(userId)]
 
-    if (targetUser.role === UserRole.COORDINATOR) {
-      const subCoordinators = await User.find({
-        parentCoordinatorId: userId,
-        role: UserRole.SUB_COORDINATOR
+    if (coordinatorRoles.includes(targetUser.role as any)) {
+      const subordinates = await User.find({
+        parentCoordinatorId: userId
       }).select('_id')
 
-      hierarchyUserIds.push(...subCoordinators.map(sc => sc._id))
+      hierarchyUserIds.push(...subordinates.map(s => s._id))
     }
 
     // Get overview statistics
@@ -91,10 +104,9 @@ export async function GET(request: NextRequest) {
     const totalCodeUsage = referralCodes.reduce((sum, code) => sum + code.totalDonations, 0)
     const conversionRate = totalCodeUsage > 0 ? (overviewStats[0]?.totalDonations || 0) / totalCodeUsage * 100 : 0
 
-    // Get active sub-coordinators count
-    const activeSubCoordinators = await User.countDocuments({
+    // Get active subordinates count
+    const activeSubordinates = await User.countDocuments({
       parentCoordinatorId: userId,
-      role: UserRole.SUB_COORDINATOR,
       status: 'ACTIVE'
     })
 
@@ -256,7 +268,7 @@ export async function GET(request: NextRequest) {
       overview: {
         ...overview,
         conversionRate,
-        activeSubCoordinators
+        activeSubordinates
       },
       trends,
       topPerformers,

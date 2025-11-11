@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     if (type === 'donations') {
       // Donation analytics
       const donations = await Donation.find({
-        referredBy: { $in: allUserIds },
+        attributedToUserId: { $in: allUserIds },
         paymentStatus: 'SUCCESS',
         createdAt: { $gte: startDate, $lte: endDate }
       }).sort({ createdAt: 1 })
@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
       })
 
       donations.forEach(d => {
-        const member = members.find(m => m._id.toString() === d.referredBy?.toString())
+        const member = members.find(m => m._id.toString() === d.attributedToUserId?.toString())
         if (member) {
           rolePerformance[member.role].donations++
           rolePerformance[member.role].amount += d.amount

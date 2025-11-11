@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/db'
+import { connectToDatabase } from '@/lib/db'
 import { User, RoleHierarchy } from '@/models/User'
 import mongoose from 'mongoose'
 
 // GET - Fetch hierarchy tree
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    await connectDB()
+    await connectToDatabase()
 
-    const userId = params.userId
+    const { userId } = await params
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return NextResponse.json(

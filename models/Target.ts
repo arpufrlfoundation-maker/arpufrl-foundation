@@ -303,6 +303,7 @@ targetSchema.statics.findOverdueTargets = function () {
     .populate('assignedBy', 'name email role')
 }
 
+// @ts-ignore - Mongoose static method typing
 targetSchema.statics.getTargetSummary = async function (this: ITargetModel, userId: mongoose.Types.ObjectId): Promise<TargetSummary> {
   // @ts-ignore - Mongoose static method typing
   const targets = await this.findByUser(userId)
