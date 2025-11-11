@@ -107,14 +107,42 @@ Then restart your development server.
 
 **Solution**: Maximum file size is 5MB. Compress your image or use a smaller file.
 
+### Error: "Transformation parameter is not allowed when using unsigned upload"
+
+**Solution**: This error occurs if you try to pass transformation parameters during upload with an unsigned preset.
+
+**Fix**:
+1. Remove any `transformation` parameters from the upload FormData
+2. Apply transformations when retrieving/displaying images instead
+3. Use `CloudinaryService.getOptimizedUrl(url, size)` to get transformed image URLs
+4. Transformations in URLs are free and don't count against your quota
+
+**Example**:
+```typescript
+// ❌ Wrong - Don't do this with unsigned uploads
+formData.append('transformation', 'c_fill,w_400,h_400')
+
+// ✅ Correct - Apply transformation when displaying
+const optimizedUrl = CloudinaryService.getOptimizedUrl(uploadedUrl, 400)
+```
+
 ## Image Transformations
 
-The uploaded images are automatically transformed with:
-- **Width**: 400px
-- **Height**: 400px
-- **Crop mode**: Fill with face detection (`c_fill,g_face`)
+Profile images are uploaded at their original size to Cloudinary. 
 
-This ensures consistent profile photo sizes and automatically centers on faces.
+**On-the-fly transformations** are applied when displaying images using the `CloudinaryService.getOptimizedUrl()` utility:
+- **Width**: Configurable (default 200px)
+- **Height**: Configurable (default 200px)
+- **Crop mode**: Fill with face detection (`c_fill,g_face`)
+- **Quality**: Automatic optimization
+
+This approach:
+- ✅ Preserves original images in full quality
+- ✅ Generates optimized versions on-demand
+- ✅ Automatically centers on faces
+- ✅ Reduces bandwidth usage
+
+**Note**: Transformation parameters cannot be applied during upload with unsigned presets. Instead, transformations are applied via URL manipulation when retrieving images.
 
 ## Free Tier Limits
 

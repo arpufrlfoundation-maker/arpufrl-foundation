@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectToDatabase } from '@/lib/db'
-import { User } from '@/models/User'
+import { User, UserStatus } from '@/models/User'
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,14 +39,14 @@ export async function GET(request: NextRequest) {
 
     // Add status filter
     if (status === 'pending') {
-      query.isApproved = false
+      query.status = UserStatus.PENDING
     } else if (status === 'approved') {
-      query.isApproved = true
+      query.status = UserStatus.ACTIVE
     }
 
     // Get sub-coordinators
     const subCoordinators = await User.find(query)
-      .select('name email isApproved createdAt donationCount totalDonations')
+      .select('name email status createdAt')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -58,13 +58,13 @@ export async function GET(request: NextRequest) {
     const pendingCount = await User.countDocuments({
       referredBy: session.user.id,
       role: 'coordinator',
-      isApproved: false
+      status: UserStatus.PENDING
     })
 
     const approvedCount = await User.countDocuments({
       referredBy: session.user.id,
       role: 'coordinator',
-      isApproved: true
+      status: UserStatus.ACTIVE
     })
 
     return NextResponse.json({
@@ -72,10 +72,8 @@ export async function GET(request: NextRequest) {
         id: coord._id.toString(),
         name: coord.name,
         email: coord.email,
-        isApproved: coord.isApproved,
-        joinedDate: coord.createdAt,
-        donationCount: coord.donationCount || 0,
-        totalDonations: coord.totalDonations || 0
+        isApproved: coord.status === UserStatus.ACTIVE,
+        joinedDate: coord.createdAt
       })),
       stats: {
         total: totalCount,
@@ -144,7 +142,7 @@ export async function POST(request: NextRequest) {
 
     // Update approval status
     if (action === 'approve') {
-      coordinator.isApproved = true
+      coordinator.status = UserStatus.ACTIVE
       await coordinator.save()
 
       return NextResponse.json({
@@ -154,13 +152,13 @@ export async function POST(request: NextRequest) {
           id: coordinator._id.toString(),
           name: coordinator.name,
           email: coordinator.email,
-          isApproved: coordinator.isApproved
+          isApproved: true
         }
       })
     } else {
       // For reject, we could either delete or mark as rejected
       // For now, we'll just mark as not approved
-      coordinator.isApproved = false
+      coordinator.status = UserStatus.INACTIVE
       await coordinator.save()
 
       return NextResponse.json({
@@ -170,7 +168,7 @@ export async function POST(request: NextRequest) {
           id: coordinator._id.toString(),
           name: coordinator.name,
           email: coordinator.email,
-          isApproved: coordinator.isApproved
+          isApproved: false
         }
       })
     }

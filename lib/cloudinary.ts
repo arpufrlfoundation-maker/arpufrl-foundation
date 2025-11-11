@@ -71,7 +71,16 @@ export class CloudinaryService {
       formData.append('file', file)
       formData.append('upload_preset', this.UPLOAD_PRESET)
       formData.append('folder', 'arpufrl/profiles') // Organize in folders
-      formData.append('transformation', 'c_fill,w_400,h_400,g_face') // Auto-crop to face
+      // Note: transformation parameter is not allowed with unsigned uploads
+      // Apply transformations on retrieval using getOptimizedUrl() instead
+
+      console.log('Uploading to Cloudinary:', {
+        cloudName: this.CLOUD_NAME,
+        uploadPreset: this.UPLOAD_PRESET,
+        folder: 'arpufrl/profiles',
+        fileType: file.type,
+        fileSize: `${(file.size / 1024).toFixed(2)} KB`
+      })
 
       const response = await fetch(this.API_URL, {
         method: 'POST',
@@ -80,7 +89,14 @@ export class CloudinaryService {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.message || 'Upload failed')
+        console.error('Cloudinary upload error response:', error)
+        
+        // Check for transformation error
+        if (error.error && error.error.message && error.error.message.includes('Transformation parameter')) {
+          throw new Error('Upload preset configuration error. Please ensure your Cloudinary upload preset does not have transformations enabled. Go to Settings > Upload > Upload presets and edit your preset to remove any transformation settings.')
+        }
+        
+        throw new Error(error.error?.message || error.message || 'Upload failed')
       }
 
       const data = await response.json()

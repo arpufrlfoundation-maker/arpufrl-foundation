@@ -14,7 +14,8 @@ import {
   UserCheck,
   LogOut,
   User,
-  Bell
+  Bell,
+  Target
 } from 'lucide-react'
 
 interface AdminDashboardLayoutProps {
@@ -34,6 +35,12 @@ const navigation: NavItem[] = [
     href: '/dashboard/admin',
     icon: Home,
     description: 'Dashboard overview and key metrics'
+  },
+  {
+    name: 'Targets',
+    href: '/dashboard/admin/targets',
+    icon: Target,
+    description: 'Fund collection targets and hierarchy'
   },
   {
     name: 'Approvals',

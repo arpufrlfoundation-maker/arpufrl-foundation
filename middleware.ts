@@ -54,6 +54,7 @@ const publicRoutes = [
 ]
 
 // Auth routes that should redirect if already authenticated
+// Note: These are also included in publicRoutes for unauthenticated access
 const authRoutes = ['/login', '/register', '/signup']
 
 export default async function middleware(request: NextRequest) {
@@ -61,11 +62,6 @@ export default async function middleware(request: NextRequest) {
 
   // Get session
   const session = await auth()
-
-  // Check if route is public
-  const isPublicRoute = publicRoutes.some(route =>
-    pathname === route || pathname.startsWith(`${route}/`)
-  )
 
   // Check if route is an auth route
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
@@ -75,6 +71,11 @@ export default async function middleware(request: NextRequest) {
     const redirectUrl = getRedirectUrl(session.user.role)
     return NextResponse.redirect(new URL(redirectUrl, request.url))
   }
+
+  // Check if route is public (includes auth routes for unauthenticated users)
+  const isPublicRoute = publicRoutes.some(route =>
+    pathname === route || pathname.startsWith(`${route}/`)
+  ) || isAuthRoute
 
   // If route is public, allow access
   if (isPublicRoute) {

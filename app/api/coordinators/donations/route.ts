@@ -27,14 +27,14 @@ export async function GET(request: NextRequest) {
 
     await connectToDatabase()
 
-    // Build query - donations referred by this coordinator
+    // Build query - donations attributed to this coordinator
     const query: any = {
-      referredBy: session.user.id
+      attributedToUserId: session.user.id
     }
 
     // Add status filter
     if (status !== 'all') {
-      query.status = status
+      query.paymentStatus = status
     }
 
     // Add date range filter
@@ -65,7 +65,6 @@ export async function GET(request: NextRequest) {
     const querySkip = exportFormat === 'csv' ? 0 : skip
 
     const donationsQuery = Donation.find(query)
-      .populate('donorId', 'name email phone')
       .populate('programId', 'name')
       .populate('referralCodeId', 'code type')
       .sort({ createdAt: -1 })
@@ -80,13 +79,13 @@ export async function GET(request: NextRequest) {
     if (exportFormat === 'csv') {
       const csvData = donations.map(donation => ({
         'Donation ID': donation._id.toString(),
-        'Donor Name': donation.donorId ? (donation.donorId as any).name : 'Anonymous',
-        'Donor Email': donation.donorId ? (donation.donorId as any).email : '',
+        'Donor Name': donation.donorName || 'Anonymous',
+        'Donor Email': donation.donorEmail || '',
         'Amount': donation.amount,
         'Program': donation.programId ? (donation.programId as any).name : 'General',
         'Referral Code': donation.referralCodeId ? (donation.referralCodeId as any).code : '',
-        'Status': donation.status,
-        'Payment Method': donation.paymentMethod || '',
+        'Status': donation.paymentStatus,
+        'Payment Method': 'online',
         'Date': new Date(donation.createdAt).toLocaleDateString(),
         'Transaction ID': donation.razorpayOrderId || ''
       }))
@@ -107,17 +106,17 @@ export async function GET(request: NextRequest) {
 
     // Calculate stats
     const stats = await Donation.aggregate([
-      { $match: { referredBy: session.user.id } },
+      { $match: { attributedToUserId: session.user.id } },
       {
         $group: {
           _id: null,
           totalAmount: { $sum: '$amount' },
           totalDonations: { $sum: 1 },
           completedDonations: {
-            $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
+            $sum: { $cond: [{ $eq: ['$paymentStatus', 'completed'] }, 1, 0] }
           },
           completedAmount: {
-            $sum: { $cond: [{ $eq: ['$status', 'completed'] }, '$amount', 0] }
+            $sum: { $cond: [{ $eq: ['$paymentStatus', 'completed'] }, '$amount', 0] }
           }
         }
       }
@@ -133,11 +132,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       donations: donations.map(donation => ({
         id: donation._id.toString(),
-        donor: donation.donorId ? {
-          name: (donation.donorId as any).name,
-          email: (donation.donorId as any).email,
-          phone: (donation.donorId as any).phone
-        } : { name: 'Anonymous', email: '', phone: '' },
+        donor: {
+          name: donation.donorName || 'Anonymous',
+          email: donation.donorEmail || '',
+          phone: donation.donorPhone || ''
+        },
         amount: donation.amount,
         program: donation.programId ? {
           name: (donation.programId as any).name
@@ -146,8 +145,8 @@ export async function GET(request: NextRequest) {
           code: (donation.referralCodeId as any).code,
           type: (donation.referralCodeId as any).type
         } : null,
-        status: donation.status,
-        paymentMethod: donation.paymentMethod || 'online',
+        status: donation.paymentStatus,
+        paymentMethod: 'online',
         date: donation.createdAt,
         transactionId: donation.razorpayOrderId || ''
       })),

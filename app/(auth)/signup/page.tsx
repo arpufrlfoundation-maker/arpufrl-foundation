@@ -173,6 +173,7 @@ export default function SignupPage() {
           state: data.state,
           email: data.email,
           password: data.password,
+          confirmPassword: data.confirmPassword,
           phone: data.phone,
           role: data.role,
           region: data.region,

@@ -3,6 +3,35 @@ import { IUser } from '@/models/User'
 import { ITarget } from '@/models/Target'
 
 /**
+ * Generic function to convert array of objects to CSV
+ */
+export function exportToCSV(data: Record<string, any>[]): string {
+  if (data.length === 0) {
+    return ''
+  }
+
+  // Get headers from first object
+  const headers = Object.keys(data[0])
+
+  // Convert data to rows
+  const rows = data.map(item =>
+    headers.map(header => {
+      const value = item[header]
+      // Escape quotes and wrap in quotes
+      return `"${String(value).replace(/"/g, '""')}"`
+    })
+  )
+
+  // Combine headers and rows
+  const csvLines = [
+    headers.map(h => `"${h}"`).join(','),
+    ...rows.map(row => row.join(','))
+  ]
+
+  return csvLines.join('\n')
+}
+
+/**
  * Convert donations to CSV format
  */
 export function donationsToCSV(donations: IDonation[]): string {
