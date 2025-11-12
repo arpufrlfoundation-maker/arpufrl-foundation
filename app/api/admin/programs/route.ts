@@ -157,7 +157,9 @@ export async function POST(request: NextRequest) {
       name,
       slug,
       description,
-      longDescription: body.longDescription,
+      longDescription: body.longDescription && body.longDescription.trim().length >= 50
+        ? body.longDescription
+        : undefined,
       image: body.image,
       gallery: body.gallery || [],
       targetAmount: body.targetAmount ? parseFloat(body.targetAmount) : undefined,

@@ -18,9 +18,11 @@ import {
   ToggleLeft,
   ToggleRight,
   Star,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Upload
 } from 'lucide-react'
 import StatsCard from './StatsCard'
+import { CloudinaryService } from '@/lib/cloudinary'
 
 interface Program {
   id: string
@@ -72,6 +74,7 @@ export default function ProgramManagement() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const [filters, setFilters] = useState<ProgramFilters>({
     search: '',
@@ -229,6 +232,27 @@ export default function ProgramManagement() {
     } catch (error) {
       console.error('Error deleting program:', error)
       alert('Failed to delete program')
+    }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    setError(null)
+
+    try {
+      const result = await CloudinaryService.uploadProgramImage(file)
+      if (result.success && result.url) {
+        setCreateForm(prev => ({ ...prev, image: result.url || '' }))
+      } else {
+        setError(result.error || 'Failed to upload image')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload image')
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -548,7 +572,7 @@ export default function ProgramManagement() {
                       {formatDate(program.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={() => viewProgramDetails(program)}
                           className="text-blue-600 hover:text-blue-900"
@@ -816,13 +840,17 @@ export default function ProgramManagement() {
 
       {/* Create Program Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ zIndex: 9999 }}>
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setShowCreateModal(false)} />
+            <div
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              onClick={() => setShowCreateModal(false)}
+              style={{ zIndex: 9998 }}
+            />
 
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
+            <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg relative" style={{ zIndex: 9999 }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Create New Program</h3>
                 <button
@@ -917,15 +945,36 @@ export default function ProgramManagement() {
 
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Program Image URL
+                      Program Image
                     </label>
-                    <input
-                      type="url"
-                      value={createForm.image}
-                      onChange={(e) => setCreateForm(prev => ({ ...prev, image: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="https://example.com/image.jpg"
-                    />
+                    <div className="space-y-2">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      {uploadingImage && (
+                        <div className="flex items-center text-sm text-blue-600">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Uploading image...
+                        </div>
+                      )}
+                      {createForm.image && !uploadingImage && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-500 mb-1">Preview:</p>
+                          <img
+                            src={createForm.image}
+                            alt="Program preview"
+                            className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center space-x-6 md:col-span-2">

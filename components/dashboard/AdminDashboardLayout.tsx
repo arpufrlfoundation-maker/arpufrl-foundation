@@ -148,10 +148,18 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
           {/* User info and logout */}
           <div className="p-4 border-t">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-gray-700">
-                  {session?.user?.name?.charAt(0).toUpperCase()}
-                </span>
+              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                {session?.user?.profilePhoto ? (
+                  <img
+                    src={session.user.profilePhoto}
+                    alt={session.user.name || 'User'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sm font-medium text-gray-700">
+                    {session?.user?.name?.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
@@ -211,10 +219,18 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
               {/* User menu */}
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-700">Welcome, {session?.user?.name}</span>
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium text-sm">
-                    {session?.user?.name?.charAt(0).toUpperCase()}
-                  </span>
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center overflow-hidden">
+                  {session?.user?.profilePhoto ? (
+                    <img
+                      src={session.user.profilePhoto}
+                      alt={session.user.name || 'User'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white font-medium text-sm">
+                      {session?.user?.name?.charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

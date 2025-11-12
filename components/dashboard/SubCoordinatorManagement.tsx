@@ -12,15 +12,25 @@ interface SubCoordinator {
   email: string
   phone?: string
   region?: string
+  state?: string
+  district?: string
+  zone?: string
+  block?: string
   role: string
-  status: 'ACTIVE' | 'INACTIVE' | 'PENDING'
-  createdAt: string
-  referralCode?: {
+  level?: string
+  status?: 'ACTIVE' | 'INACTIVE' | 'PENDING'
+  createdAt?: string
+  joinedDate?: string
+  referralCode?: string
+  referralCodeActive?: boolean
+  totalDonations?: number
+  totalAmount?: number
+  recentDonations?: Array<{
     id: string
-    code: string
-    totalDonations: number
-    totalAmount: number
-  }
+    donorName: string
+    amount: number
+    date: string
+  }>
 }
 
 interface SubCoordinatorFormData {
@@ -38,6 +48,8 @@ export default function SubCoordinatorManagement() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [selectedSubordinate, setSelectedSubordinate] = useState<SubCoordinator | null>(null)
   const [creating, setCreating] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [availableRoles, setAvailableRoles] = useState<UserRoleType[]>([])
@@ -172,7 +184,12 @@ export default function SubCoordinatorManagement() {
     }
   }
 
-  const getStatusBadgeColor = (status: string) => {
+  const handleViewDetails = (subCoordinator: SubCoordinator) => {
+    setSelectedSubordinate(subCoordinator)
+    setShowDetailsModal(true)
+  }
+
+  const getStatusBadgeColor = (status?: string) => {
     switch (status) {
       case 'ACTIVE':
         return 'bg-green-100 text-green-800'
@@ -444,15 +461,23 @@ export default function SubCoordinatorManagement() {
 
                       {subCoordinator.referralCode && (
                         <div>
-                          <p><strong>Referral Code:</strong> {subCoordinator.referralCode.code}</p>
-                          <p><strong>Total Donations:</strong> {subCoordinator.referralCode.totalDonations}</p>
-                          <p><strong>Total Amount:</strong> ₹{subCoordinator.referralCode.totalAmount.toLocaleString()}</p>
+                          <p><strong>Referral Code:</strong> {subCoordinator.referralCode}</p>
+                          <p><strong>Total Donations:</strong> {subCoordinator.totalDonations || 0}</p>
+                          <p><strong>Total Amount:</strong> ₹{(subCoordinator.totalAmount || 0).toLocaleString()}</p>
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div className="flex space-x-2 ml-4">
+                    <button
+                      onClick={() => handleViewDetails(subCoordinator)}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center"
+                      title="View Details"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+
                     {subCoordinator.status === 'PENDING' && (
                       <button
                         onClick={() => handleUpdateStatus(subCoordinator.id, 'ACTIVE')}
@@ -486,6 +511,194 @@ export default function SubCoordinatorManagement() {
           </div>
         )}
       </div>
+
+      {/* Details Modal */}
+      {showDetailsModal && selectedSubordinate && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ zIndex: 9999 }}>
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              onClick={() => setShowDetailsModal(false)}
+              style={{ zIndex: 9998 }}
+            />
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div className="inline-block w-full max-w-3xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg relative" style={{ zIndex: 9999 }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Team Member Details</h3>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Basic Information */}
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Basic Information</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Name</label>
+                      <p className="text-sm text-gray-900">{selectedSubordinate.name}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Email</label>
+                      <p className="text-sm text-gray-900">{selectedSubordinate.email}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Phone</label>
+                      <p className="text-sm text-gray-900">{selectedSubordinate.phone || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Region</label>
+                      <p className="text-sm text-gray-900">{selectedSubordinate.region || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Role</label>
+                      <p className="text-sm text-gray-900">{RoleDisplayNames[selectedSubordinate.role as UserRoleType]}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(selectedSubordinate.status)}`}>
+                        {selectedSubordinate.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Referral Information */}
+                {selectedSubordinate.referralCode && (
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-3">Referral Performance</h4>
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-sm font-medium text-gray-700">Referral Code</p>
+                        <p className="text-lg font-bold text-gray-900 font-mono">{selectedSubordinate.referralCode}</p>
+                        {selectedSubordinate.referralCodeActive !== undefined && (
+                          <span className={`text-xs ${selectedSubordinate.referralCodeActive ? 'text-green-600' : 'text-red-600'}`}>
+                            {selectedSubordinate.referralCodeActive ? 'Active' : 'Inactive'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-sm font-medium text-gray-700">Total Donations</p>
+                        <p className="text-lg font-bold text-gray-900">{selectedSubordinate.totalDonations || 0}</p>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-sm font-medium text-gray-700">Total Amount</p>
+                        <p className="text-lg font-bold text-gray-900">₹{(selectedSubordinate.totalAmount || 0).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Recent Donations */}
+                {selectedSubordinate.recentDonations && selectedSubordinate.recentDonations.length > 0 && (
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-3">Recent Donations</h4>
+                    <div className="bg-gray-50 rounded-lg overflow-hidden">
+                      <table className="w-full">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Donor</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Amount</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {selectedSubordinate.recentDonations.map((donation) => (
+                            <tr key={donation.id}>
+                              <td className="px-4 py-2 text-sm text-gray-900">{donation.donorName}</td>
+                              <td className="px-4 py-2 text-sm font-semibold text-green-600">
+                                ₹{(donation.amount / 100).toLocaleString()}
+                              </td>
+                              <td className="px-4 py-2 text-sm text-gray-500">
+                                {new Date(donation.date).toLocaleDateString('en-IN', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Location Information */}
+                {(selectedSubordinate.state || selectedSubordinate.zone || selectedSubordinate.district || selectedSubordinate.block) && (
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-3">Location</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {selectedSubordinate.state && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">State</label>
+                          <p className="text-sm text-gray-900">{selectedSubordinate.state}</p>
+                        </div>
+                      )}
+                      {selectedSubordinate.zone && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Zone</label>
+                          <p className="text-sm text-gray-900">{selectedSubordinate.zone}</p>
+                        </div>
+                      )}
+                      {selectedSubordinate.district && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">District</label>
+                          <p className="text-sm text-gray-900">{selectedSubordinate.district}</p>
+                        </div>
+                      )}
+                      {selectedSubordinate.block && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Block</label>
+                          <p className="text-sm text-gray-900">{selectedSubordinate.block}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex space-x-3 pt-4 border-t">
+                  <button
+                    onClick={() => setShowDetailsModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Close
+                  </button>
+                  {selectedSubordinate.status === 'ACTIVE' && (
+                    <button
+                      onClick={() => {
+                        handleUpdateStatus(selectedSubordinate.id, 'INACTIVE')
+                        setShowDetailsModal(false)
+                      }}
+                      className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      Deactivate
+                    </button>
+                  )}
+                  {selectedSubordinate.status === 'INACTIVE' && (
+                    <button
+                      onClick={() => {
+                        handleUpdateStatus(selectedSubordinate.id, 'ACTIVE')
+                        setShowDetailsModal(false)
+                      }}
+                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Activate
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

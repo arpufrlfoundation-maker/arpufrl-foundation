@@ -24,6 +24,7 @@ declare module 'next-auth' {
     region?: string
     parentCoordinatorId?: string
     isDemoAccount?: boolean
+    profilePhoto?: string
   }
 
   interface Session {
@@ -36,6 +37,7 @@ declare module 'next-auth' {
       region?: string
       parentCoordinatorId?: string
       isDemoAccount?: boolean
+      profilePhoto?: string
     }
   }
 }
@@ -107,7 +109,8 @@ export const authConfig: NextAuthConfig = {
             status: user.status,
             region: user.region,
             parentCoordinatorId: user.parentCoordinatorId?.toString(),
-            isDemoAccount: false
+            isDemoAccount: false,
+            profilePhoto: user.profilePhoto
           }
         } catch (error) {
           console.error('Authentication error:', error)
@@ -139,6 +142,7 @@ export const authConfig: NextAuthConfig = {
         token.region = user.region
         token.parentCoordinatorId = user.parentCoordinatorId
         token.isDemoAccount = user.isDemoAccount
+        token.profilePhoto = user.profilePhoto
       }
 
       // Update session trigger (for profile updates)
@@ -150,6 +154,7 @@ export const authConfig: NextAuthConfig = {
         token.region = session.user.region
         token.parentCoordinatorId = session.user.parentCoordinatorId
         token.isDemoAccount = session.user.isDemoAccount
+        token.profilePhoto = session.user.profilePhoto
       }
 
       // Note: We don't verify user status in the database on every request
@@ -168,6 +173,7 @@ export const authConfig: NextAuthConfig = {
         session.user.region = token.region as string | undefined
         session.user.parentCoordinatorId = token.parentCoordinatorId as string | undefined
         session.user.isDemoAccount = token.isDemoAccount as boolean | undefined
+        session.user.profilePhoto = token.profilePhoto as string | undefined
       }
       return session
     },

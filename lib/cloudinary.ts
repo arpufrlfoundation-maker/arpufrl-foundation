@@ -40,6 +40,25 @@ export class CloudinaryService {
    * @returns Promise with upload result
    */
   static async uploadProfilePhoto(file: File): Promise<CloudinaryUploadResponse> {
+    return this.uploadImage(file, 'arpufrl/profiles')
+  }
+
+  /**
+   * Upload a program image to Cloudinary
+   * @param file - File object from input
+   * @returns Promise with upload result
+   */
+  static async uploadProgramImage(file: File): Promise<CloudinaryUploadResponse> {
+    return this.uploadImage(file, 'arpufrl/programs')
+  }
+
+  /**
+   * Generic image upload function
+   * @param file - File object from input
+   * @param folder - Cloudinary folder path
+   * @returns Promise with upload result
+   */
+  private static async uploadImage(file: File, folder: string): Promise<CloudinaryUploadResponse> {
     try {
       if (!this.isConfigured()) {
         console.error('Cloudinary Configuration Error:', this.getConfigError())
@@ -70,14 +89,14 @@ export class CloudinaryService {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('upload_preset', this.UPLOAD_PRESET)
-      formData.append('folder', 'arpufrl/profiles') // Organize in folders
+      formData.append('folder', folder) // Organize in folders
       // Note: transformation parameter is not allowed with unsigned uploads
       // Apply transformations on retrieval using getOptimizedUrl() instead
 
       console.log('Uploading to Cloudinary:', {
         cloudName: this.CLOUD_NAME,
         uploadPreset: this.UPLOAD_PRESET,
-        folder: 'arpufrl/profiles',
+        folder,
         fileType: file.type,
         fileSize: `${(file.size / 1024).toFixed(2)} KB`
       })

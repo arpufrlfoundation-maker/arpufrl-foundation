@@ -230,17 +230,22 @@ referralCodeSchema.pre('save', async function (next) {
       return next(new Error('Owner user not found'))
     }
 
-    if (owner.role === 'ADMIN' || owner.role === 'COORDINATOR') {
-      this.type = ReferralCodeType.COORDINATOR
-    } else if (owner.role === 'SUB_COORDINATOR') {
-      this.type = ReferralCodeType.SUB_COORDINATOR
+    // Determine referral code type based on user role
+    // Everyone can have referral codes now
+    const coordinatorRoles = [
+      'ADMIN',
+      'CENTRAL_PRESIDENT',
+      'STATE_PRESIDENT',
+      'STATE_COORDINATOR',
+      'ZONE_COORDINATOR',
+      'DISTRICT_PRESIDENT',
+      'DISTRICT_COORDINATOR'
+    ]
 
-      // Sub-coordinators must have a parent code
-      if (!this.parentCodeId) {
-        return next(new Error('Sub-coordinators must have a parent referral code'))
-      }
+    if (coordinatorRoles.includes(owner.role)) {
+      this.type = ReferralCodeType.COORDINATOR
     } else {
-      return next(new Error('Only coordinators and sub-coordinators can have referral codes'))
+      this.type = ReferralCodeType.SUB_COORDINATOR
     }
 
     // Set region from owner if not provided

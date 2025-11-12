@@ -44,10 +44,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new referral code
+    // Determine referral code type based on user role
+    const coordinatorRoles = [
+      UserRole.CENTRAL_PRESIDENT,
+      UserRole.STATE_PRESIDENT,
+      UserRole.STATE_COORDINATOR,
+      UserRole.ZONE_COORDINATOR,
+      UserRole.DISTRICT_PRESIDENT,
+      UserRole.DISTRICT_COORDINATOR
+    ] as const
+
+    const isCoordinator = coordinatorRoles.includes(user.role as any)
+
     const referralCode = new ReferralCode({
       code,
       ownerUserId: user._id,
-      type: user.role,
+      type: isCoordinator ? 'COORDINATOR' : 'SUB_COORDINATOR',
       region: user.region,
       active: true,
       parentCodeId: user.parentCoordinatorId

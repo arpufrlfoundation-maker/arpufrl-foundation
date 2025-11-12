@@ -64,7 +64,10 @@ export async function PATCH(
     if (status) updateData.status = status
     if (notes !== undefined) updateData.notes = notes
     if (status === SurveyStatus.REVIEWED) {
-      updateData.reviewedBy = session.user.id
+      // Only set reviewedBy if user ID is a valid ObjectId (not demo admin)
+      if (session.user.id && session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+        updateData.reviewedBy = session.user.id
+      }
       updateData.reviewedAt = new Date()
     }
 

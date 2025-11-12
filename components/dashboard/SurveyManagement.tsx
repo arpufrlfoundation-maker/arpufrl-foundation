@@ -63,11 +63,11 @@ interface SurveyStats {
 }
 
 const surveyTypeLabels: Record<string, string> = {
-  HOSPITAL: 'Hospital Survey',
-  SCHOOL: 'School Survey',
-  HEALTH_CAMP: 'Health Camp Feedback',
-  COMMUNITY_WELFARE: 'Community Welfare',
-  STAFF_VOLUNTEER: 'Staff & Volunteer'
+  HOSPITAL: '🏥 Hospital Survey / अस्पताल सर्वेक्षण',
+  SCHOOL: '🏫 School Survey / विद्यालय सर्वेक्षण',
+  HEALTH_CAMP: '⛑️ Health Camp Feedback / स्वास्थ्य शिविर प्रतिक्रिया',
+  COMMUNITY_WELFARE: '🤝 Community Welfare Report / सामुदायिक कल्याण रिपोर्ट',
+  STAFF_VOLUNTEER: '👥 Staff & Volunteer Feedback / कर्मचारी और स्वयंसेवक प्रतिक्रिया'
 }
 
 const surveyTypeIcons: Record<string, any> = {

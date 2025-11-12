@@ -344,8 +344,27 @@ export async function getTeamMembers(
     .limit(limit)
     .lean()
 
+  // Format members with donation details
+  const formattedMembers = members.map((member: any) => ({
+    id: member._id.toString(),
+    name: member.name,
+    email: member.email,
+    role: member.role,
+    status: member.status,
+    level: member.role,
+    region: member.region,
+    state: member.state,
+    zone: member.zone,
+    district: member.district,
+    block: member.block,
+    referralCode: member.referralCode,
+    totalDonations: member.totalDonationsReferred || 0,
+    totalAmount: member.totalAmountReferred || 0,
+    createdAt: member.createdAt
+  }))
+
   return {
-    members,
+    teamMembers: formattedMembers,
     pagination: {
       page,
       limit,
