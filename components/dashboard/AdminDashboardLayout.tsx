@@ -15,7 +15,8 @@ import {
   LogOut,
   User,
   Bell,
-  Target
+  Target,
+  ClipboardList
 } from 'lucide-react'
 
 interface AdminDashboardLayoutProps {
@@ -43,12 +44,6 @@ const navigation: NavItem[] = [
     description: 'Fund collection targets and hierarchy'
   },
   {
-    name: 'Approvals',
-    href: '/dashboard/admin/approvals',
-    icon: UserCheck,
-    description: 'Approve pending user registrations'
-  },
-  {
     name: 'Donations',
     href: '/dashboard/admin/donations',
     icon: DollarSign,
@@ -64,7 +59,13 @@ const navigation: NavItem[] = [
     name: 'Coordinators',
     href: '/dashboard/admin/coordinators',
     icon: UserCheck,
-    description: 'Coordinator management and hierarchy'
+    description: 'All users by hierarchy - complete team management'
+  },
+  {
+    name: 'Surveys',
+    href: '/dashboard/admin/surveys',
+    icon: ClipboardList,
+    description: 'Field survey data and reports'
   },
   {
     name: 'Programs',

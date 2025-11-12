@@ -116,8 +116,8 @@ export async function GET(request: NextRequest) {
         teamCollectedAmount: activeTarget.teamCollectedAmount,
         totalCollected: activeTarget.getTotalCollection(),
         remainingAmount,
-        completionPercentage: activeTarget.targetValue > 0 
-          ? Math.round((activeTarget.getTotalCollection() / activeTarget.targetValue) * 100) 
+        completionPercentage: activeTarget.targetValue > 0
+          ? Math.round((activeTarget.getTotalCollection() / activeTarget.targetValue) * 100)
           : 0,
         status: activeTarget.status,
         startDate: activeTarget.startDate,

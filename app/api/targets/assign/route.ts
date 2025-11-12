@@ -218,8 +218,8 @@ export async function GET(request: NextRequest) {
         teamCollectedAmount: target.teamCollectedAmount,
         totalCollected: target.collectedAmount + target.teamCollectedAmount,
         remainingAmount: Math.max(0, target.targetValue - (target.collectedAmount + target.teamCollectedAmount)),
-        completionPercentage: target.targetValue > 0 
-          ? Math.round(((target.collectedAmount + target.teamCollectedAmount) / target.targetValue) * 100) 
+        completionPercentage: target.targetValue > 0
+          ? Math.round(((target.collectedAmount + target.teamCollectedAmount) / target.targetValue) * 100)
           : 0,
         status: target.status,
         startDate: target.startDate,

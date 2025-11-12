@@ -29,23 +29,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || ''
     const region = searchParams.get('region') || ''
 
-    // Build filter query for coordinators only
-    const coordinatorRoles = [
-      UserRole.CENTRAL_PRESIDENT,
-      UserRole.STATE_PRESIDENT,
-      UserRole.STATE_COORDINATOR,
-      UserRole.ZONE_COORDINATOR,
-      UserRole.DISTRICT_PRESIDENT,
-      UserRole.DISTRICT_COORDINATOR,
-      UserRole.BLOCK_COORDINATOR,
-      UserRole.NODAL_OFFICER,
-      UserRole.PRERAK,
-      UserRole.PRERNA_SAKHI
-    ]
-
-    const filter: any = {
-      role: { $in: coordinatorRoles }
-    }
+    // Build filter query for ALL users (not just coordinators)
+    // This includes ADMIN, all coordinators, and VOLUNTEER roles
+    const filter: any = {}
 
     // Search filter
     if (search) {

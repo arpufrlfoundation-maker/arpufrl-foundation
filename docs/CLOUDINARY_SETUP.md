@@ -128,7 +128,7 @@ const optimizedUrl = CloudinaryService.getOptimizedUrl(uploadedUrl, 400)
 
 ## Image Transformations
 
-Profile images are uploaded at their original size to Cloudinary. 
+Profile images are uploaded at their original size to Cloudinary.
 
 **On-the-fly transformations** are applied when displaying images using the `CloudinaryService.getOptimizedUrl()` utility:
 - **Width**: Configurable (default 200px)

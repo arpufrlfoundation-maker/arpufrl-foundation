@@ -11,11 +11,7 @@ export async function generateReferralCode(
   region?: string
 ): Promise<string> {
   // Create base code from name and role
-  const namePrefix = name
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase())
-    .join('')
-    .substring(0, 3)
+  const namePrefix = name.split(' ').map(word => word.charAt(0).toUpperCase()).join('').substring(0, 3)
 
   const rolePrefix = getRolePrefix(role)
   const regionCode = region ? region.substring(0, 3).toUpperCase() : 'GEN'

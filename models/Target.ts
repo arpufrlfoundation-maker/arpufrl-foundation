@@ -458,7 +458,7 @@ targetSchema.statics.aggregateTeamCollection = async function (
   userId: mongoose.Types.ObjectId
 ): Promise<number> {
   const User = mongoose.model('User')
-  
+
   // Get team members (users who have this user as parent coordinator)
   const teamMembers = await User.find({ parentCoordinatorId: userId }).select('_id')
 

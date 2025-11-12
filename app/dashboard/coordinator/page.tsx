@@ -123,18 +123,10 @@ export default function CoordinatorDashboard() {
         )}
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Left Column - Overview Stats */}
-          <div className="xl:col-span-2">
+        <div className="grid grid-cols-1 gap-8">
+          {/* Overview Stats */}
+          <div>
             <CoordinatorOverview userId={session.user.id} />
-          </div>
-
-          {/* Right Column - Referral Code */}
-          <div className="xl:col-span-1">
-            <ReferralCodeCard
-              referralCode={referralCode}
-              loading={loading}
-            />
           </div>
         </div>
 

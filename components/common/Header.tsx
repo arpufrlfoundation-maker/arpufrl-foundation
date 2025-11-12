@@ -45,7 +45,7 @@ export default function Header() {
         return '/donate'
       case 'registration':
       case 'join us':
-        return '/register'
+        return '/login' // Redirect to login instead
       case 'team':
         return '/about#team'
       case 'legals':
@@ -156,6 +156,10 @@ export default function Header() {
               <AuthButtons />
             )}
 
+            <Button asChild variant="outline">
+              <Link href="/survey">📋 Survey</Link>
+            </Button>
+
             <Button asChild>
               <Link href="/donate">Donate Now</Link>
             </Button>
@@ -265,9 +269,6 @@ function AuthButtons() {
       >
         Login
       </Link>
-      <Button asChild variant="outline" size="sm">
-        <Link href="/register">Sign Up</Link>
-      </Button>
     </div>
   )
 }
@@ -408,15 +409,15 @@ function MobileMenu({ navigationItems, session, status, onClose, onSignOut, dash
               >
                 Login
               </Link>
-              <Button asChild className="w-full">
-                <Link href="/register" onClick={onClose}>
-                  Sign Up
-                </Link>
-              </Button>
             </div>
           )}
 
-          <div className="pt-3 mt-3 border-t border-gray-200">
+          <div className="pt-3 mt-3 border-t border-gray-200 space-y-2">
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/survey" onClick={onClose}>
+                📋 Fill Survey
+              </Link>
+            </Button>
             <Button asChild className="w-full">
               <Link href="/donate" onClick={onClose}>
                 Donate Now
@@ -449,7 +450,7 @@ function getDefaultLink(label: string): string {
       return '/donate'
     case 'registration':
     case 'join us':
-      return '/register'
+      return '/login' // Redirect to login instead
     case 'team':
       return '/about#team'
     case 'legals':

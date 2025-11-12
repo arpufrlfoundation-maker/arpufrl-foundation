@@ -51,7 +51,7 @@ const navigation: NavItem[] = [
     name: 'Sub-Coordinators',
     href: '/dashboard/coordinator/sub-coordinators',
     icon: Users,
-    description: 'Manage your sub-coordinators'
+    description: 'Manage your sub-coordinators and volunteers'
   },
   {
     name: 'Donations',

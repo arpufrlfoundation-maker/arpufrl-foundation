@@ -133,7 +133,9 @@ export const userValidationSchema = z.object({
 
   parentCoordinatorId: z.string()
     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId format')
-    .optional(),
+    .optional()
+    .or(z.literal(''))
+    .transform(val => val === '' ? undefined : val),
 
   // Referral code for tracking donations
   referralCode: z.string()

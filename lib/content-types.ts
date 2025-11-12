@@ -320,7 +320,7 @@ export const getFallbackContent = (): InfoJSON => ({
       U: "Upliftment"
     },
     buttons: [
-      { label: "Join Us", link: "/register" },
+      { label: "Join Us", link: "/login" },
       { label: "Donate", link: "/donate" }
     ],
   },

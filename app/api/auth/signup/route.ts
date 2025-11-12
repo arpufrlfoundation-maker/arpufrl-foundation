@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs'
 
 /**
  * New user signup endpoint with comprehensive validation
- * All new accounts default to status = PENDING
+ * All new accounts are created as ACTIVE (no approval needed)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -60,16 +60,54 @@ export async function POST(request: NextRequest) {
     if (referralCode) {
       const existingReferralCode = await User.findOne({ referralCode })
       if (existingReferralCode) {
-        return NextResponse.json(
-          { error: 'Referral code already exists. Please refresh the page to generate a new one.' },
-          { status: 409 }
-        )
+        // Generate a new unique referral code with additional randomness
+        const { generateReferralCode } = await import('@/lib/generateReferral')
+        let newCode = generateReferralCode(role || 'VOLUNTEER')
+        let attempts = 0
+
+        // Try up to 10 times to generate a unique code
+        while (attempts < 10) {
+          const codeExists = await User.findOne({ referralCode: newCode })
+          if (!codeExists) {
+            // Use the new unique code
+            body.referralCode = newCode
+            break
+          }
+          newCode = generateReferralCode(role || 'VOLUNTEER')
+          attempts++
+        }
+
+        if (attempts >= 10) {
+          return NextResponse.json(
+            { error: 'Unable to generate unique referral code. Please try again.' },
+            { status: 500 }
+          )
+        }
       }
     }
 
     // Validate parent coordinator if provided
     let parentCoordinatorId = null
-    if (parentId) {
+
+    // Auto-assign ADMIN as parent for STATE_PRESIDENT and STATE_COORDINATOR
+    if (role === UserRole.STATE_PRESIDENT || role === UserRole.STATE_COORDINATOR) {
+      const adminUser = await User.findOne({ role: UserRole.ADMIN })
+      if (!adminUser) {
+        return NextResponse.json(
+          { error: 'No admin user found in the system. Please contact support.' },
+          { status: 400 }
+        )
+      }
+      parentCoordinatorId = adminUser._id
+    } else if (parentId && parentId.trim() !== '') {
+      // Only validate parent if it's provided and not empty string
+      if (!mongoose.Types.ObjectId.isValid(parentId)) {
+        return NextResponse.json(
+          { error: 'Invalid parent coordinator ID format' },
+          { status: 400 }
+        )
+      }
+
       const parentCoordinator = await User.findById(parentId)
       if (!parentCoordinator) {
         return NextResponse.json(
@@ -84,28 +122,30 @@ export async function POST(request: NextRequest) {
     const saltRounds = 12
     const hashedPassword = await bcrypt.hash(password, saltRounds)
 
-    // Create new user with status = PENDING (default for all new signups)
-    const userData = {
+    // Create new user with status = ACTIVE (all users are active immediately)
+    const userData: any = {
       name,
-      fatherName: fatherName || null,
-      address: address || null,
-      district: district || null,
-      state: state || null,
       email: email.toLowerCase(),
       hashedPassword,
       phone,
       role: role || UserRole.VOLUNTEER,
-      status: role === UserRole.VOLUNTEER ? UserStatus.ACTIVE : UserStatus.PENDING, // Volunteers are active, others pending
-      region,
-      referralCode: referralCode || null,
-      uniqueId: uniqueId || null,
-      profilePhoto: profilePhoto || null,
+      status: UserStatus.ACTIVE, // All users are ACTIVE by default
       parentCoordinatorId,
-      fatherPhone: fatherPhone || null,
-      motherPhone: motherPhone || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     }
+
+    // Only add optional fields if they have values (not null/undefined)
+    if (fatherName) userData.fatherName = fatherName
+    if (address) userData.address = address
+    if (district) userData.district = district
+    if (state) userData.state = state
+    if (region) userData.region = region
+    if (referralCode) userData.referralCode = referralCode
+    if (uniqueId) userData.uniqueId = uniqueId
+    if (profilePhoto) userData.profilePhoto = profilePhoto
+    if (fatherPhone) userData.fatherPhone = fatherPhone
+    if (motherPhone) userData.motherPhone = motherPhone
 
     const user = new User(userData)
     await user.save()
@@ -126,7 +166,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: 'Signup successful! Please wait for approval from your superior.',
+        message: 'Signup successful! You can now login.',
         user: userResponse
       },
       { status: 201 }

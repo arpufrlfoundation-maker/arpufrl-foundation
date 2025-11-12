@@ -90,12 +90,12 @@ export class CloudinaryService {
       if (!response.ok) {
         const error = await response.json()
         console.error('Cloudinary upload error response:', error)
-        
+
         // Check for transformation error
         if (error.error && error.error.message && error.error.message.includes('Transformation parameter')) {
           throw new Error('Upload preset configuration error. Please ensure your Cloudinary upload preset does not have transformations enabled. Go to Settings > Upload > Upload presets and edit your preset to remove any transformation settings.')
         }
-        
+
         throw new Error(error.error?.message || error.message || 'Upload failed')
       }
 

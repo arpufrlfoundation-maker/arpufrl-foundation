@@ -44,18 +44,18 @@ const publicRoutes = [
   '/donate',
   '/stories',
   '/login',
-  '/register',
-  '/signup',
   '/api/auth',
   '/api/content',
   '/api/donations',
   '/api/programs',
   '/api/webhooks',
+  '/survey',
+  '/api/surveys', // Allow public survey submissions
 ]
 
 // Auth routes that should redirect if already authenticated
 // Note: These are also included in publicRoutes for unauthenticated access
-const authRoutes = ['/login', '/register', '/signup']
+const authRoutes = ['/login']
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

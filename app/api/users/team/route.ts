@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectToDatabase } from '@/lib/db'
-import { User } from '@/models/User'
+import { User, UserRole, UserStatus } from '@/models/User'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     await connectToDatabase()
 
-    // Get current user with populated team
+    // Get current user
     const user = await User.findById(session.user.id)
 
     if (!user) {
@@ -26,17 +26,27 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get team members (users who have this user as parent coordinator)
-    const teamMembers = await User.find({
-      parentCoordinatorId: session.user.id
-    }).select('name email role').lean()
+    // Get team members (subordinates in hierarchy - users who have this user as parent coordinator)
+    let teamMembers = await User.find({
+      parentCoordinatorId: session.user.id,
+      status: UserStatus.ACTIVE
+    }).select('name email role state district zone block').lean()
+
+    // If no team members found, fetch STATE_PRESIDENT users as fallback
+    if (teamMembers.length === 0) {
+      teamMembers = await User.find({
+        role: UserRole.STATE_PRESIDENT,
+        status: UserStatus.ACTIVE
+      }).select('name email role state district zone block').lean()
+    }
 
     return NextResponse.json({
       teamMembers: teamMembers.map(member => ({
         id: member._id.toString(),
         name: member.name,
         email: member.email,
-        role: member.role
+        role: member.role,
+        level: member.role // For backward compatibility
       }))
     })
   } catch (error: any) {

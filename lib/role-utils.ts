@@ -18,7 +18,7 @@ export const ALL_COORDINATOR_ROLES: readonly UserRoleType[] = [
 ] as const
 
 /**
- * Higher-level coordinator roles that can have sub-coordinators
+ * Higher-level coordinator roles that can have subordinates in the hierarchy
  */
 export const PARENT_COORDINATOR_ROLES: readonly UserRoleType[] = [
   UserRole.ADMIN,
@@ -41,9 +41,9 @@ export function isCoordinatorRole(role: string): boolean {
 }
 
 /**
- * Check if a role can have sub-coordinators
+ * Check if a role can have subordinates in the hierarchy
  */
-export function canHaveSubCoordinators(role: string): boolean {
+export function canHaveSubordinates(role: string): boolean {
   return PARENT_COORDINATOR_ROLES.includes(role as any)
 }
 

@@ -11,9 +11,12 @@ import {
   TrendingUp,
   Eye,
   RefreshCw,
-  Download
+  Download,
+  Sparkles,
+  Plus
 } from 'lucide-react'
 import StatsCard from './StatsCard'
+import confetti from 'canvas-confetti'
 
 interface ReferralStats {
   totalReferrals: number
@@ -53,6 +56,7 @@ export default function ReferralManagement() {
   const [error, setError] = useState<string | null>(null)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
     fetchReferralData()
@@ -103,6 +107,45 @@ export default function ReferralManagement() {
       setTimeout(() => setCopiedCode(null), 2000)
     } catch (err) {
       console.error('Failed to copy:', err)
+    }
+  }
+
+  const generateReferralCode = async () => {
+    try {
+      setGenerating(true)
+      setError(null)
+
+      const response = await fetch('/api/coordinators/referrals/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to generate referral code')
+      }
+
+      const data = await response.json()
+
+      // Add new code to the list
+      setReferralCodes(prev => [data.code, ...prev])
+
+      // Celebration effect!
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#3b82f6', '#f59e0b']
+      })
+
+      // Refresh stats
+      await fetchReferralData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate referral code')
+    } finally {
+      setGenerating(false)
     }
   }
 
@@ -181,13 +224,56 @@ export default function ReferralManagement() {
 
       {/* Referral Codes */}
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">Your Referral Codes</h2>
-          <p className="text-sm text-gray-600 mt-1">Share these codes to track donations</p>
+        <div className="p-6 border-b flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Your Referral Codes</h2>
+            <p className="text-sm text-gray-600 mt-1">Share these codes to track donations</p>
+          </div>
+          <button
+            onClick={generateReferralCode}
+            disabled={generating}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {generating ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                <Sparkles className="w-4 h-4" />
+                Generate Code
+              </>
+            )}
+          </button>
         </div>
         <div className="p-6">
           {referralCodes.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No referral codes found</p>
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Share2 className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 mb-4">No referral codes found</p>
+              <button
+                onClick={generateReferralCode}
+                disabled={generating}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-medium"
+              >
+                {generating ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-5 h-5" />
+                    <Sparkles className="w-5 h-5" />
+                    Generate Your First Referral Code
+                  </>
+                )}
+              </button>
+            </div>
           ) : (
             <div className="grid gap-4">
               {referralCodes.map((code) => (

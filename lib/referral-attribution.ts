@@ -67,7 +67,7 @@ export interface HierarchyPerformance {
   directAmount: number
   hierarchyDonations: number
   hierarchyAmount: number
-  subCoordinators: number
+  subordinatesCount: number
 }
 
 export class ReferralAttributionService {
@@ -427,20 +427,20 @@ export class ReferralAttributionService {
         }
       ])
 
-      // Get hierarchy donations (including sub-coordinators)
-      const subCoordinatorIds = await User.find({
+      // Get hierarchy donations (including subordinates)
+      const subordinateIds = await User.find({
         parentCoordinatorId: hierarchyUser._id
       }).distinct('_id')
 
-      const subReferralCodeIds = await ReferralCode.find({
-        ownerUserId: { $in: subCoordinatorIds }
+      const subordinateReferralCodeIds = await ReferralCode.find({
+        ownerUserId: { $in: subordinateIds }
       }).distinct('_id')
 
       const hierarchyStats = await Donation.aggregate([
         {
           $match: {
             ...dateFilter,
-            referralCodeId: { $in: [...subReferralCodeIds, referralCode._id] }
+            referralCodeId: { $in: [...subordinateReferralCodeIds, referralCode._id] }
           }
         },
         {
@@ -464,7 +464,7 @@ export class ReferralAttributionService {
         directAmount: direct.amount,
         hierarchyDonations: hierarchy.donations,
         hierarchyAmount: hierarchy.amount,
-        subCoordinators: subCoordinatorIds.length
+        subordinatesCount: subordinateIds.length
       })
     }
 

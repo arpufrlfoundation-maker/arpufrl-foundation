@@ -71,11 +71,23 @@ export default function ProgramManagement() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [creating, setCreating] = useState(false)
 
   const [filters, setFilters] = useState<ProgramFilters>({
     search: '',
     status: '',
     featured: ''
+  })
+
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    description: '',
+    longDescription: '',
+    targetAmount: '',
+    image: '',
+    active: true,
+    featured: false,
+    priority: '0'
   })
 
   const itemsPerPage = 20
@@ -217,6 +229,51 @@ export default function ProgramManagement() {
     } catch (error) {
       console.error('Error deleting program:', error)
       alert('Failed to delete program')
+    }
+  }
+
+  const handleCreateProgram = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCreating(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/admin/programs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...createForm,
+          targetAmount: createForm.targetAmount ? parseFloat(createForm.targetAmount) : undefined
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create program')
+      }
+
+      // Reset form and close modal
+      setCreateForm({
+        name: '',
+        description: '',
+        longDescription: '',
+        targetAmount: '',
+        image: '',
+        active: true,
+        featured: false,
+        priority: '0'
+      })
+      setShowCreateModal(false)
+
+      // Refresh the programs list
+      await fetchPrograms()
+      await fetchStats()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create program')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -763,49 +820,154 @@ export default function ProgramManagement() {
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setShowCreateModal(false)} />
 
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
             <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Create New Program</h3>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
                 >
                   ×
                 </button>
               </div>
 
-              <div className="mt-4">
-                <p className="text-sm text-gray-600 mb-4">
-                  To create a new program, please use the admin API or contact a system administrator.
-                </p>
-                <p className="text-sm text-gray-600 mb-4">
-                  Program creation requires:
-                </p>
-                <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 mb-6">
-                  <li>Program name (unique)</li>
-                  <li>Short description (10-500 characters)</li>
-                  <li>Long description (optional, 50-5000 characters)</li>
-                  <li>Target amount (optional)</li>
-                  <li>Images and gallery photos (optional)</li>
-                </ul>
-
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    Close
-                  </button>
-                  <a
-                    href="/api/admin/programs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    View API Documentation
-                  </a>
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">{error}</p>
                 </div>
-              </div>
+              )}
+
+              <form onSubmit={handleCreateProgram} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Program Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={createForm.name}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter program name"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Short Description *
+                    </label>
+                    <textarea
+                      required
+                      rows={2}
+                      value={createForm.description}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, description: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Brief description (10-500 characters)"
+                      minLength={10}
+                      maxLength={500}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Long Description
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={createForm.longDescription}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, longDescription: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Detailed description (optional, 50-5000 characters)"
+                      maxLength={5000}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Target Amount (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={createForm.targetAmount}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, targetAmount: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Optional target amount"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Priority
+                    </label>
+                    <input
+                      type="number"
+                      value={createForm.priority}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, priority: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Display priority (0 = highest)"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Program Image URL
+                    </label>
+                    <input
+                      type="url"
+                      value={createForm.image}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, image: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-6 md:col-span-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={createForm.active}
+                        onChange={(e) => setCreateForm(prev => ({ ...prev, active: e.target.checked }))}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Active</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={createForm.featured}
+                        onChange={(e) => setCreateForm(prev => ({ ...prev, featured: e.target.checked }))}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Featured</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    disabled={creating}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {creating ? 'Creating...' : 'Create Program'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

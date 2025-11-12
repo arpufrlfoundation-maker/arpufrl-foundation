@@ -17,36 +17,15 @@ export async function GET(request: NextRequest) {
 
     await connectToDatabase()
 
-    const coordinatorRoles = [
-      UserRole.CENTRAL_PRESIDENT,
-      UserRole.STATE_PRESIDENT,
-      UserRole.STATE_COORDINATOR,
-      UserRole.ZONE_COORDINATOR,
-      UserRole.DISTRICT_PRESIDENT,
-      UserRole.DISTRICT_COORDINATOR,
-      UserRole.BLOCK_COORDINATOR,
-      UserRole.NODAL_OFFICER,
-      UserRole.PRERAK,
-      UserRole.PRERNA_SAKHI
-    ]
-
-    // Get coordinator statistics
+    // Get statistics for ALL users (not just coordinators)
     const [
       totalCoordinators,
       activeCoordinators,
-      pendingCoordinators,
       donationStats
     ] = await Promise.all([
+      User.countDocuments({}), // All users
       User.countDocuments({
-        role: { $in: coordinatorRoles }
-      }),
-      User.countDocuments({
-        role: { $in: coordinatorRoles },
         status: UserStatus.ACTIVE
-      }),
-      User.countDocuments({
-        role: { $in: coordinatorRoles },
-        status: UserStatus.PENDING
       }),
       // Get donation attribution statistics
       Donation.aggregate([
@@ -80,9 +59,8 @@ export async function GET(request: NextRequest) {
     }
 
     const stats = {
-      totalCoordinators,
-      activeCoordinators,
-      pendingCoordinators,
+      totalCoordinators, // Total users count
+      activeCoordinators, // Active users count
       totalDonationsAttributed: attributionStats.totalDonationsAttributed,
       totalAmountAttributed: attributionStats.totalAmountAttributed
     }

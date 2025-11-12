@@ -1,6 +1,6 @@
 /**
- * Generate a referral code based on role
- * Format: ROLEPREFIX + 4 random digits
+ * Generate a unique referral code based on role
+ * Format: ROLEPREFIX + 4 random digits + timestamp suffix for uniqueness
  */
 export function generateReferralCode(role: string): string {
   // Map roles to prefixes
@@ -20,12 +20,14 @@ export function generateReferralCode(role: string): string {
 
   const prefix = rolePrefix[role] || role.slice(0, 3).toUpperCase()
   const random = Math.floor(1000 + Math.random() * 9000)
-  return `${prefix}${random}`
+  // Add timestamp-based suffix for additional uniqueness
+  const timestamp = Date.now().toString().slice(-3)
+  return `${prefix}${random}${timestamp}`
 }
 
 /**
  * Validate referral code format
  */
 export function isValidReferralCode(code: string): boolean {
-  return /^[A-Z]{2,3}\d{4}$/.test(code)
+  return /^[A-Z]{2,3}\d{7}$/.test(code)
 }

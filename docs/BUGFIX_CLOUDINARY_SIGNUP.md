@@ -97,7 +97,7 @@ if (isPublicRoute) {
 ## Files Modified
 
 ### `/lib/cloudinary.ts`
-- **Line 74**: Removed `formData.append('transformation', ...)` 
+- **Line 74**: Removed `formData.append('transformation', ...)`
 - **Added comment**: Explaining transformation should be applied via `getOptimizedUrl()`
 
 ### `/middleware.ts`
@@ -148,7 +148,7 @@ if (isPublicRoute) {
 // Profile photo - small (200x200)
 CloudinaryService.getOptimizedUrl(url, 200)
 
-// Profile photo - medium (400x400) 
+// Profile photo - medium (400x400)
 CloudinaryService.getOptimizedUrl(url, 400)
 
 // Custom transformations

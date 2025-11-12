@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { Eye, EyeOff } from 'lucide-react'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
+import { UserRole, RoleHierarchy, RoleDisplayNames, UserRoleType } from '@/models/User'
 
 interface SubCoordinator {
   id: string
@@ -10,6 +12,7 @@ interface SubCoordinator {
   email: string
   phone?: string
   region?: string
+  role: string
   status: 'ACTIVE' | 'INACTIVE' | 'PENDING'
   createdAt: string
   referralCode?: {
@@ -25,54 +28,78 @@ interface SubCoordinatorFormData {
   email: string
   phone: string
   region: string
+  role: string
   password: string
 }
 
 export default function SubCoordinatorManagement() {
   const { data: session } = useSession()
-  const [subCoordinators, setSubCoordinators] = useState<SubCoordinator[]>([])
+  const [subordinates, setSubordinates] = useState<SubCoordinator[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [availableRoles, setAvailableRoles] = useState<UserRoleType[]>([])
   const [formData, setFormData] = useState<SubCoordinatorFormData>({
     name: '',
     email: '',
     phone: '',
     region: '',
+    role: '',
     password: ''
   })
 
   useEffect(() => {
-    if (session?.user?.id) {
-      fetchSubCoordinators()
+    if (session?.user?.id && session?.user?.role) {
+      fetchSubordinates()
+      calculateAvailableRoles(session.user.role as UserRoleType)
     }
   }, [session])
 
-  const fetchSubCoordinators = async () => {
+  // Calculate which roles can be assigned based on current user's hierarchy level
+  const calculateAvailableRoles = (currentRole: UserRoleType) => {
+    const currentLevel = RoleHierarchy[currentRole]
+
+    // Get all roles that are one or more levels below current user
+    const subordinateRoles = Object.entries(RoleHierarchy)
+      .filter(([role, level]) => level > currentLevel && role !== 'ADMIN')
+      .map(([role]) => role as UserRoleType)
+      .sort((a, b) => RoleHierarchy[a] - RoleHierarchy[b])
+
+    setAvailableRoles(subordinateRoles)
+
+    // Set default role to immediate next level
+    if (subordinateRoles.length > 0) {
+      setFormData(prev => ({ ...prev, role: subordinateRoles[0] }))
+    }
+  }
+
+  const fetchSubordinates = async () => {
     if (!session?.user?.id) return
 
     try {
       setLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/coordinators?parentCoordinatorId=${session.user.id}`)
+      // Fetch subordinates using hierarchy system
+      const response = await fetch('/api/users/team')
 
       if (!response.ok) {
-        throw new Error('Failed to fetch sub-coordinators')
+        throw new Error('Failed to fetch team members')
       }
 
       const data = await response.json()
-      setSubCoordinators(data.coordinators || [])
+      setSubordinates(data.teamMembers || [])
     } catch (error) {
-      console.error('Error fetching sub-coordinators:', error)
-      setError(error instanceof Error ? error.message : 'Failed to load sub-coordinators')
+      console.error('Error fetching subordinates:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load team members')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleCreateSubCoordinator = async (e: React.FormEvent) => {
+  const handleCreateSubordinate = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!session?.user?.id) return
@@ -81,31 +108,33 @@ export default function SubCoordinatorManagement() {
       setCreating(true)
       setError(null)
 
-      const response = await fetch('/api/coordinators', {
+      const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ...formData,
-          role: 'SUB_COORDINATOR',
-          parentCoordinatorId: session.user.id
+          confirmPassword: formData.password,
+          parentId: session.user.id
         }),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create sub-coordinator')
+        throw new Error(errorData.error || 'Failed to add team member')
       }
 
       const newSubCoordinator = await response.json()
-      setSubCoordinators(prev => [newSubCoordinator, ...prev])
+      // Prepend locally so UI updates immediately. fetchSubordinates will keep data in sync when called elsewhere.
+      setSubordinates(prev => [newSubCoordinator, ...prev])
       setShowCreateForm(false)
       setFormData({
         name: '',
         email: '',
         phone: '',
         region: '',
+        role: '',
         password: ''
       })
     } catch (error) {
@@ -134,7 +163,7 @@ export default function SubCoordinatorManagement() {
       }
 
       const updatedSubCoordinator = await response.json()
-      setSubCoordinators(prev =>
+      setSubordinates(prev =>
         prev.map(sc => sc.id === subCoordinatorId ? { ...sc, status: updatedSubCoordinator.status } : sc)
       )
     } catch (error) {
@@ -172,9 +201,9 @@ export default function SubCoordinatorManagement() {
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Sub-Coordinator Management</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Sub-Coordinators and Volunteers</h3>
             <p className="text-sm text-gray-600 mt-1">
-              Manage your sub-coordinators and track their performance
+              Manage your sub-coordinators and volunteers in the hierarchy
             </p>
           </div>
           <button
@@ -202,7 +231,7 @@ export default function SubCoordinatorManagement() {
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <h4 className="text-lg font-semibold text-gray-900 mb-4">Add New Sub-Coordinator</h4>
 
-            <form onSubmit={handleCreateSubCoordinator} className="space-y-4">
+            <form onSubmit={handleCreateSubordinate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
@@ -260,20 +289,90 @@ export default function SubCoordinatorManagement() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role in Hierarchy
+                </label>
+                <select
+                  required
+                  value={formData.role}
+                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select role...</option>
+                  {availableRoles.map(role => (
+                    <option key={role} value={role}>
+                      {RoleDisplayNames[role]}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  You can only assign roles below your hierarchy level
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter password"
-                  minLength={8}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter password"
+                    minLength={8}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
                   Must be at least 8 characters with uppercase, lowercase, and number
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={formData.password}
+                    onChange={(e) => {
+                      // This validates password match on the fly
+                      if (formData.password !== e.target.value) {
+                        e.target.setCustomValidity('Passwords do not match')
+                      } else {
+                        e.target.setCustomValidity('')
+                      }
+                    }}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Confirm password"
+                    minLength={8}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="flex space-x-3 pt-4">
@@ -290,7 +389,7 @@ export default function SubCoordinatorManagement() {
                   disabled={creating}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
-                  {creating ? 'Creating...' : 'Create'}
+                  {creating ? 'Creating...' : 'Create Sub-Coordinator'}
                 </button>
               </div>
             </form>
@@ -298,27 +397,27 @@ export default function SubCoordinatorManagement() {
         </div>
       )}
 
-      {/* Sub-Coordinators List */}
+      {/* Team Members List */}
       <div className="p-6">
-        {subCoordinators.length === 0 ? (
+        {subordinates.length === 0 ? (
           <div className="text-center py-8">
             <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
               👥
             </div>
-            <h4 className="text-lg font-medium text-gray-900 mb-2">No Sub-Coordinators Yet</h4>
+            <h4 className="text-lg font-medium text-gray-900 mb-2">No Team Members Yet</h4>
             <p className="text-gray-600 mb-4">
-              Start building your team by adding sub-coordinators to help with fundraising activities.
+              Start building your team by adding members to help with fundraising activities.
             </p>
             <button
               onClick={() => setShowCreateForm(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Add Your First Sub-Coordinator
+              Add Your First Team Member
             </button>
           </div>
         ) : (
           <div className="space-y-4">
-            {subCoordinators.map((subCoordinator) => (
+            {subordinates.map((subCoordinator) => (
               <div
                 key={subCoordinator.id}
                 className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
