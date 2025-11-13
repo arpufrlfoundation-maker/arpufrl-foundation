@@ -53,6 +53,15 @@ export class CloudinaryService {
   }
 
   /**
+   * Upload a transaction proof/receipt to Cloudinary
+   * @param file - File object from input
+   * @returns Promise with upload result
+   */
+  static async uploadTransactionProof(file: File): Promise<CloudinaryUploadResponse> {
+    return this.uploadImage(file, 'arpufrl/transactions')
+  }
+
+  /**
    * Generic image upload function
    * @param file - File object from input
    * @param folder - Cloudinary folder path

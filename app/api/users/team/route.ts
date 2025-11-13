@@ -18,33 +18,56 @@ export async function GET(request: NextRequest) {
 
     await connectToDatabase()
 
-    // Get current user
-    const user = await User.findById(session.user.id)
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+    // Get current user - handle demo-admin case
+    let user = null
+    if (session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+      user = await User.findById(session.user.id)
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        )
+      }
+    } else {
+      // Demo admin
+      user = { role: UserRole.ADMIN, _id: session.user.id }
     }
 
-    // Get team members (subordinates in hierarchy - users who have this user as parent coordinator)
-    let teamMembers = await User.find({
-      parentCoordinatorId: session.user.id,
-      status: UserStatus.ACTIVE
-    }).select('name email role state district zone block totalDonationsReferred totalAmountReferred referralCode phone createdAt').lean()
+    // Get team members based on role
+    let teamMembers
 
-    // If no team members found, fetch STATE_PRESIDENT users as fallback
-    if (teamMembers.length === 0) {
+    if (user.role === UserRole.ADMIN) {
+      // Admin can see all coordinators
       teamMembers = await User.find({
-        role: UserRole.STATE_PRESIDENT,
+        status: UserStatus.ACTIVE,
+        role: { $ne: UserRole.ADMIN }  // Exclude other admins
+      }).select('name email role state district zone block region totalDonationsReferred totalAmountReferred referralCode phone createdAt').lean()
+    } else {
+      // Get team members (subordinates in hierarchy - users who have this user as parent coordinator)
+      teamMembers = await User.find({
+        parentCoordinatorId: session.user.id,
         status: UserStatus.ACTIVE
-      }).select('name email role state district zone block totalDonationsReferred totalAmountReferred referralCode phone createdAt').lean()
+      }).select('name email role state district zone block region totalDonationsReferred totalAmountReferred referralCode phone createdAt').lean()
+
+      // If no team members found, try to get users at the same level or below in hierarchy
+      if (teamMembers.length === 0) {
+        // Get all active users who might be assignable
+        teamMembers = await User.find({
+          status: UserStatus.ACTIVE,
+          role: { $in: [
+            UserRole.STATE_PRESIDENT,
+            UserRole.STATE_COORDINATOR,
+            UserRole.ZONE_COORDINATOR,
+            UserRole.DISTRICT_PRESIDENT,
+            UserRole.DISTRICT_COORDINATOR
+          ]}
+        }).select('name email role state district zone block region totalDonationsReferred totalAmountReferred referralCode phone createdAt').lean()
+      }
     }
 
     // Get referral codes and donation details for each member
     const memberIds = teamMembers.map(m => m._id)
-    
+
     // Fetch all referral codes for team members
     const referralCodes = await ReferralCode.find({
       ownerUserId: { $in: memberIds }
@@ -125,6 +148,7 @@ export async function GET(request: NextRequest) {
           phone: (member as any).phone,
           role: member.role,
           level: member.role, // For backward compatibility
+          region: (member as any).region,
           state: (member as any).state,
           district: (member as any).district,
           zone: (member as any).zone,

@@ -16,12 +16,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has permission (admin or coordinator)
-    const user = await User.findById(session.user.id)
-    if (!user || !['admin', 'coordinator'].includes(user.role)) {
-      return NextResponse.json(
-        { error: 'Only admins and coordinators can verify transactions' },
-        { status: 403 }
-      )
+    let user = null
+    if (session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+      user = await User.findById(session.user.id)
+      if (!user || ![UserRole.ADMIN, 'COORDINATOR'].includes(user.role)) {
+        return NextResponse.json(
+          { error: 'Only admins and coordinators can verify transactions' },
+          { status: 403 }
+        )
+      }
+    } else {
+      // Demo admin
+      user = { role: UserRole.ADMIN, _id: session.user.id }
     }
 
     const body = await request.json()
@@ -136,20 +142,32 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user has permission
-    const user = await User.findById(session.user.id).populate('team')
-    if (!user || !['admin', 'coordinator'].includes(user.role)) {
-      return NextResponse.json(
-        { error: 'Only admins and coordinators can view pending transactions' },
-        { status: 403 }
-      )
+    let user: any = null
+    if (session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+      user = await User.findById(session.user.id)
+      if (!user || ![UserRole.ADMIN, 'COORDINATOR'].includes(user.role)) {
+        return NextResponse.json(
+          { error: 'Only admins and coordinators can view pending transactions' },
+          { status: 403 }
+        )
+      }
+    } else {
+      // Demo admin
+      user = { role: UserRole.ADMIN, _id: session.user.id }
     }
 
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '50')
+    const statusFilter = searchParams.get('status')
 
     await connectToDatabase()
 
-    let query: any = { status: 'pending' }
+    let query: any = {}
+
+    // Add status filter if provided
+    if (statusFilter && ['pending', 'verified', 'rejected'].includes(statusFilter)) {
+      query.status = statusFilter
+    }
 
     // For coordinators, only show their team's transactions
     if (user.role !== UserRole.ADMIN) {
@@ -162,6 +180,7 @@ export async function GET(request: NextRequest) {
 
     const pendingTransactions = await Transaction.find(query)
       .populate('userId', 'name email role')
+      .populate('verifiedBy', 'name email')
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean()
@@ -179,13 +198,21 @@ export async function GET(request: NextRequest) {
         paymentMode: txn.paymentMode,
         transactionId: txn.transactionId,
         receiptNumber: txn.receiptNumber,
+        status: txn.status,
         donorName: txn.donorName,
         donorContact: txn.donorContact,
+        donorEmail: txn.donorEmail,
         purpose: txn.purpose,
         notes: txn.notes,
         attachments: txn.attachments,
         collectionDate: txn.collectionDate,
-        createdAt: txn.createdAt
+        createdAt: txn.createdAt,
+        verifiedBy: txn.verifiedBy ? {
+          name: (txn.verifiedBy as any)?.name,
+          email: (txn.verifiedBy as any)?.email
+        } : null,
+        verifiedAt: txn.verifiedAt,
+        rejectionReason: txn.rejectionReason
       })),
       count: pendingTransactions.length
     })

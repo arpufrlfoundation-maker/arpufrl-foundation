@@ -65,7 +65,7 @@ This guide will help you test the complete referral code and donation attributio
    # Connect to MongoDB
    mongosh
    use arpufrl
-   
+
    # Find the donation
    db.donations.find({ donorEmail: "testdonor@example.com" }).pretty()
    ```
@@ -312,7 +312,7 @@ curl http://localhost:3000/api/coordinators/referrals/donations?limit=10 \
 4. ReferralCode.updateStats() is called
 
 ### Issue: Stats not updating
-**Solution:** 
+**Solution:**
 1. Check MongoDB aggregation pipeline
 2. Verify totalDonations/totalAmount fields update
 3. Check date range filters for "this month" stats

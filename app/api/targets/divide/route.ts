@@ -20,9 +20,16 @@ export async function POST(request: NextRequest) {
 
     // divisions is an array of: { assignedToId, amount, level, region, description }
 
-    if (!parentTargetId || !divisions || !Array.isArray(divisions) || divisions.length === 0) {
+    if (!parentTargetId) {
       return NextResponse.json(
-        { error: 'Invalid request data' },
+        { error: 'Parent target ID is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!divisions || !Array.isArray(divisions) || divisions.length === 0) {
+      return NextResponse.json(
+        { error: 'At least one division is required. Divisions array cannot be empty.' },
         { status: 400 }
       )
     }
@@ -70,24 +77,33 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate all assignees exist and are team members (users who have this user as parent)
-    const user = await User.findById(session.user.id)
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+    let user: any = null
+    if (session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+      user = await User.findById(session.user.id)
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        )
+      }
+    } else {
+      // Demo admin - skip team validation
+      user = { _id: session.user.id }
     }
 
     // Get team members (users who have this user as parent coordinator)
-    const teamMembers = await User.find({ parentCoordinatorId: session.user.id }).select('_id')
-    const teamMemberIds = teamMembers.map(member => member._id.toString())
+    // Skip validation for demo admin
+    if (session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+      const teamMembers = await User.find({ parentCoordinatorId: session.user.id }).select('_id')
+      const teamMemberIds = teamMembers.map(member => member._id.toString())
 
-    for (const division of divisions) {
-      if (!teamMemberIds.includes(division.assignedToId)) {
-        return NextResponse.json(
-          { error: `User ${division.assignedToId} is not in your team` },
-          { status: 400 }
-        )
+      for (const division of divisions) {
+        if (!teamMemberIds.includes(division.assignedToId)) {
+          return NextResponse.json(
+            { error: `User ${division.assignedToId} is not in your team` },
+            { status: 400 }
+          )
+        }
       }
     }
 

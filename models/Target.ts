@@ -535,7 +535,7 @@ targetSchema.statics.getHierarchyStats = async function (
   const User = mongoose.model('User')
 
   // Get user and their active target
-  const user = await User.findById(userId).populate('team')
+  const user = await User.findById(userId)
   const target = await this.findOne({
     assignedTo: userId,
     type: TargetType.DONATION_AMOUNT,
@@ -551,12 +551,15 @@ targetSchema.statics.getHierarchyStats = async function (
     ? Math.min((totalCollection / target.targetValue) * 100, 100)
     : 0
 
-  // Get team breakdown
+  // Get team breakdown - find all users with this user as parent coordinator
   const teamBreakdown: any[] = []
   const topPerformers: any[] = []
+  
+  // Get subordinates (team members)
+  const teamMembers = await User.find({ parentCoordinatorId: userId })
 
-  if (user.team && user.team.length > 0) {
-    for (const member of user.team) {
+  if (teamMembers && teamMembers.length > 0) {
+    for (const member of teamMembers) {
       const memberTarget = await this.findOne({
         assignedTo: (member as any)._id,
         type: TargetType.DONATION_AMOUNT,

@@ -208,19 +208,19 @@ const handleUpdateStatus = async (surveyId: string, status: string, notes?: stri
 1. **View Details** (Eye icon) - Line 580
    - Opens modal with program details
    - Shows funding progress, description, donations
-   
+
 2. **Edit Program** (Edit icon) - Line 587
    - Opens edit modal with current data
    - Updates program information
-   
+
 3. **Toggle Status** (ToggleRight/ToggleLeft icon) - Line 591
    - Activates/Deactivates program
    - Calls PATCH `/api/admin/programs/${id}`
-   
+
 4. **Toggle Featured** (Star icon) - Line 598
    - Adds/removes from featured programs
    - Calls PATCH `/api/admin/programs/${id}`
-   
+
 5. **Delete Program** (Trash2 icon) - Line 605
    - Permanently deletes program
    - Shows confirmation dialog

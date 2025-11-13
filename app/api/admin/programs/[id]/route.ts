@@ -43,18 +43,18 @@ export async function PATCH(
     // Validate update fields
     const allowedUpdates = [
       'name', 'description', 'longDescription', 'image', 'gallery',
-      'targetAmount', 'active', 'featured', 'priority',
+      'targetAmount', 'raisedAmount', 'active', 'featured', 'priority',
       'metaTitle', 'metaDescription'
     ]
     const updates: any = {}
 
     for (const [key, value] of Object.entries(body)) {
       if (allowedUpdates.includes(key)) {
-        if (key === 'targetAmount' && value !== null && value !== undefined) {
+        if ((key === 'targetAmount' || key === 'raisedAmount') && value !== null && value !== undefined) {
           const amount = parseFloat(value as string)
           if (isNaN(amount) || amount < 0) {
             return NextResponse.json(
-              { error: 'Target amount must be a valid positive number' },
+              { error: `${key === 'targetAmount' ? 'Target' : 'Raised'} amount must be a valid positive number` },
               { status: 400 }
             )
           }

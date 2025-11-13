@@ -23,9 +23,14 @@ export async function GET(request: NextRequest) {
 
     await connectToDatabase()
 
-    // Get current user
-    const user = await User.findById(session.user.id)
-    if (!user) {
+    // Get current user - handle demo-admin case
+    let user = null
+    if (session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+      user = await User.findById(session.user.id)
+    }
+
+    // For demo admin or if user not found, skip user validation
+    if (!user && !session.user.id.includes('demo')) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -38,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query based on scope
-    if (scope === 'team') {
+    if (scope === 'team' && user) {
       // Get user's team members (users who have this user as parent coordinator)
       const teamMembers = await User.find({ parentCoordinatorId: session.user.id }).select('_id')
       const teamMemberIds = teamMembers.map(member => member._id)
@@ -48,7 +53,7 @@ export async function GET(request: NextRequest) {
       // Get by region
       query[`region.${regionType}`] = regionValue
     }
-    // For 'national', no additional filter needed
+    // For 'national' or admin users, no additional filter needed - show all
 
     // Get all targets matching criteria
     const targets = await Target.find(query)

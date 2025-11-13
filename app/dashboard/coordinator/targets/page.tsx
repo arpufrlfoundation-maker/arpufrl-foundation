@@ -12,6 +12,29 @@ export default function CoordinatorTargetsPage() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [parentTargetId, setParentTargetId] = useState<string | undefined>()
   const [parentTargetAmount, setParentTargetAmount] = useState<number | undefined>()
+  const [loadingTarget, setLoadingTarget] = useState(false)
+
+  useEffect(() => {
+    fetchActiveTarget()
+  }, [refreshKey])
+
+  const fetchActiveTarget = async () => {
+    try {
+      setLoadingTarget(true)
+      const response = await fetch('/api/targets?status=IN_PROGRESS')
+      const data = await response.json()
+
+      if (response.ok && data.targets && data.targets.length > 0) {
+        const activeTarget = data.targets[0]
+        setParentTargetId(activeTarget._id || activeTarget.id)
+        setParentTargetAmount(activeTarget.targetValue)
+      }
+    } catch (error) {
+      console.error('Error fetching active target:', error)
+    } finally {
+      setLoadingTarget(false)
+    }
+  }
 
   const handleSuccess = () => {
     setRefreshKey(prev => prev + 1)
@@ -84,12 +107,24 @@ export default function CoordinatorTargetsPage() {
 
         {activeTab === 'divide' && (
           <div className="bg-white rounded-lg shadow p-6">
-            <TargetAssignment
-              mode="divide"
-              parentTargetId={parentTargetId}
-              parentTargetAmount={parentTargetAmount}
-              onSuccess={handleSuccess}
-            />
+            {loadingTarget ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+              </div>
+            ) : !parentTargetId ? (
+              <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                <Target className="w-16 h-16 mb-4 text-gray-400" />
+                <p className="text-lg font-medium">No Active Target</p>
+                <p className="text-sm">You need an active target to divide it among your team</p>
+              </div>
+            ) : (
+              <TargetAssignment
+                mode="divide"
+                parentTargetId={parentTargetId}
+                parentTargetAmount={parentTargetAmount}
+                onSuccess={handleSuccess}
+              />
+            )}
           </div>
         )}
 
@@ -165,23 +200,23 @@ function HierarchyRanking() {
             <div
               key={entry.userId}
               className={`flex items-center justify-between p-4 rounded-lg ${entry.isCurrentUser
-                  ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300'
-                  : index < 3
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200'
-                    : 'bg-gray-50'
+                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300'
+                : index < 3
+                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200'
+                  : 'bg-gray-50'
                 }`}
             >
               <div className="flex items-center space-x-4">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${entry.isCurrentUser
-                      ? 'bg-blue-500 text-white'
-                      : index === 0
-                        ? 'bg-yellow-400 text-yellow-900'
-                        : index === 1
-                          ? 'bg-gray-300 text-gray-700'
-                          : index === 2
-                            ? 'bg-orange-300 text-orange-900'
-                            : 'bg-gray-200 text-gray-600'
+                    ? 'bg-blue-500 text-white'
+                    : index === 0
+                      ? 'bg-yellow-400 text-yellow-900'
+                      : index === 1
+                        ? 'bg-gray-300 text-gray-700'
+                        : index === 2
+                          ? 'bg-orange-300 text-orange-900'
+                          : 'bg-gray-200 text-gray-600'
                     }`}
                 >
                   #{entry.rank}

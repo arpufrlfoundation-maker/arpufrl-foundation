@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { DollarSign, Upload, AlertCircle, CheckCircle, Calendar, User, CreditCard } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { DollarSign, Upload, AlertCircle, CheckCircle, Calendar, User, CreditCard, Clock, XCircle, Image as ImageIcon, X } from 'lucide-react'
+import { CloudinaryService } from '@/lib/cloudinary'
 
 interface TransactionRecordingProps {
   onSuccess?: () => void
@@ -20,6 +21,10 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([])
+  const [showHistory, setShowHistory] = useState(false)
+  const [uploadingProof, setUploadingProof] = useState(false)
+  const [proofImages, setProofImages] = useState<string[]>([])
 
   // Form fields
   const [amount, setAmount] = useState('')
@@ -32,6 +37,22 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
   const [purpose, setPurpose] = useState('')
   const [notes, setNotes] = useState('')
   const [collectionDate, setCollectionDate] = useState(new Date().toISOString().split('T')[0])
+
+  useEffect(() => {
+    fetchRecentTransactions()
+  }, [])
+
+  const fetchRecentTransactions = async () => {
+    try {
+      const response = await fetch('/api/transactions/create?limit=10')
+      const data = await response.json()
+      if (response.ok) {
+        setRecentTransactions(data.transactions || [])
+      }
+    } catch (error) {
+      console.error('Error fetching transactions:', error)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,7 +74,8 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
           donorEmail: donorEmail || undefined,
           purpose: purpose || undefined,
           notes: notes || undefined,
-          collectionDate
+          collectionDate,
+          attachments: proofImages
         })
       })
 
@@ -75,6 +97,9 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
       setPurpose('')
       setNotes('')
       setCollectionDate(new Date().toISOString().split('T')[0])
+      setProofImages([])
+
+      fetchRecentTransactions()
 
       setTimeout(() => {
         if (onSuccess) onSuccess()
@@ -86,8 +111,117 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
     }
   }
 
+  const handleProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploadingProof(true)
+    setError(null)
+
+    try {
+      const uploadPromises = Array.from(files).map(file =>
+        CloudinaryService.uploadTransactionProof(file)
+      )
+
+      const results = await Promise.all(uploadPromises)
+
+      const newUrls: string[] = []
+      for (const result of results) {
+        if (result.success && result.url) {
+          newUrls.push(result.url)
+        } else {
+          throw new Error(result.error || 'Failed to upload proof')
+        }
+      }
+
+      setProofImages(prev => [...prev, ...newUrls])
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload proof images')
+    } finally {
+      setUploadingProof(false)
+    }
+  }
+
+  const removeProofImage = (index: number) => {
+    setProofImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    })
+  }
+
+  const getStatusBadge = (status: string) => {
+    const styles = {
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: Clock },
+      verified: { bg: 'bg-green-100', text: 'text-green-800', icon: CheckCircle },
+      rejected: { bg: 'bg-red-100', text: 'text-red-800', icon: XCircle }
+    }
+    const style = styles[status as keyof typeof styles]
+    const Icon = style.icon
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
+        <Icon className="w-3 h-3 mr-1" />
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    )
+  }
+
   return (
     <div className="space-y-6">
+      {/* Toggle Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          {showHistory ? 'Hide History' : 'View Transaction History'}
+        </button>
+      </div>
+
+      {/* Recent Transactions */}
+      {showHistory && recentTransactions.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Transactions</h3>
+          <div className="space-y-3">
+            {recentTransactions.map((txn) => (
+              <div key={txn.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-lg text-gray-900">{formatCurrency(txn.amount)}</span>
+                    {getStatusBadge(txn.status)}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <span className="capitalize">{txn.paymentMode.replace('_', ' ')}</span>
+                    {txn.receiptNumber && <span> • Receipt: {txn.receiptNumber}</span>}
+                  </div>
+                  {txn.donorName && (
+                    <div className="text-sm text-gray-500 mt-1">Donor: {txn.donorName}</div>
+                  )}
+                  {txn.rejectionReason && (
+                    <div className="text-sm text-red-600 mt-1">Reason: {txn.rejectionReason}</div>
+                  )}
+                </div>
+                <div className="text-right text-sm text-gray-500">
+                  {formatDate(txn.collectionDate)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -158,8 +292,8 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
                     type="button"
                     onClick={() => setPaymentMode(mode.value)}
                     className={`p-3 rounded-lg border-2 transition-all ${paymentMode === mode.value
-                        ? 'border-green-500 bg-green-50 text-green-900'
-                        : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                      ? 'border-green-500 bg-green-50 text-green-900'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
                       }`}
                   >
                     <span className="text-2xl mb-1 block">{mode.icon}</span>
@@ -283,6 +417,56 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
                 maxLength={1000}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               />
+            </div>
+
+            {/* Image Upload for Proof */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Proof / Receipt (Optional)
+              </label>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    onChange={handleProofUpload}
+                    disabled={uploadingProof}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:opacity-50"
+                  />
+                  {uploadingProof && (
+                    <div className="flex items-center text-sm text-purple-600">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600 mr-2"></div>
+                      Uploading...
+                    </div>
+                  )}
+                </div>
+
+                {proofImages.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {proofImages.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={url}
+                          alt={`Proof ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg border-2 border-purple-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeProofImage(index)}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-500">
+                  Upload screenshots, photos of receipts, or payment confirmations (JPG, PNG, WebP)
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -60,12 +60,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has permission to assign to this person
-    const assigner = await User.findById(session.user.id)
-    if (!assigner) {
-      return NextResponse.json(
-        { error: 'Assigner not found' },
-        { status: 404 }
-      )
+    let assigner = null
+    if (session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+      assigner = await User.findById(session.user.id)
+      if (!assigner) {
+        return NextResponse.json(
+          { error: 'Assigner not found' },
+          { status: 404 }
+        )
+      }
+    } else {
+      // Demo admin - allow all operations
+      assigner = { role: UserRole.ADMIN, _id: session.user.id }
     }
 
     // Admin can assign to anyone, coordinators can only assign to their team
@@ -102,9 +108,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the target
+    // For demo-admin, use null or a valid ObjectId
+    const assignedById = session.user.id.match(/^[0-9a-fA-F]{24}$/)
+      ? session.user.id
+      : assignedToId // Use assignee's ID for demo admin
+
     const newTarget = await Target.create({
       assignedTo: assignedToId,
-      assignedBy: session.user.id,
+      assignedBy: assignedById,
       type: TargetType.DONATION_AMOUNT,
       targetValue: targetAmount,
       currentValue: 0,

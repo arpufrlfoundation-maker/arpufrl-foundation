@@ -9,7 +9,7 @@
 Error updating survey: CastError: Cast to ObjectId failed for value "demo-admin"
 ```
 
-**Root Cause:** 
+**Root Cause:**
 Demo admin has ID "demo-admin" (string) but MongoDB's `reviewedBy` field expects a valid 24-character ObjectId.
 
 **Solution:**
@@ -127,7 +127,7 @@ import { Donation } from '@/models/Donation'
 
 ### 3. ✅ Admin Coordinators - Referral Code Display
 
-**Status:** 
+**Status:**
 The referral code fetching was already correctly implemented in the backend.
 
 **API Response Shows:**
@@ -364,7 +364,7 @@ npm run build
 ### Backend APIs
 1. `/app/api/surveys/[id]/route.ts`
    - Added ObjectId validation for demo admin
-   
+
 2. `/app/api/users/team/route.ts`
    - Added ReferralCode and Donation imports
    - Enhanced user data selection

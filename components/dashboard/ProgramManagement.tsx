@@ -93,6 +93,18 @@ export default function ProgramManagement() {
     priority: '0'
   })
 
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    longDescription: '',
+    targetAmount: '',
+    raisedAmount: '',
+    image: '',
+    active: true,
+    featured: false,
+    priority: '0'
+  })
+
   const itemsPerPage = 20
 
   useEffect(() => {
@@ -245,7 +257,9 @@ export default function ProgramManagement() {
     try {
       const result = await CloudinaryService.uploadProgramImage(file)
       if (result.success && result.url) {
+        // Update both forms - only one will be visible at a time
         setCreateForm(prev => ({ ...prev, image: result.url || '' }))
+        setEditForm(prev => ({ ...prev, image: result.url || '' }))
       } else {
         setError(result.error || 'Failed to upload image')
       }
@@ -301,6 +315,58 @@ export default function ProgramManagement() {
     }
   }
 
+  const handleUpdateProgram = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedProgram) return
+
+    setCreating(true)
+    setError(null)
+
+    try {
+      const targetAmount = editForm.targetAmount ? parseFloat(editForm.targetAmount) : undefined
+      const raisedAmount = editForm.raisedAmount ? parseFloat(editForm.raisedAmount) : 0
+
+      // Validate raised amount doesn't exceed target
+      if (targetAmount && raisedAmount > targetAmount) {
+        throw new Error('Raised amount cannot exceed target amount')
+      }
+
+      const response = await fetch(`/api/admin/programs/${selectedProgram.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editForm.name,
+          description: editForm.description,
+          longDescription: editForm.longDescription || undefined,
+          targetAmount,
+          raisedAmount,
+          image: editForm.image || undefined,
+          active: editForm.active,
+          featured: editForm.featured,
+          priority: parseInt(editForm.priority)
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update program')
+      }
+
+      setShowEditModal(false)
+      setSelectedProgram(null)
+
+      // Refresh the programs list
+      await fetchPrograms()
+      await fetchStats()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update program')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -341,6 +407,17 @@ export default function ProgramManagement() {
 
   const editProgram = (program: Program) => {
     setSelectedProgram(program)
+    setEditForm({
+      name: program.name,
+      description: program.description,
+      longDescription: program.longDescription || '',
+      targetAmount: program.targetAmount?.toString() || '',
+      raisedAmount: program.raisedAmount?.toString() || '0',
+      image: program.image || '',
+      active: program.active,
+      featured: program.featured,
+      priority: program.priority?.toString() || '0'
+    })
     setShowEditModal(true)
   }
 
@@ -833,6 +910,228 @@ export default function ProgramManagement() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Program Modal */}
+      {showEditModal && selectedProgram && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ zIndex: 9999 }}>
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              onClick={() => setShowEditModal(false)}
+              style={{ zIndex: 9998 }}
+            />
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg relative" style={{ zIndex: 9999 }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Edit Program: {selectedProgram.name}</h3>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleUpdateProgram} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Program Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter program name"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Short Description *
+                    </label>
+                    <textarea
+                      required
+                      rows={2}
+                      value={editForm.description}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Brief description (10-500 characters)"
+                      minLength={10}
+                      maxLength={500}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Long Description
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={editForm.longDescription}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, longDescription: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Detailed description (optional, 50-5000 characters)"
+                      maxLength={5000}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Target Amount (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={editForm.targetAmount}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, targetAmount: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Optional target amount"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Raised Amount (₹) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={editForm.raisedAmount}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, raisedAmount: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Amount raised manually"
+                      min="0"
+                      step="1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Admin can manually set/adjust raised amount
+                    </p>
+                  </div>
+
+                  {editForm.targetAmount && editForm.raisedAmount && (
+                    <div className="md:col-span-2 p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm font-medium text-gray-700">Progress Preview</p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <p className="text-lg font-bold text-blue-600">
+                          {((parseFloat(editForm.raisedAmount) / parseFloat(editForm.targetAmount)) * 100).toFixed(1)}%
+                        </p>
+                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all"
+                            style={{
+                              width: `${Math.min((parseFloat(editForm.raisedAmount) / parseFloat(editForm.targetAmount)) * 100, 100)}%`
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Priority
+                    </label>
+                    <input
+                      type="number"
+                      value={editForm.priority}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, priority: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Display priority (0 = highest)"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Program Image
+                    </label>
+                    <div className="space-y-2">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      {uploadingImage && (
+                        <div className="flex items-center text-sm text-blue-600">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Uploading image...
+                        </div>
+                      )}
+                      {editForm.image && !uploadingImage && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-500 mb-1">Current Image:</p>
+                          <img
+                            src={editForm.image}
+                            alt="Program preview"
+                            className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-6 md:col-span-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={editForm.active}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, active: e.target.checked }))}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Active</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={editForm.featured}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, featured: e.target.checked }))}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Featured</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    disabled={creating}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {creating ? 'Updating...' : 'Update Program'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

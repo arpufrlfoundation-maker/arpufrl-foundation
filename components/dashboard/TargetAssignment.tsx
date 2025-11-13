@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Target, Users, Calendar, DollarSign, X, Plus, AlertCircle, CheckCircle } from 'lucide-react'
+import { Target, Users, Calendar, DollarSign, X, Plus, AlertCircle, CheckCircle, Filter, Search } from 'lucide-react'
 
 interface TeamMember {
   id: string
@@ -9,6 +9,9 @@ interface TeamMember {
   email: string
   role: string
   level?: string
+  region?: string
+  state?: string
+  district?: string
 }
 
 interface Division {
@@ -38,11 +41,23 @@ const hierarchyLevels = [
   { value: 'volunteer', label: 'Volunteer' }
 ]
 
+// Priority roles for target assignment
+const PRIORITY_ROLES = [
+  'STATE_PRESIDENT',
+  'STATE_COORDINATOR',
+  'ZONE_COORDINATOR'
+]
+
 export default function TargetAssignment({ mode, parentTargetId, parentTargetAmount, onSuccess }: TargetAssignmentProps) {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [filteredMembers, setFilteredMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  // Filter states
+  const [roleFilter, setRoleFilter] = useState<'all' | 'priority'>('priority')
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Single Assignment Form
   const [assignTo, setAssignTo] = useState('')
@@ -67,6 +82,28 @@ export default function TargetAssignment({ mode, parentTargetId, parentTargetAmo
     setStartDate(today.toISOString().split('T')[0])
     setEndDate(nextMonth.toISOString().split('T')[0])
   }, [])
+
+  useEffect(() => {
+    // Filter team members based on role and search
+    let filtered = teamMembers
+
+    if (roleFilter === 'priority') {
+      filtered = filtered.filter(member => PRIORITY_ROLES.includes(member.role))
+    }
+
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase()
+      filtered = filtered.filter(member =>
+        member.name.toLowerCase().includes(search) ||
+        member.email.toLowerCase().includes(search) ||
+        member.role.toLowerCase().includes(search) ||
+        member.region?.toLowerCase().includes(search) ||
+        member.state?.toLowerCase().includes(search)
+      )
+    }
+
+    setFilteredMembers(filtered)
+  }, [teamMembers, roleFilter, searchTerm])
 
   const fetchTeamMembers = async () => {
     try {
@@ -207,6 +244,23 @@ export default function TargetAssignment({ mode, parentTargetId, parentTargetAmo
   const totalDivided = divisions.reduce((sum, div) => sum + div.amount, 0)
   const remaining = parentTargetAmount ? parentTargetAmount - totalDivided : 0
 
+  // Get role display name
+  const getRoleDisplayName = (role: string) => {
+    const roleNames: Record<string, string> = {
+      'STATE_PRESIDENT': 'State President',
+      'STATE_COORDINATOR': 'State Coordinator',
+      'ZONE_COORDINATOR': 'Zone Coordinator',
+      'DISTRICT_PRESIDENT': 'District President',
+      'DISTRICT_COORDINATOR': 'District Coordinator',
+      'BLOCK_COORDINATOR': 'Block Coordinator',
+      'NODAL_OFFICER': 'Nodal Officer',
+      'PRERAK': 'Prerak',
+      'PRERNA_SAKHI': 'Prerna Sakhi',
+      'VOLUNTEER': 'Volunteer'
+    }
+    return roleNames[role] || role
+  }
+
   return (
     <div className="space-y-6">
       {error && (
@@ -238,6 +292,64 @@ export default function TargetAssignment({ mode, parentTargetId, parentTargetAmo
               Assign New Target
             </h3>
 
+            {/* Filter Controls */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Filter className="w-4 h-4 inline mr-1" />
+                    Filter by Role
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRoleFilter('priority')}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${roleFilter === 'priority'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                    >
+                      Priority Roles
+                      <span className="ml-2 text-xs">
+                        ({teamMembers.filter(m => PRIORITY_ROLES.includes(m.role)).length})
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRoleFilter('all')}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${roleFilter === 'all'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                    >
+                      All Members
+                      <span className="ml-2 text-xs">({teamMembers.length})</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Search className="w-4 h-4 inline mr-1" />
+                    Search
+                  </label>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search by name, email, role, region..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {roleFilter === 'priority' && (
+                <div className="mt-3 text-xs text-blue-700 bg-blue-100 px-3 py-2 rounded">
+                  <strong>Priority Roles:</strong> State President, State Coordinator, Zone Coordinator
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -249,13 +361,20 @@ export default function TargetAssignment({ mode, parentTargetId, parentTargetAmo
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">Select team member</option>
-                  {teamMembers.map(member => (
+                  <option value="">Select team member ({filteredMembers.length} available)</option>
+                  {filteredMembers.map(member => (
                     <option key={member.id} value={member.id}>
-                      {member.name} - {member.email}
+                      {member.name} • {getRoleDisplayName(member.role)}
+                      {member.region && ` • ${member.region}`}
+                      {member.state && ` • ${member.state}`}
                     </option>
                   ))}
                 </select>
+                {filteredMembers.length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    No members found. Try adjusting filters.
+                  </p>
+                )}
               </div>
 
               <div>
@@ -393,9 +512,10 @@ export default function TargetAssignment({ mode, parentTargetId, parentTargetAmo
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 >
                   <option value="">Select team member</option>
-                  {teamMembers.filter(m => !divisions.some(d => d.assignedToId === m.id)).map(member => (
+                  {filteredMembers.filter(m => !divisions.some(d => d.assignedToId === m.id)).map(member => (
                     <option key={member.id} value={member.id}>
-                      {member.name} - {member.email}
+                      {member.name} • {getRoleDisplayName(member.role)}
+                      {member.region && ` • ${member.region}`}
                     </option>
                   ))}
                 </select>

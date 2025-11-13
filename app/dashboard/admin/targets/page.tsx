@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminDashboardLayout from '@/components/dashboard/AdminDashboardLayout'
 import TargetDashboard from '@/components/dashboard/TargetDashboard'
 import TargetAssignment from '@/components/dashboard/TargetAssignment'
@@ -34,8 +34,8 @@ export default function AdminTargetsPage() {
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`flex items-center px-6 py-3 font-medium transition-colors ${activeTab === 'dashboard'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               <Target className="w-5 h-5 mr-2" />
@@ -44,8 +44,8 @@ export default function AdminTargetsPage() {
             <button
               onClick={() => setActiveTab('assign')}
               className={`flex items-center px-6 py-3 font-medium transition-colors ${activeTab === 'assign'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -54,8 +54,8 @@ export default function AdminTargetsPage() {
             <button
               onClick={() => setActiveTab('leaderboard')}
               className={`flex items-center px-6 py-3 font-medium transition-colors ${activeTab === 'leaderboard'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               <BarChart className="w-5 h-5 mr-2" />
@@ -89,15 +89,12 @@ function LeaderboardView() {
   const [leaderboard, setLeaderboard] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [scope, setScope] = useState('national')
-
-  useState(() => {
-    fetchLeaderboard()
-  })
+  const [levelFilter, setLevelFilter] = useState<string>('all')
 
   const fetchLeaderboard = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/targets/leaderboard?scope=${scope}&limit=20`)
+      const response = await fetch(`/api/targets/leaderboard?scope=${scope}&limit=100`)
       const data = await response.json()
 
       if (response.ok) {
@@ -109,6 +106,18 @@ function LeaderboardView() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchLeaderboard()
+  }, [scope])
+
+  // Filter by level
+  const filteredLeaderboard = levelFilter === 'all'
+    ? leaderboard
+    : leaderboard.filter(entry => entry.level === levelFilter)
+
+  // Get unique levels for filter
+  const availableLevels = [...new Set(leaderboard.map(entry => entry.level))].sort()
 
   if (loading) {
     return (
@@ -125,24 +134,36 @@ function LeaderboardView() {
           <Users className="w-6 h-6 mr-2 text-blue-600" />
           Performance Leaderboard
         </h2>
-        <select
-          value={scope}
-          onChange={(e) => {
-            setScope(e.target.value)
-            fetchLeaderboard()
-          }}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="national">National</option>
-          <option value="team">My Team</option>
-        </select>
+        <div className="flex gap-3">
+          <select
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Levels</option>
+            {availableLevels.map(level => (
+              <option key={level} value={level} className="capitalize">{level}</option>
+            ))}
+          </select>
+          <select
+            value={scope}
+            onChange={(e) => {
+              setScope(e.target.value)
+              fetchLeaderboard()
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="national">National</option>
+            <option value="team">My Team</option>
+          </select>
+        </div>
       </div>
 
-      {leaderboard.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">No leaderboard data available yet</p>
+      {filteredLeaderboard.length === 0 ? (
+        <p className="text-center text-gray-500 py-8">No data available for selected filters</p>
       ) : (
         <div className="space-y-3">
-          {leaderboard.map((entry, index) => (
+          {filteredLeaderboard.map((entry, index) => (
             <div
               key={entry.userId}
               className={`flex items-center justify-between p-4 rounded-lg ${index < 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200' : 'bg-gray-50'
@@ -150,9 +171,9 @@ function LeaderboardView() {
             >
               <div className="flex items-center space-x-4">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                    index === 1 ? 'bg-gray-300 text-gray-700' :
-                      index === 2 ? 'bg-orange-300 text-orange-900' :
-                        'bg-gray-200 text-gray-600'
+                  index === 1 ? 'bg-gray-300 text-gray-700' :
+                    index === 2 ? 'bg-orange-300 text-orange-900' :
+                      'bg-gray-200 text-gray-600'
                   }`}>
                   #{entry.rank}
                 </div>

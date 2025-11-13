@@ -47,12 +47,15 @@ export async function POST(request: NextRequest) {
 
     await connectToDatabase()
 
-    // Find user's active target
-    const activeTarget = await Target.findOne({
-      assignedTo: session.user.id,
-      type: TargetType.DONATION_AMOUNT,
-      status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS] }
-    })
+    // Find user's active target - handle demo-admin case
+    let activeTarget = null
+    if (session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+      activeTarget = await Target.findOne({
+        assignedTo: session.user.id,
+        type: TargetType.DONATION_AMOUNT,
+        status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS] }
+      })
+    }
 
     // Create transaction
     const transaction = await Transaction.create({

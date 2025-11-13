@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const active = searchParams.get('active')
     const featured = searchParams.get('featured')
+    const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
     // Build filter query
@@ -24,15 +25,29 @@ export async function GET(request: NextRequest) {
       filter.featured = true
     }
 
+    // Calculate pagination
+    const skip = (page - 1) * limit
+    const total = await Program.countDocuments(filter)
+
     // Fetch programs
     const programs = await Program.find(filter)
-      .select('name slug description targetAmount raisedAmount active featured priority')
+      .select('name slug description longDescription image targetAmount raisedAmount donationCount active featured priority category')
       .sort({ priority: -1, featured: -1, createdAt: -1 })
+      .skip(skip)
       .limit(limit)
 
     return NextResponse.json({
       success: true,
-      data: programs
+      data: {
+        programs,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          totalCount: total,
+          hasNext: page < Math.ceil(total / limit),
+          hasPrev: page > 1
+        }
+      }
     })
 
   } catch (error) {

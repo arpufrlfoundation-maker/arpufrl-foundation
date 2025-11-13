@@ -19,6 +19,8 @@ interface TargetDashboardProps {
 
 interface TargetStats {
   hasTarget: boolean
+  message?: string
+  isAdmin?: boolean
   target?: {
     id: string
     targetAmount: number
@@ -149,10 +151,11 @@ export default function TargetDashboard({ userId }: TargetDashboardProps) {
         <TargetIcon className="w-12 h-12 text-blue-500 mx-auto mb-3" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">No Active Target</h3>
         <p className="text-gray-600">
-          You don't have an active fund collection target assigned yet.
+          {stats?.message || 'You have not been assigned any collection target yet. Please contact your administrator.'}
         </p>
       </div>
     )
+
   }
 
   const { target, hierarchy, transactions, trends } = stats
@@ -287,9 +290,9 @@ export default function TargetDashboard({ userId }: TargetDashboardProps) {
                 <div key={performer.userId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                        index === 1 ? 'bg-gray-300 text-gray-700' :
-                          index === 2 ? 'bg-orange-300 text-orange-900' :
-                            'bg-gray-200 text-gray-600'
+                      index === 1 ? 'bg-gray-300 text-gray-700' :
+                        index === 2 ? 'bg-orange-300 text-orange-900' :
+                          'bg-gray-200 text-gray-600'
                       }`}>
                       {index + 1}
                     </div>
@@ -396,8 +399,8 @@ export default function TargetDashboard({ userId }: TargetDashboardProps) {
             <div>
               <p className="text-sm text-gray-500">Status</p>
               <p className={`font-medium inline-flex items-center ${target.status === 'COMPLETED' ? 'text-green-600' :
-                  target.status === 'IN_PROGRESS' ? 'text-blue-600' :
-                    'text-gray-600'
+                target.status === 'IN_PROGRESS' ? 'text-blue-600' :
+                  'text-gray-600'
                 }`}>
                 {target.status === 'COMPLETED' && <CheckCircle className="w-4 h-4 mr-1" />}
                 {target.status}

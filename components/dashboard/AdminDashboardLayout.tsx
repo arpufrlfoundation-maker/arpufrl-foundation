@@ -16,7 +16,8 @@ import {
   User,
   Bell,
   Target,
-  ClipboardList
+  ClipboardList,
+  Receipt
 } from 'lucide-react'
 
 interface AdminDashboardLayoutProps {
@@ -42,6 +43,12 @@ const navigation: NavItem[] = [
     href: '/dashboard/admin/targets',
     icon: Target,
     description: 'Fund collection targets and hierarchy'
+  },
+  {
+    name: 'Transactions',
+    href: '/dashboard/admin/transactions',
+    icon: Receipt,
+    description: 'Verify coordinator fund collections'
   },
   {
     name: 'Donations',
