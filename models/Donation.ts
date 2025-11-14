@@ -155,6 +155,12 @@ export interface IDonation extends Document {
   ipAddress?: string
   userAgent?: string
 
+  // Commission distribution tracking
+  distributed?: boolean
+  distributedAt?: Date
+  totalCommissionDistributed?: number
+  organizationFundAmount?: number
+
   // Timestamps
   createdAt: Date
   updatedAt: Date
@@ -411,6 +417,29 @@ const donationSchema = new Schema<IDonation>({
   userAgent: {
     type: String,
     maxlength: [500, 'User agent must not exceed 500 characters']
+  },
+
+  // Commission distribution tracking
+  distributed: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+
+  distributedAt: {
+    type: Date
+  },
+
+  totalCommissionDistributed: {
+    type: Number,
+    default: 0,
+    min: [0, 'Total commission distributed cannot be negative']
+  },
+
+  organizationFundAmount: {
+    type: Number,
+    default: 0,
+    min: [0, 'Organization fund amount cannot be negative']
   }
 }, {
   timestamps: true,

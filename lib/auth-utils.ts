@@ -3,9 +3,41 @@ import { UserRole, UserStatus, UserRoleType } from '../models/User'
 import { NextRequest } from 'next/server'
 import { Session } from 'next-auth'
 import { isDemoAdmin, isDemoAdminById } from './demo-admin'
+import mongoose from 'mongoose'
 
 // Type definitions for role checking
 export type RequiredRole = UserRoleType | UserRoleType[]
+
+// Helper functions for ObjectId handling
+export const objectIdUtils = {
+  /**
+   * Check if a string is a valid MongoDB ObjectId
+   */
+  isValidObjectId: (id: string): boolean => {
+    return /^[0-9a-fA-F]{24}$/.test(id)
+  },
+
+  /**
+   * Convert string to ObjectId if valid, otherwise return null
+   */
+  toObjectId: (id: string): mongoose.Types.ObjectId | null => {
+    if (objectIdUtils.isValidObjectId(id)) {
+      try {
+        return new mongoose.Types.ObjectId(id)
+      } catch {
+        return null
+      }
+    }
+    return null
+  },
+
+  /**
+   * Check if user ID is valid for database queries (either valid ObjectId or demo-admin)
+   */
+  isValidUserId: (userId: string): boolean => {
+    return objectIdUtils.isValidObjectId(userId) || userId.includes('demo-admin') || userId.includes('demo')
+  }
+}
 
 // Authentication utilities
 export const authUtils = {

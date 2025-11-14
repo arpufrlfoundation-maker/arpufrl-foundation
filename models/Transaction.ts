@@ -57,6 +57,7 @@ const TransactionSchema = new Schema<ITransaction>(
     verifiedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
+      required: false, // Optional to handle demo-admin
       index: true
     },
     amount: {
@@ -182,21 +183,25 @@ TransactionSchema.post('save', async function (doc) {
 
 // Instance method to verify transaction
 TransactionSchema.methods.verify = async function (
-  verifiedBy: mongoose.Types.ObjectId
+  verifiedBy: mongoose.Types.ObjectId | null
 ): Promise<ITransaction> {
   this.status = 'verified'
-  this.verifiedBy = verifiedBy
+  if (verifiedBy) {
+    this.verifiedBy = verifiedBy
+  }
   this.verifiedAt = new Date()
   return await this.save()
 }
 
 // Instance method to reject transaction
 TransactionSchema.methods.reject = async function (
-  verifiedBy: mongoose.Types.ObjectId,
+  verifiedBy: mongoose.Types.ObjectId | null,
   reason: string
 ): Promise<ITransaction> {
   this.status = 'rejected'
-  this.verifiedBy = verifiedBy
+  if (verifiedBy) {
+    this.verifiedBy = verifiedBy
+  }
   this.verifiedAt = new Date()
   this.rejectionReason = reason
   return await this.save()

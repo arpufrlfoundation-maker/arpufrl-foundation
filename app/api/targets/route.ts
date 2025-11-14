@@ -1,141 +1,117 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
 import { connectToDatabase } from '@/lib/db'
-import { Target, targetUtils } from '@/models/Target'
-import { User, UserRole } from '@/models/User'
+import Target, { TargetStatus } from '@/models/Target'
 import mongoose from 'mongoose'
 
-// GET - Fetch targets for a user
-export async function GET(request: NextRequest) {
+/**
+ * GET /api/targets
+ * Get all targets for the current user
+ */
+export async function GET(req: NextRequest) {
   try {
+    const session = await auth()
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     await connectToDatabase()
 
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
-    const assignedBy = searchParams.get('assignedBy')
+    const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
+    const includeHistory = searchParams.get('includeHistory') === 'true'
 
-    let query: any = {}
+    // Handle demo-admin - they can view all targets
+    let userId: mongoose.Types.ObjectId
+    if (session.user.id === 'demo-admin') {
+      // For admin, return all targets
+      const targets = await Target.find({})
+        .populate('assignedTo', 'name email role')
+        .populate('assignedBy', 'name email role')
+        .sort({ createdAt: -1 })
+        .limit(100)
 
-    if (userId) {
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return NextResponse.json(
-          { error: 'Invalid user ID' },
-          { status: 400 }
-        )
-      }
-      query.assignedTo = userId
+      return NextResponse.json({
+        success: true,
+        targets,
+        summary: {
+          totalTargets: targets.length,
+          active: targets.filter((t: any) => t.status === TargetStatus.IN_PROGRESS).length,
+          completed: targets.filter((t: any) => t.status === TargetStatus.COMPLETED).length,
+          pending: targets.filter((t: any) => t.status === TargetStatus.PENDING).length
+        }
+      })
     }
 
-    if (assignedBy) {
-      if (!mongoose.Types.ObjectId.isValid(assignedBy)) {
-        return NextResponse.json(
-          { error: 'Invalid assigned by ID' },
-          { status: 400 }
-        )
-      }
-      query.assignedBy = assignedBy
+    userId = new mongoose.Types.ObjectId(session.user.id)
+
+    let targets
+    if (status === 'active') {
+      // Get only active target
+      targets = [await Target.findActiveByUser(userId)].filter(Boolean)
+    } else if (includeHistory) {
+      // Get all targets including completed and cancelled
+      targets = await Target.findByUser(userId)
+    } else {
+      // Get active and pending targets
+      targets = await Target.find({
+        assignedTo: userId,
+        status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS, TargetStatus.OVERDUE] }
+      })
+        .populate('assignedBy', 'name email role')
+        .sort({ createdAt: -1 })
     }
 
-    if (status) {
-      query.status = status
-    }
+    // Get summary
+    const summary = await Target.getTargetSummary(userId)
 
-    const targets = await Target.find(query)
-      .populate('assignedTo', 'name email role')
-      .populate('assignedBy', 'name email role')
-      .sort({ createdAt: -1 })
-
-    return NextResponse.json({ targets })
-  } catch (error) {
-    console.error('Error fetching targets:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch targets' },
-      { status: 500 }
-    )
-  }
-}
-
-// POST - Create a new target
-export async function POST(request: NextRequest) {
-  try {
-    await connectToDatabase()
-
-    const body = await request.json()
-
-    // Validate data
-    const validation = targetUtils.validateCreationData(body)
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error },
-        { status: 400 }
-      )
-    }
-
-    const { assignedTo, assignedBy, type, targetValue, startDate, endDate, description } = body
-
-    // Verify both users exist
-    const targetUser = await User.findById(assignedTo)
-    const assignerUser = await User.findById(assignedBy)
-
-    if (!targetUser || !assignerUser) {
-      return NextResponse.json(
-        { error: 'Invalid user IDs' },
-        { status: 400 }
-      )
-    }
-
-    // Verify assigner can manage target user
-    if (assignerUser.role !== UserRole.ADMIN) {
-      const canManage = await assignerUser.canManageUser(targetUser._id)
-      if (!canManage) {
-        return NextResponse.json(
-          { error: 'You do not have permission to assign targets to this user' },
-          { status: 403 }
-        )
-      }
-    }
-
-    // Create target
-    const target = await Target.createTarget({
-      assignedTo: new mongoose.Types.ObjectId(assignedTo),
-      assignedBy: new mongoose.Types.ObjectId(assignedBy),
-      type,
-      targetValue,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      description,
-      currentValue: 0,
-      status: 'PENDING'
+    return NextResponse.json({
+      success: true,
+      targets,
+      summary
     })
 
+  } catch (error: any) {
+    console.error('Error fetching targets:', error)
     return NextResponse.json(
-      { message: 'Target created successfully', target },
-      { status: 201 }
-    )
-  } catch (error) {
-    console.error('Error creating target:', error)
-    return NextResponse.json(
-      { error: 'Failed to create target' },
+      { error: error.message || 'Failed to fetch targets' },
       { status: 500 }
     )
   }
 }
 
-// PUT - Update target progress
-export async function PUT(request: NextRequest) {
+/**
+ * PATCH /api/targets
+ * Update a target (status, notes, etc.)
+ */
+export async function PATCH(req: NextRequest) {
   try {
+    const session = await auth()
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     await connectToDatabase()
 
-    const body = await request.json()
-    const { targetId, currentValue, status, notes } = body
+    const body = await req.json()
+    const { targetId, status, notes } = body
 
-    if (!targetId || !mongoose.Types.ObjectId.isValid(targetId)) {
+    if (!targetId) {
       return NextResponse.json(
-        { error: 'Invalid target ID' },
+        { error: 'Target ID is required' },
         { status: 400 }
       )
     }
 
+    // Find the target
     const target = await Target.findById(targetId)
     if (!target) {
       return NextResponse.json(
@@ -144,15 +120,19 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Update fields
-    if (currentValue !== undefined) {
-      await target.updateProgress(currentValue)
+    // Check if user owns this target or is the assigner
+    const userId = session.user.id
+    if (target.assignedTo.toString() !== userId && target.assignedBy?.toString() !== userId) {
+      return NextResponse.json(
+        { error: 'You do not have permission to update this target' },
+        { status: 403 }
+      )
     }
 
+    // Update fields
     if (status) {
       target.status = status
     }
-
     if (notes) {
       target.notes = notes
     }
@@ -160,48 +140,15 @@ export async function PUT(request: NextRequest) {
     await target.save()
 
     return NextResponse.json({
+      success: true,
       message: 'Target updated successfully',
       target
     })
-  } catch (error) {
+
+  } catch (error: any) {
     console.error('Error updating target:', error)
     return NextResponse.json(
-      { error: 'Failed to update target' },
-      { status: 500 }
-    )
-  }
-}
-
-// DELETE - Delete a target
-export async function DELETE(request: NextRequest) {
-  try {
-    await connectToDatabase()
-
-    const { searchParams } = new URL(request.url)
-    const targetId = searchParams.get('targetId')
-
-    if (!targetId || !mongoose.Types.ObjectId.isValid(targetId)) {
-      return NextResponse.json(
-        { error: 'Invalid target ID' },
-        { status: 400 }
-      )
-    }
-
-    const target = await Target.findByIdAndDelete(targetId)
-    if (!target) {
-      return NextResponse.json(
-        { error: 'Target not found' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json({
-      message: 'Target deleted successfully'
-    })
-  } catch (error) {
-    console.error('Error deleting target:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete target' },
+      { error: error.message || 'Failed to update target' },
       { status: 500 }
     )
   }

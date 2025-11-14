@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/db'
 import { User } from '@/models/User'
 import { Donation } from '@/models/Donation'
-import { Target } from '@/models/Target'
+import Target from '@/models/Target'
 import { generateQRCodeDataURL } from '@/lib/referral-utils'
 import mongoose from 'mongoose'
 
@@ -14,6 +14,14 @@ export async function GET(
     await connectToDatabase()
 
     const { userId } = await params
+
+    // Handle demo-admin case
+    if (userId === 'demo-admin') {
+      return NextResponse.json(
+        { error: 'Demo admin does not have a dashboard' },
+        { status: 400 }
+      )
+    }
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return NextResponse.json(
@@ -73,9 +81,9 @@ export async function GET(
       .filter(t => t.status !== 'CANCELLED')
       .slice(0, 5)
       .map(t => ({
-        name: t.type.replace(/_/g, ' '),
-        target: t.targetValue,
-        current: t.currentValue,
+        name: t.description || 'Target',
+        target: t.targetAmount,
+        current: t.totalCollection,
         percentage: t.progressPercentage
       }))
 

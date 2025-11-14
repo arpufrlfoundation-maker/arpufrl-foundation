@@ -214,6 +214,10 @@ export interface IUser extends Document {
   totalDonationsReferred?: number
   totalAmountReferred?: number
 
+  // Commission tracking
+  commission_wallet?: number
+  total_collected?: number
+
   // Timestamps
   createdAt: Date
   updatedAt: Date
@@ -457,6 +461,19 @@ const userSchema = new Schema<IUser>({
     type: Number,
     default: 0,
     min: [0, 'Total amount cannot be negative']
+  },
+
+  // Commission tracking
+  commission_wallet: {
+    type: Number,
+    default: 0,
+    min: [0, 'Commission wallet cannot be negative']
+  },
+
+  total_collected: {
+    type: Number,
+    default: 0,
+    min: [0, 'Total collected cannot be negative']
   }
 }, {
   timestamps: true,

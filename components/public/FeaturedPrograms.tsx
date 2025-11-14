@@ -22,17 +22,54 @@ export default function FeaturedPrograms() {
   useEffect(() => {
     const fetchFeaturedPrograms = async () => {
       try {
-        // Mock data for now - replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 800))
-
+        const response = await fetch('/api/programs?featured=true&limit=3')
+        if (response.ok) {
+          const data = await response.json()
+          setPrograms(data.programs || [])
+        } else {
+          // Fallback to mock data if API fails
+          setPrograms([
+            {
+              _id: '1',
+              name: 'Education for All',
+              slug: 'education-for-all',
+              description: 'Providing quality education and learning resources to underprivileged children in rural communities.',
+              image: '/images/education-program.jpg',
+              targetAmount: 500000,
+              raisedAmount: 325000,
+              donationCount: 156
+            },
+            {
+              _id: '2',
+              name: 'Healthcare Access',
+              slug: 'healthcare-access',
+              description: 'Ensuring basic healthcare services and medical support reach remote villages and urban slums.',
+              image: '/images/healthcare-program.jpg',
+              targetAmount: 750000,
+              raisedAmount: 480000,
+              donationCount: 203
+            },
+            {
+              _id: '3',
+              name: 'Clean Water Initiative',
+              slug: 'clean-water-initiative',
+              description: 'Building sustainable water systems and promoting hygiene awareness in water-scarce regions.',
+              image: '/images/water-program.jpg',
+              targetAmount: 300000,
+              raisedAmount: 180000,
+              donationCount: 89
+            }
+          ])
+        }
+      } catch (error) {
+        console.error('Error fetching featured programs:', error)
+        // Use mock data on error
         setPrograms([
           {
             _id: '1',
             name: 'Education for All',
             slug: 'education-for-all',
             description: 'Providing quality education and learning resources to underprivileged children in rural communities.',
-            image: '/images/education-program.jpg',
-            targetAmount: 500000,
             raisedAmount: 325000,
             donationCount: 156
           },
@@ -41,8 +78,6 @@ export default function FeaturedPrograms() {
             name: 'Healthcare Access',
             slug: 'healthcare-access',
             description: 'Ensuring basic healthcare services and medical support reach remote villages and urban slums.',
-            image: '/images/healthcare-program.jpg',
-            targetAmount: 750000,
             raisedAmount: 480000,
             donationCount: 203
           },
@@ -51,14 +86,10 @@ export default function FeaturedPrograms() {
             name: 'Clean Water Initiative',
             slug: 'clean-water-initiative',
             description: 'Building sustainable water systems and promoting hygiene awareness in water-scarce regions.',
-            image: '/images/water-program.jpg',
-            targetAmount: 300000,
             raisedAmount: 180000,
             donationCount: 89
           }
         ])
-      } catch (error) {
-        console.error('Error fetching featured programs:', error)
       } finally {
         setIsLoading(false)
       }

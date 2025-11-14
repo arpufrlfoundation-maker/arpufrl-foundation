@@ -21,7 +21,23 @@ export async function GET(request: NextRequest) {
 
     await connectToDatabase()
 
-    const user = await User.findById(session.user.id).select('-hashedPassword')
+    // Handle demo-admin case - only query if valid ObjectId
+    let user = null
+    if (session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+      user = await User.findById(session.user.id).select('-hashedPassword')
+    }
+
+    // For demo-admin, return session data
+    if (!user && session.user.id.includes('demo')) {
+      return NextResponse.json({
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        role: session.user.role,
+        status: session.user.status,
+        isDemoAccount: true
+      })
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -90,6 +106,14 @@ export async function PUT(request: NextRequest) {
     } = body
 
     await connectToDatabase()
+
+    // Handle demo-admin case - demo accounts cannot update profile
+    if (!session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return NextResponse.json(
+        { error: 'Demo accounts cannot update profile' },
+        { status: 403 }
+      )
+    }
 
     const user = await User.findById(session.user.id)
 

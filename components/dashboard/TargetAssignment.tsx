@@ -128,7 +128,7 @@ export default function TargetAssignment({ mode, parentTargetId, parentTargetAmo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          assignedToId: assignTo,
+          assignedTo: assignTo,
           targetAmount: parseFloat(targetAmount),
           startDate,
           endDate,
@@ -305,8 +305,8 @@ export default function TargetAssignment({ mode, parentTargetId, parentTargetAmo
                       type="button"
                       onClick={() => setRoleFilter('priority')}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${roleFilter === 'priority'
-                          ? 'bg-blue-600 text-white shadow-md'
-                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                         }`}
                     >
                       Priority Roles
@@ -318,8 +318,8 @@ export default function TargetAssignment({ mode, parentTargetId, parentTargetAmo
                       type="button"
                       onClick={() => setRoleFilter('all')}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${roleFilter === 'all'
-                          ? 'bg-blue-600 text-white shadow-md'
-                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                         }`}
                     >
                       All Members

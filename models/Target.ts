@@ -13,38 +13,37 @@ export const TargetStatus = {
 
 export type TargetStatusType = typeof TargetStatus[keyof typeof TargetStatus]
 
-// Target type enum
-export const TargetType = {
-  DONATION_AMOUNT: 'DONATION_AMOUNT',
-  DONATION_COUNT: 'DONATION_COUNT',
-  REFERRAL_COUNT: 'REFERRAL_COUNT',
-  NEW_DONORS: 'NEW_DONORS'
+// Hierarchy level enum - maps to user roles
+export const HierarchyLevel = {
+  NATIONAL: 'national',       // Central President
+  STATE: 'state',             // State President
+  STATE_COORD: 'state_coord', // State Coordinator
+  ZONE: 'zone',               // Zone Coordinator
+  DISTRICT_PRES: 'district_pres', // District President
+  DISTRICT_COORD: 'district_coord', // District Coordinator
+  BLOCK: 'block',             // Block Coordinator
+  NODAL: 'nodal',             // Nodal Officer
+  PRERAK: 'prerak',           // Prerak (Gram Sabha)
+  PRERNA: 'prerna',           // Prerna Sakhi (Village)
+  VOLUNTEER: 'volunteer'      // Volunteer (Member)
 } as const
 
-export type TargetTypeType = typeof TargetType[keyof typeof TargetType]
+export type HierarchyLevelType = typeof HierarchyLevel[keyof typeof HierarchyLevel]
 
 // Zod validation schemas
 export const targetValidationSchema = z.object({
   assignedTo: z.string()
     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid user ID format'),
 
-  assignedBy: z.string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid user ID format'),
+  assignedBy: z.union([
+    z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid user ID format'),
+    z.null(),
+    z.undefined()
+  ]).optional(),
 
-  type: z.enum([
-    TargetType.DONATION_AMOUNT,
-    TargetType.DONATION_COUNT,
-    TargetType.REFERRAL_COUNT,
-    TargetType.NEW_DONORS
-  ]),
-
-  targetValue: z.number()
-    .min(1, 'Target value must be at least 1')
-    .max(10000000, 'Target value is too large'),
-
-  currentValue: z.number()
-    .min(0, 'Current value cannot be negative')
-    .default(0),
+  targetAmount: z.number()
+    .min(1, 'Target amount must be at least ₹1')
+    .max(100000000, 'Target amount is too large'),
 
   status: z.enum([
     TargetStatus.PENDING,
@@ -69,8 +68,8 @@ export const targetValidationSchema = z.object({
 
 export const targetCreationSchema = targetValidationSchema.pick({
   assignedTo: true,
-  type: true,
-  targetValue: true,
+  assignedBy: true,
+  targetAmount: true,
   startDate: true,
   endDate: true,
   description: true
@@ -80,7 +79,6 @@ export const targetCreationSchema = targetValidationSchema.pick({
 })
 
 export const targetUpdateSchema = z.object({
-  currentValue: z.number().min(0).optional(),
   status: z.enum([
     TargetStatus.PENDING,
     TargetStatus.IN_PROGRESS,
@@ -91,39 +89,31 @@ export const targetUpdateSchema = z.object({
   notes: z.string().max(1000).optional()
 })
 
-// Hierarchy level enum
-export const HierarchyLevel = {
-  NATIONAL: 'national',
-  STATE: 'state',
-  ZONE: 'zone',
-  DISTRICT: 'district',
-  BLOCK: 'block',
-  NODAL: 'nodal',
-  PRERAK: 'prerak',
-  PRERNA: 'prerna',
-  VOLUNTEER: 'volunteer'
-} as const
-
-export type HierarchyLevelType = typeof HierarchyLevel[keyof typeof HierarchyLevel]
-
 // TypeScript interface for Target document
 export interface ITarget extends Document {
   _id: mongoose.Types.ObjectId
+
+  // Assignment details
   assignedTo: mongoose.Types.ObjectId
-  assignedBy: mongoose.Types.ObjectId
-  type: TargetTypeType
-  targetValue: number
-  currentValue: number
+  assignedBy?: mongoose.Types.ObjectId | null
+
+  // Target details
+  targetAmount: number        // Total target assigned
+
+  // Collection tracking
+  personalCollection: number  // Amount collected by this person directly
+  teamCollection: number      // Sum of all subordinates' total collections
+  totalCollection: number     // personalCollection + teamCollection
+
+  // Status and dates
   status: TargetStatusType
   startDate: Date
   endDate: Date
   description?: string
   notes?: string
 
-  // Hierarchical fund collection fields
-  parentTargetId?: mongoose.Types.ObjectId
-  collectedAmount: number // Amount collected personally
-  teamCollectedAmount: number // Amount collected by team (aggregated from subordinates)
+  // Hierarchical structure
+  parentTargetId?: mongoose.Types.ObjectId // Parent's target (if subdivided)
   level: HierarchyLevelType
   region?: {
     state?: string
@@ -132,11 +122,14 @@ export interface ITarget extends Document {
     block?: string
     village?: string
   }
-  isDivided: boolean // Whether target has been subdivided
-  subdivisions: mongoose.Types.ObjectId[] // Child targets
+
+  // Subdivision tracking
+  isDivided: boolean // Whether this target has been subdivided to subordinates
+  subdivisions: mongoose.Types.ObjectId[] // Child target IDs
 
   // Calculated fields
   progressPercentage: number
+  remainingAmount: number
   daysRemaining: number
   isOverdue: boolean
 
@@ -145,31 +138,35 @@ export interface ITarget extends Document {
   updatedAt: Date
 
   // Instance methods
-  updateProgress(value: number): Promise<ITarget>
+  updateProgress(): Promise<ITarget>
   checkAndUpdateStatus(): Promise<ITarget>
   calculateProgress(): number
   isAchieved(): boolean
   getTotalCollection(): number
   getRemainingAmount(): number
+  subdivideTarget(subdivisions: { userId: mongoose.Types.ObjectId; amount: number }[]): Promise<ITarget[]>
 }
 
 // Static methods interface
 export interface ITargetModel extends Model<ITarget> {
   findByUser(userId: mongoose.Types.ObjectId): Promise<ITarget[]>
-  findActiveByUser(userId: mongoose.Types.ObjectId): Promise<ITarget[]>
+  findActiveByUser(userId: mongoose.Types.ObjectId): Promise<ITarget | null>
   findOverdueTargets(): Promise<ITarget[]>
   getTargetSummary(userId: mongoose.Types.ObjectId): Promise<TargetSummary>
   createTarget(targetData: Partial<ITarget>): Promise<ITarget>
   bulkCreateTargets(targetsData: Partial<ITarget>[]): Promise<ITarget[]>
   aggregateTeamCollection(userId: mongoose.Types.ObjectId): Promise<number>
-  propagateCollection(userId: mongoose.Types.ObjectId, amount: number): Promise<void>
+  propagateCollectionUpward(userId: mongoose.Types.ObjectId, amount: number): Promise<void>
   getHierarchyStats(userId: mongoose.Types.ObjectId): Promise<HierarchyStats>
+  getDashboardData(userId: mongoose.Types.ObjectId): Promise<DashboardData>
+  getLeaderboard(userId: mongoose.Types.ObjectId, limit?: number): Promise<LeaderboardEntry[]>
 }
 
 // Helper interfaces
 export interface TargetSummary {
   userId: mongoose.Types.ObjectId
   totalTargets: number
+  activeTarget: ITarget | null
   completedTargets: number
   inProgressTargets: number
   overdueTargets: number
@@ -179,486 +176,709 @@ export interface TargetSummary {
 
 export interface HierarchyStats {
   userId: mongoose.Types.ObjectId
+  userName: string
   level: HierarchyLevelType
+
+  // Target info
+  targetAmount: number
   personalCollection: number
   teamCollection: number
   totalCollection: number
-  targetAmount: number
+  remainingAmount: number
   achievementPercentage: number
+
+  // Team breakdown
   teamBreakdown: {
     userId: mongoose.Types.ObjectId
     name: string
+    role: string
     level: HierarchyLevelType
-    collected: number
-    percentage: number
+    targetAmount: number
+    personalCollection: number
+    teamCollection: number
+    totalCollection: number
+    achievementPercentage: number
+    region?: {
+      state?: string
+      zone?: string
+      district?: string
+      block?: string
+    }
   }[]
+
+  // Statistics
   subordinatesCount: number
+  activeSubordinates: number
   topPerformers: {
     userId: mongoose.Types.ObjectId
     name: string
+    role: string
     collected: number
+    percentage: number
   }[]
 }
 
-// Mongoose schema definition
-const targetSchema = new Schema<ITarget>({
-  assignedTo: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'Assigned to user is required'],
-    index: true
-  },
-
-  assignedBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'Assigned by user is required'],
-    index: true
-  },
-
-  type: {
-    type: String,
-    enum: Object.values(TargetType),
-    required: [true, 'Target type is required'],
-    index: true
-  },
-
-  targetValue: {
-    type: Number,
-    required: [true, 'Target value is required'],
-    min: [1, 'Target value must be at least 1'],
-    max: [10000000, 'Target value is too large']
-  },
-
-  currentValue: {
-    type: Number,
-    default: 0,
-    min: [0, 'Current value cannot be negative']
-  },
-
-  status: {
-    type: String,
-    enum: Object.values(TargetStatus),
-    default: TargetStatus.PENDING,
-    index: true
-  },
-
-  startDate: {
-    type: Date,
-    required: [true, 'Start date is required'],
-    index: true
-  },
-
-  endDate: {
-    type: Date,
-    required: [true, 'End date is required'],
-    index: true,
-    validate: {
-      validator: function (this: ITarget, value: Date) {
-        return value > this.startDate
-      },
-      message: 'End date must be after start date'
-    }
-  },
-
-  description: {
-    type: String,
-    trim: true,
-    maxlength: [500, 'Description must not exceed 500 characters']
-  },
-
-  notes: {
-    type: String,
-    trim: true,
-    maxlength: [1000, 'Notes must not exceed 1000 characters']
-  },
-
-  // Hierarchical fund collection fields
-  parentTargetId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Target',
-    index: true
-  },
-
-  collectedAmount: {
-    type: Number,
-    default: 0,
-    min: [0, 'Collected amount cannot be negative']
-  },
-
-  teamCollectedAmount: {
-    type: Number,
-    default: 0,
-    min: [0, 'Team collected amount cannot be negative']
-  },
-
-  level: {
-    type: String,
-    enum: Object.values(HierarchyLevel),
-    index: true
-  },
-
-  region: {
-    state: { type: String, index: true },
-    zone: { type: String, index: true },
-    district: { type: String, index: true },
-    block: { type: String, index: true },
-    village: { type: String }
-  },
-
-  isDivided: {
-    type: Boolean,
-    default: false
-  },
-
-  subdivisions: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Target'
-  }]
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-})
-
-// Virtual fields
-targetSchema.virtual('progressPercentage').get(function () {
-  if (this.targetValue === 0) return 0
-  return Math.min((this.currentValue / this.targetValue) * 100, 100)
-})
-
-targetSchema.virtual('daysRemaining').get(function () {
-  const now = new Date()
-  const end = new Date(this.endDate)
-  const diff = end.getTime() - now.getTime()
-  return Math.ceil(diff / (1000 * 60 * 60 * 24))
-})
-
-targetSchema.virtual('isOverdue').get(function () {
-  return new Date() > new Date(this.endDate) && this.status !== TargetStatus.COMPLETED
-})
-
-// Indexes for performance
-targetSchema.index({ assignedTo: 1, status: 1 })
-targetSchema.index({ assignedBy: 1, createdAt: -1 })
-targetSchema.index({ endDate: 1, status: 1 })
-
-// Instance methods
-targetSchema.methods.updateProgress = async function (value: number): Promise<ITarget> {
-  this.currentValue = Math.max(0, value)
-  await this.checkAndUpdateStatus()
-  return await this.save()
+export interface DashboardData {
+  user: {
+    id: mongoose.Types.ObjectId
+    name: string
+    role: string
+    level: HierarchyLevelType
+  }
+  target: {
+    amount: number
+    personalCollection: number
+    teamCollection: number
+    totalCollection: number
+    remainingAmount: number
+    achievementPercentage: number
+    status: TargetStatusType
+    daysRemaining: number
+    isOverdue: boolean
+  }
+  team: {
+    totalMembers: number
+    activeMembers: number
+    totalTeamCollection: number
+    averageCollection: number
+    topPerformers: {
+      userId: mongoose.Types.ObjectId
+      name: string
+      collected: number
+      percentage: number
+    }[]
+  }
+  recentActivity: {
+    date: Date
+    userId: mongoose.Types.ObjectId
+    userName: string
+    amount: number
+    type: 'personal' | 'team'
+  }[]
+  analytics: {
+    dailyCollection: { date: string; amount: number }[]
+    weeklyTrend: { week: string; amount: number }[]
+    monthlyTrend: { month: string; amount: number }[]
+  }
 }
 
-targetSchema.methods.checkAndUpdateStatus = async function (this: ITarget): Promise<ITarget> {
-  const now = new Date()
+export interface LeaderboardEntry {
+  rank: number
+  userId: mongoose.Types.ObjectId
+  name: string
+  role: string
+  level: HierarchyLevelType
+  targetAmount: number
+  totalCollection: number
+  achievementPercentage: number
+  region?: {
+    state?: string
+    zone?: string
+    district?: string
+  }
+}
 
-  // Check if target is achieved
-  if (this.currentValue >= this.targetValue) {
+// Mongoose schema definition
+const targetSchema = new Schema<ITarget>(
+  {
+    assignedTo: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Assigned to user is required'],
+      index: true
+    },
+
+    assignedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      index: true
+    },
+
+    targetAmount: {
+      type: Number,
+      required: [true, 'Target amount is required'],
+      min: [1, 'Target amount must be at least ₹1'],
+      max: [100000000, 'Target amount is too large']
+    },
+
+    personalCollection: {
+      type: Number,
+      default: 0,
+      min: [0, 'Personal collection cannot be negative']
+    },
+
+    teamCollection: {
+      type: Number,
+      default: 0,
+      min: [0, 'Team collection cannot be negative']
+    },
+
+    totalCollection: {
+      type: Number,
+      default: 0,
+      min: [0, 'Total collection cannot be negative']
+    },
+
+    status: {
+      type: String,
+      enum: Object.values(TargetStatus),
+      default: TargetStatus.PENDING,
+      index: true
+    },
+
+    startDate: {
+      type: Date,
+      required: [true, 'Start date is required'],
+      index: true
+    },
+
+    endDate: {
+      type: Date,
+      required: [true, 'End date is required'],
+      index: true,
+      validate: {
+        validator: function (this: ITarget, value: Date) {
+          return value > this.startDate
+        },
+        message: 'End date must be after start date'
+      }
+    },
+
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Description must not exceed 500 characters']
+    },
+
+    notes: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Notes must not exceed 1000 characters']
+    },
+
+    parentTargetId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Target',
+      index: true
+    },
+
+    level: {
+      type: String,
+      enum: Object.values(HierarchyLevel),
+      required: true,
+      index: true
+    },
+
+    region: {
+      state: { type: String, trim: true },
+      zone: { type: String, trim: true },
+      district: { type: String, trim: true },
+      block: { type: String, trim: true },
+      village: { type: String, trim: true }
+    },
+
+    isDivided: {
+      type: Boolean,
+      default: false
+    },
+
+    subdivisions: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Target'
+    }],
+
+    progressPercentage: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
+    },
+
+    remainingAmount: {
+      type: Number,
+      default: 0
+    },
+
+    daysRemaining: {
+      type: Number,
+      default: 0
+    },
+
+    isOverdue: {
+      type: Boolean,
+      default: false,
+      index: true
+    }
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+)
+
+// Indexes for efficient querying
+targetSchema.index({ assignedTo: 1, status: 1 })
+targetSchema.index({ assignedTo: 1, startDate: -1 })
+targetSchema.index({ level: 1, status: 1 })
+targetSchema.index({ parentTargetId: 1 })
+targetSchema.index({ 'region.state': 1, 'region.district': 1 })
+targetSchema.index({ endDate: 1, status: 1 }) // For overdue queries
+
+// Pre-save middleware to calculate fields
+targetSchema.pre('save', function (next) {
+  // Calculate total collection
+  this.totalCollection = this.personalCollection + this.teamCollection
+
+  // Calculate remaining amount
+  this.remainingAmount = Math.max(0, this.targetAmount - this.totalCollection)
+
+  // Calculate progress percentage
+  this.progressPercentage = this.targetAmount > 0
+    ? Math.min(100, (this.totalCollection / this.targetAmount) * 100)
+    : 0
+
+  // Calculate days remaining
+  const today = new Date()
+  const endDate = new Date(this.endDate)
+  const diffTime = endDate.getTime() - today.getTime()
+  this.daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+  // Check if overdue
+  this.isOverdue = this.daysRemaining < 0 && this.status !== TargetStatus.COMPLETED
+
+  // Auto-update status based on progress
+  if (this.totalCollection >= this.targetAmount && this.status !== TargetStatus.CANCELLED) {
     this.status = TargetStatus.COMPLETED
-  }
-  // Check if target is overdue
-  else if (now > this.endDate) {
+  } else if (this.isOverdue && this.status === TargetStatus.IN_PROGRESS) {
     this.status = TargetStatus.OVERDUE
-  }
-  // Check if target is in progress
-  else if (this.currentValue > 0 && this.status === TargetStatus.PENDING) {
+  } else if (this.totalCollection > 0 && this.status === TargetStatus.PENDING) {
     this.status = TargetStatus.IN_PROGRESS
   }
 
-  // @ts-ignore - Mongoose typing complexity
-  return this
-}
+  next()
+})
 
+// Instance methods
 targetSchema.methods.calculateProgress = function (): number {
-  if (this.targetValue === 0) return 0
-  return Math.min((this.currentValue / this.targetValue) * 100, 100)
+  return this.targetAmount > 0
+    ? Math.min(100, (this.totalCollection / this.targetAmount) * 100)
+    : 0
 }
 
 targetSchema.methods.isAchieved = function (): boolean {
-  return this.currentValue >= this.targetValue
+  return this.totalCollection >= this.targetAmount
 }
 
-// Method to get total collection (personal + team)
 targetSchema.methods.getTotalCollection = function (): number {
-  return this.collectedAmount + this.teamCollectedAmount
+  return this.totalCollection
 }
 
-// Method to get remaining amount
 targetSchema.methods.getRemainingAmount = function (): number {
-  const totalCollected = this.getTotalCollection()
-  return Math.max(0, this.targetValue - totalCollected)
+  return Math.max(0, this.targetAmount - this.totalCollection)
+}
+
+targetSchema.methods.updateProgress = async function (this: ITarget): Promise<ITarget> {
+  await this.save()
+  return this
+}
+
+targetSchema.methods.checkAndUpdateStatus = async function (this: ITarget): Promise<ITarget> {
+  const today = new Date()
+
+  if (this.totalCollection >= this.targetAmount) {
+    this.status = TargetStatus.COMPLETED
+  } else if (this.endDate < today && this.status !== TargetStatus.COMPLETED) {
+    this.status = TargetStatus.OVERDUE
+  } else if (this.totalCollection > 0 && this.status === TargetStatus.PENDING) {
+    this.status = TargetStatus.IN_PROGRESS
+  }
+
+  await this.save()
+  return this
+}
+
+targetSchema.methods.subdivideTarget = async function (
+  subdivisions: { userId: mongoose.Types.ObjectId; amount: number }[]
+): Promise<ITarget[]> {
+  const Target = this.constructor as ITargetModel
+
+  // Validate total subdivision doesn't exceed target
+  const totalSubdivision = subdivisions.reduce((sum, sub) => sum + sub.amount, 0)
+  if (totalSubdivision > this.targetAmount) {
+    throw new Error('Total subdivisions exceed target amount')
+  }
+
+  // Create child targets
+  const childTargets = await Promise.all(
+    subdivisions.map(sub =>
+      Target.create({
+        assignedTo: sub.userId,
+        assignedBy: this.assignedTo,
+        targetAmount: sub.amount,
+        startDate: this.startDate,
+        endDate: this.endDate,
+        parentTargetId: this._id,
+        level: this.level, // Will be updated based on user role
+        status: TargetStatus.PENDING
+      })
+    )
+  )
+
+  // Update this target
+  this.isDivided = true
+  this.subdivisions = childTargets.map(t => t._id)
+  await this.save()
+
+  return childTargets
 }
 
 // Static methods
-targetSchema.statics.findByUser = function (userId: mongoose.Types.ObjectId) {
+targetSchema.statics.findByUser = async function (
+  userId: mongoose.Types.ObjectId
+): Promise<ITarget[]> {
   return this.find({ assignedTo: userId })
+    .populate('assignedBy', 'name email role')
+    .populate('assignedTo', 'name email role')
+    .sort({ createdAt: -1 })
+}
+
+targetSchema.statics.findActiveByUser = async function (
+  userId: mongoose.Types.ObjectId
+): Promise<ITarget | null> {
+  return this.findOne({
+    assignedTo: userId,
+    status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS, TargetStatus.OVERDUE] }
+  })
     .populate('assignedBy', 'name email role')
     .sort({ createdAt: -1 })
 }
 
-targetSchema.statics.findActiveByUser = function (userId: mongoose.Types.ObjectId) {
+targetSchema.statics.findOverdueTargets = async function (): Promise<ITarget[]> {
+  const today = new Date()
   return this.find({
-    assignedTo: userId,
-    status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS] }
-  })
-    .populate('assignedBy', 'name email role')
-    .sort({ endDate: 1 })
-}
-
-targetSchema.statics.findOverdueTargets = function () {
-  return this.find({
-    endDate: { $lt: new Date() },
+    endDate: { $lt: today },
     status: { $nin: [TargetStatus.COMPLETED, TargetStatus.CANCELLED] }
   })
     .populate('assignedTo', 'name email role')
     .populate('assignedBy', 'name email role')
 }
 
-// @ts-ignore - Mongoose static method typing
-targetSchema.statics.getTargetSummary = async function (this: ITargetModel, userId: mongoose.Types.ObjectId): Promise<TargetSummary> {
-  // @ts-ignore - Mongoose static method typing
-  const targets = await this.findByUser(userId)
+targetSchema.statics.getTargetSummary = async function (
+  userId: mongoose.Types.ObjectId
+): Promise<TargetSummary> {
+  const Model = this as unknown as ITargetModel
+  const targets = await Model.findByUser(userId)
 
-  const summary: TargetSummary = {
+  const activeTarget = await Model.findActiveByUser(userId)
+
+  const completedTargets = targets.filter((t: ITarget) => t.status === TargetStatus.COMPLETED).length
+  const inProgressTargets = targets.filter((t: ITarget) => t.status === TargetStatus.IN_PROGRESS).length
+  const overdueTargets = targets.filter((t: ITarget) => t.status === TargetStatus.OVERDUE).length
+
+  const averageProgress = targets.length > 0
+    ? targets.reduce((sum: number, t: ITarget) => sum + t.progressPercentage, 0) / targets.length
+    : 0
+
+  return {
     userId,
     totalTargets: targets.length,
-    // @ts-ignore - Filter typing with Mongoose documents
-    completedTargets: targets.filter((t: any) => t.status === TargetStatus.COMPLETED).length,
-    // @ts-ignore
-    inProgressTargets: targets.filter((t: any) => t.status === TargetStatus.IN_PROGRESS).length,
-    // @ts-ignore
-    overdueTargets: targets.filter((t: any) => t.isOverdue).length,
-    averageProgress: 0,
+    activeTarget,
+    completedTargets,
+    inProgressTargets,
+    overdueTargets,
+    averageProgress,
     targets
   }
-
-  if (targets.length > 0) {
-    // @ts-ignore - Reduce typing with Mongoose documents
-    const totalProgress = targets.reduce((sum: any, t: any) => sum + t.calculateProgress(), 0)
-    summary.averageProgress = totalProgress / targets.length
-  }
-
-  return summary
 }
 
-targetSchema.statics.createTarget = async function (targetData: Partial<ITarget>): Promise<ITarget> {
-  const target = new this(targetData)
-  return await target.save()
+targetSchema.statics.createTarget = async function (
+  targetData: Partial<ITarget>
+): Promise<ITarget> {
+  return this.create(targetData)
 }
 
-targetSchema.statics.bulkCreateTargets = async function (targetsData: Partial<ITarget>[]): Promise<ITarget[]> {
-  const created = await this.insertMany(targetsData)
-  // @ts-ignore - Mongoose insertMany return type complexity
-  return created as unknown as ITarget[]
+targetSchema.statics.bulkCreateTargets = async function (
+  targetsData: Partial<ITarget>[]
+): Promise<ITarget[]> {
+  return this.insertMany(targetsData) as any
 }
 
-// Static method to aggregate team collections up the hierarchy
 targetSchema.statics.aggregateTeamCollection = async function (
   userId: mongoose.Types.ObjectId
 ): Promise<number> {
+  // Get all subordinates' targets
   const User = mongoose.model('User')
+  const subordinates = await User.find({ parentCoordinatorId: userId }).select('_id')
+  const subordinateIds = subordinates.map((s: any) => s._id)
 
-  // Get team members (users who have this user as parent coordinator)
-  const teamMembers = await User.find({ parentCoordinatorId: userId }).select('_id')
+  if (subordinateIds.length === 0) return 0
 
-  if (!teamMembers || teamMembers.length === 0) {
-    return 0
-  }
-
-  const teamUserIds = teamMembers.map(member => member._id)
-
-  // Get all active fund collection targets for team members
-  const teamTargets = await this.find({
-    assignedTo: { $in: teamUserIds },
-    type: TargetType.DONATION_AMOUNT,
-    status: { $in: [TargetStatus.IN_PROGRESS, TargetStatus.COMPLETED] }
+  // Sum up their total collections
+  const targets = await this.find({
+    assignedTo: { $in: subordinateIds },
+    status: { $ne: TargetStatus.CANCELLED }
   })
 
-  let totalTeamCollection = 0
-
-  for (const target of teamTargets) {
-    // Add personal collection
-    totalTeamCollection += target.collectedAmount
-    // Recursively add team's collection
-    const subTeamCollection = await (this as any).aggregateTeamCollection(target.assignedTo)
-    totalTeamCollection += subTeamCollection
-  }
-
-  return totalTeamCollection
+  return targets.reduce((sum: number, target: ITarget) => sum + target.totalCollection, 0)
 }
 
-// Static method to propagate collection up the hierarchy
-targetSchema.statics.propagateCollection = async function (
+targetSchema.statics.propagateCollectionUpward = async function (
   userId: mongoose.Types.ObjectId,
   amount: number
 ): Promise<void> {
   const User = mongoose.model('User')
+  const Model = this as unknown as ITargetModel
 
-  // Update current user's active target
-  const currentTarget = await this.findOne({
-    assignedTo: userId,
-    type: TargetType.DONATION_AMOUNT,
-    status: { $in: [TargetStatus.IN_PROGRESS, TargetStatus.PENDING] }
-  })
+  // Find user and their hierarchy
+  const user = await User.findById(userId).select('parentCoordinatorId')
+  if (!user || !user.parentCoordinatorId) return
 
-  if (currentTarget) {
-    currentTarget.collectedAmount += amount
-    currentTarget.currentValue = currentTarget.collectedAmount + currentTarget.teamCollectedAmount
-    await currentTarget.save()
-  }
+  // Update parent's target teamCollection
+  const parentTarget = await Model.findActiveByUser(user.parentCoordinatorId)
+  if (parentTarget) {
+    // Recalculate team collection from all subordinates
+    const teamCollection = await Model.aggregateTeamCollection(user.parentCoordinatorId)
+    parentTarget.teamCollection = teamCollection
+    await parentTarget.save()
 
-  // Find parent and propagate upward
-  const user = await User.findById(userId)
-  if (user && user.referredBy) {
-    const parentTarget = await this.findOne({
-      assignedTo: user.referredBy,
-      type: TargetType.DONATION_AMOUNT,
-      status: { $in: [TargetStatus.IN_PROGRESS, TargetStatus.PENDING] }
-    })
-
-    if (parentTarget) {
-      parentTarget.teamCollectedAmount += amount
-      parentTarget.currentValue = parentTarget.collectedAmount + parentTarget.teamCollectedAmount
-      await parentTarget.save()
-
-      // Continue propagating upward
-      await (this as any).propagateCollection(user.referredBy, amount)
-    }
+    // Recursively propagate upward
+    await Model.propagateCollectionUpward(user.parentCoordinatorId, amount)
   }
 }
 
-// Static method to get hierarchy statistics
 targetSchema.statics.getHierarchyStats = async function (
   userId: mongoose.Types.ObjectId
 ): Promise<HierarchyStats> {
   const User = mongoose.model('User')
+  const Model = this as unknown as ITargetModel
 
-  // Get user and their active target
+  // Get user details
   const user = await User.findById(userId)
-  const target = await this.findOne({
-    assignedTo: userId,
-    type: TargetType.DONATION_AMOUNT,
-    status: { $in: [TargetStatus.IN_PROGRESS, TargetStatus.PENDING] }
-  })
+    .select('name role state district zone block')
+  if (!user) throw new Error('User not found')
 
-  if (!target) {
-    throw new Error('No active target found for user')
-  }
-
-  const totalCollection = target.collectedAmount + target.teamCollectedAmount
-  const achievementPercentage = target.targetValue > 0
-    ? Math.min((totalCollection / target.targetValue) * 100, 100)
-    : 0
-
-  // Get team breakdown - find all users with this user as parent coordinator
-  const teamBreakdown: any[] = []
-  const topPerformers: any[] = []
-  
-  // Get subordinates (team members)
-  const teamMembers = await User.find({ parentCoordinatorId: userId })
-
-  if (teamMembers && teamMembers.length > 0) {
-    for (const member of teamMembers) {
-      const memberTarget = await this.findOne({
-        assignedTo: (member as any)._id,
-        type: TargetType.DONATION_AMOUNT,
-        status: { $in: [TargetStatus.IN_PROGRESS, TargetStatus.COMPLETED] }
-      })
-
-      if (memberTarget) {
-        const memberTotal = memberTarget.collectedAmount + memberTarget.teamCollectedAmount
-
-        teamBreakdown.push({
-          userId: (member as any)._id,
-          name: (member as any).name,
-          level: memberTarget.level || 'volunteer',
-          collected: memberTotal,
-          percentage: memberTarget.targetValue > 0
-            ? (memberTotal / memberTarget.targetValue) * 100
-            : 0
-        })
-
-        topPerformers.push({
-          userId: (member as any)._id,
-          name: (member as any).name,
-          collected: memberTotal
-        })
-      }
+  // Get user's active target
+  const activeTarget = await Model.findActiveByUser(userId)
+  if (!activeTarget) {
+    return {
+      userId,
+      userName: user.name,
+      level: HierarchyLevel.VOLUNTEER,
+      targetAmount: 0,
+      personalCollection: 0,
+      teamCollection: 0,
+      totalCollection: 0,
+      remainingAmount: 0,
+      achievementPercentage: 0,
+      teamBreakdown: [],
+      subordinatesCount: 0,
+      activeSubordinates: 0,
+      topPerformers: []
     }
   }
 
-  // Sort top performers by collection amount
-  topPerformers.sort((a, b) => b.collected - a.collected)
+  // Get all subordinates
+  const subordinates = await User.find({ parentId: userId })
+    .select('_id name role state district zone block')
+
+  // Get subordinates' targets
+  const subordinateTargets = await this.find({
+    assignedTo: { $in: subordinates.map(s => s._id) },
+    status: { $ne: TargetStatus.CANCELLED }
+  }).populate('assignedTo', 'name role')
+
+  // Build team breakdown
+  const teamBreakdown = subordinateTargets.map((target: any) => {
+    const subordinate = subordinates.find((s: any) => s._id.equals(target.assignedTo._id))
+    return {
+      userId: target.assignedTo._id,
+      name: (target.assignedTo as any).name,
+      role: (target.assignedTo as any).role,
+      level: target.level,
+      targetAmount: target.targetAmount,
+      personalCollection: target.personalCollection,
+      teamCollection: target.teamCollection,
+      totalCollection: target.totalCollection,
+      achievementPercentage: target.progressPercentage,
+      region: {
+        state: subordinate?.state,
+        zone: subordinate?.zone,
+        district: subordinate?.district,
+        block: subordinate?.block
+      }
+    }
+  })
+
+  // Get top performers
+  const topPerformers = teamBreakdown
+    .sort((a: any, b: any) => b.totalCollection - a.totalCollection)
+    .slice(0, 5)
+    .map((entry: any, index: number) => ({
+      userId: entry.userId,
+      name: entry.name,
+      role: entry.role,
+      collected: entry.totalCollection,
+      percentage: entry.achievementPercentage
+    }))
 
   return {
     userId,
-    level: target.level || 'volunteer',
-    personalCollection: target.collectedAmount,
-    teamCollection: target.teamCollectedAmount,
-    totalCollection,
-    targetAmount: target.targetValue,
-    achievementPercentage,
+    userName: user.name,
+    level: activeTarget.level,
+    targetAmount: activeTarget.targetAmount,
+    personalCollection: activeTarget.personalCollection,
+    teamCollection: activeTarget.teamCollection,
+    totalCollection: activeTarget.totalCollection,
+    remainingAmount: activeTarget.remainingAmount,
+    achievementPercentage: activeTarget.progressPercentage,
     teamBreakdown,
-    subordinatesCount: user.team ? user.team.length : 0,
-    topPerformers: topPerformers.slice(0, 10)
+    subordinatesCount: subordinates.length,
+    activeSubordinates: subordinateTargets.length,
+    topPerformers
   }
 }
 
-// Pre-save middleware to check and update status
-targetSchema.pre('save', async function (next) {
-  if (this.isModified('currentValue') || this.isModified('endDate')) {
-    await this.checkAndUpdateStatus()
-  }
-  next()
-})
+targetSchema.statics.getDashboardData = async function (
+  userId: mongoose.Types.ObjectId
+): Promise<DashboardData> {
+  const User = mongoose.model('User')
+  const Transaction = mongoose.model('Transaction')
+  const Model = this as unknown as ITargetModel
 
-// Create and export the model
-export const Target = (mongoose.models?.Target as ITargetModel) ||
-  mongoose.model<ITarget, ITargetModel>('Target', targetSchema)
+  // Get user details
+  const user = await User.findById(userId).select('name role')
+  if (!user) throw new Error('User not found')
 
-// Export utility functions
-export const targetUtils = {
-  /**
-   * Validate target data using Zod schema
-   */
-  validateTargetData: (data: unknown) => {
-    return targetValidationSchema.safeParse(data)
-  },
+  // Get hierarchy stats
+  const hierarchyStats = await Model.getHierarchyStats(userId)
 
-  /**
-   * Validate target creation data
-   */
-  validateCreationData: (data: unknown) => {
-    return targetCreationSchema.safeParse(data)
-  },
+  // Get recent transactions
+  const recentTransactions = await Transaction.find({
+    userId,
+    status: 'verified'
+  })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .populate('userId', 'name')
 
-  /**
-   * Validate target update data
-   */
-  validateUpdateData: (data: unknown) => {
-    return targetUpdateSchema.safeParse(data)
-  },
+  const recentActivity = recentTransactions.map(txn => ({
+    date: txn.createdAt,
+    userId: txn.userId._id,
+    userName: (txn.userId as any).name,
+    amount: txn.amount,
+    type: 'personal' as const
+  }))
 
-  /**
-   * Calculate overall performance for a user
-   */
-  calculatePerformance: (targets: ITarget[]) => {
-    const completed = targets.filter(t => t.status === TargetStatus.COMPLETED).length
-    const total = targets.length
-    const completionRate = total > 0 ? (completed / total) * 100 : 0
+  // Get analytics data
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    const avgProgress = total > 0
-      ? targets.reduce((sum, t) => sum + t.calculateProgress(), 0) / total
-      : 0
+  const transactions = await Transaction.find({
+    userId,
+    status: 'verified',
+    createdAt: { $gte: thirtyDaysAgo }
+  }).sort({ createdAt: 1 })
 
-    return {
-      totalTargets: total,
-      completedTargets: completed,
-      completionRate,
-      averageProgress: avgProgress,
-      onTrack: targets.filter(t => !t.isOverdue && t.status === TargetStatus.IN_PROGRESS).length,
-      overdue: targets.filter(t => t.isOverdue).length
+  // Daily collection
+  const dailyMap = new Map<string, number>()
+  transactions.forEach(txn => {
+    const dateStr = txn.createdAt.toISOString().split('T')[0]
+    dailyMap.set(dateStr, (dailyMap.get(dateStr) || 0) + txn.amount)
+  })
+
+  const dailyCollection = Array.from(dailyMap.entries()).map(([date, amount]) => ({
+    date,
+    amount
+  }))
+
+  const activeTarget = await Model.findActiveByUser(userId)
+
+  return {
+    user: {
+      id: userId,
+      name: user.name,
+      role: user.role,
+      level: hierarchyStats.level
+    },
+    target: {
+      amount: hierarchyStats.targetAmount,
+      personalCollection: hierarchyStats.personalCollection,
+      teamCollection: hierarchyStats.teamCollection,
+      totalCollection: hierarchyStats.totalCollection,
+      remainingAmount: hierarchyStats.remainingAmount,
+      achievementPercentage: hierarchyStats.achievementPercentage,
+      status: activeTarget?.status || TargetStatus.PENDING,
+      daysRemaining: activeTarget?.daysRemaining || 0,
+      isOverdue: activeTarget?.isOverdue || false
+    },
+    team: {
+      totalMembers: hierarchyStats.subordinatesCount,
+      activeMembers: hierarchyStats.activeSubordinates,
+      totalTeamCollection: hierarchyStats.teamCollection,
+      averageCollection: hierarchyStats.subordinatesCount > 0
+        ? hierarchyStats.teamCollection / hierarchyStats.subordinatesCount
+        : 0,
+      topPerformers: hierarchyStats.topPerformers
+    },
+    recentActivity,
+    analytics: {
+      dailyCollection,
+      weeklyTrend: [],
+      monthlyTrend: []
     }
   }
 }
+
+targetSchema.statics.getLeaderboard = async function (
+  userId: mongoose.Types.ObjectId,
+  limit: number = 10
+): Promise<LeaderboardEntry[]> {
+  const User = mongoose.model('User')
+
+  // Get user to determine scope
+  const user = await User.findById(userId).select('role parentId state district')
+  if (!user) throw new Error('User not found')
+
+  // Get all users at the same or lower level
+  let query: any = {}
+
+  // If state level, show state-wide leaderboard
+  if (user.state) {
+    const stateUsers = await User.find({ state: user.state }).select('_id')
+    query.assignedTo = { $in: stateUsers.map(u => u._id) }
+  }
+
+  const targets = await this.find({
+    ...query,
+    status: { $ne: TargetStatus.CANCELLED }
+  })
+    .populate('assignedTo', 'name role state district zone')
+    .sort({ totalCollection: -1 })
+    .limit(limit)
+
+  return targets.map((target: any, index: number) => {
+    const assignedUser = target.assignedTo as any
+    return {
+      rank: index + 1,
+      userId: assignedUser._id,
+      name: assignedUser.name,
+      role: assignedUser.role,
+      level: target.level,
+      targetAmount: target.targetAmount,
+      totalCollection: target.totalCollection,
+      achievementPercentage: target.progressPercentage,
+      region: {
+        state: assignedUser.state,
+        zone: assignedUser.zone,
+        district: assignedUser.district
+      }
+    }
+  })
+}
+
+// Export the model
+const Target = (mongoose.models.Target || mongoose.model<ITarget, ITargetModel>('Target', targetSchema)) as ITargetModel
+
+export default Target
+export { Target }

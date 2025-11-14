@@ -226,8 +226,8 @@ export default function AdminTransactionsPage() {
               <button
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
                 All
@@ -235,8 +235,8 @@ export default function AdminTransactionsPage() {
               <button
                 onClick={() => setFilter('pending')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'pending'
-                    ? 'bg-yellow-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-yellow-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
                 Pending
@@ -244,8 +244,8 @@ export default function AdminTransactionsPage() {
               <button
                 onClick={() => setFilter('verified')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'verified'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
                 Verified
@@ -253,8 +253,8 @@ export default function AdminTransactionsPage() {
               <button
                 onClick={() => setFilter('rejected')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'rejected'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
                 Rejected

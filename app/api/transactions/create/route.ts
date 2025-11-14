@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectToDatabase } from '@/lib/db'
 import Transaction from '@/models/Transaction'
-import { Target, TargetType, TargetStatus } from '@/models/Target'
+import Target, { TargetStatus } from '@/models/Target'
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +52,6 @@ export async function POST(request: NextRequest) {
     if (session.user.id.match(/^[0-9a-fA-F]{24}$/)) {
       activeTarget = await Target.findOne({
         assignedTo: session.user.id,
-        type: TargetType.DONATION_AMOUNT,
         status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS] }
       })
     }

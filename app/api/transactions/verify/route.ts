@@ -94,13 +94,28 @@ export async function POST(request: NextRequest) {
 
     // Perform verification or rejection
     if (action === 'approve') {
-      await (transaction as any).verify(session.user.id)
+      // For demo-admin, pass null instead of invalid ObjectId
+      const verifierId = session.user.id.match(/^[0-9a-fA-F]{24}$/)
+        ? session.user.id
+        : null
+      await (transaction as any).verify(verifierId)
     } else {
-      await (transaction as any).reject(session.user.id, reason)
+      const verifierId = session.user.id.match(/^[0-9a-fA-F]{24}$/)
+        ? session.user.id
+        : null
+      await (transaction as any).reject(verifierId, reason)
     }
 
     await transaction.populate('userId', 'name email')
-    await transaction.populate('verifiedBy', 'name email')
+
+    // Only populate verifiedBy if it's a valid ObjectId
+    if (transaction.verifiedBy) {
+      try {
+        await transaction.populate('verifiedBy', 'name email')
+      } catch (e) {
+        // Skip populate if it fails
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -113,10 +128,10 @@ export async function POST(request: NextRequest) {
           name: (transaction.userId as any).name,
           email: (transaction.userId as any).email
         },
-        verifiedBy: {
+        verifiedBy: transaction.verifiedBy ? {
           name: (transaction.verifiedBy as any).name,
           email: (transaction.verifiedBy as any).email
-        },
+        } : { name: 'Administrator', email: 'admin@arpufrl.demo' },
         verifiedAt: transaction.verifiedAt,
         rejectionReason: transaction.rejectionReason
       }
