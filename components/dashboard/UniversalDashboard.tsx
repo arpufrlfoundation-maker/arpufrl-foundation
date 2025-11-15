@@ -21,6 +21,13 @@ interface DashboardData {
     roleDisplay: string
     region?: string
     referralCode?: string
+    upperCoordinator?: {
+      id: string
+      name: string
+      role: string
+      email: string
+      phone?: string
+    }
   }
   donations: {
     total: number
@@ -50,6 +57,7 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showPaymentWidget, setShowPaymentWidget] = useState(true)
+  const [generatingReferral, setGeneratingReferral] = useState(false)
 
   useEffect(() => {
     fetchDashboardData()
@@ -86,6 +94,29 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
 
     navigator.clipboard.writeText(referralLink)
     alert('Referral link copied to clipboard!')
+  }
+
+  const generateReferralCode = async () => {
+    try {
+      setGeneratingReferral(true)
+      const response = await fetch('/api/user/generate-referral', {
+        method: 'POST'
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate referral code')
+      }
+
+      // Refresh dashboard data to get the new referral code
+      await fetchDashboardData()
+      alert('Referral code generated successfully!')
+    } catch (err: any) {
+      alert(err.message || 'Failed to generate referral code')
+    } finally {
+      setGeneratingReferral(false)
+    }
   }
 
   const downloadIdCard = () => {
@@ -144,13 +175,22 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
               <Bell className="h-6 w-6" />
             </button>
 
-            {user.referralCode && (
+            {user.referralCode ? (
               <button
                 onClick={copyReferralLink}
                 className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
               >
                 <Share2 className="h-5 w-5" />
                 <span>Share Referral</span>
+              </button>
+            ) : (
+              <button
+                onClick={generateReferralCode}
+                disabled={generatingReferral}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Share2 className="h-5 w-5" />
+                <span>{generatingReferral ? 'Generating...' : 'Generate Referral'}</span>
               </button>
             )}
 
@@ -163,6 +203,25 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
             </button>
           </div>
         </div>
+
+        {/* Upper Coordinator Info */}
+        {user.upperCoordinator && (
+          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-900">Your Coordinator</p>
+                <p className="text-lg font-bold text-blue-700 mt-1">{user.upperCoordinator.name}</p>
+                <p className="text-sm text-blue-600">{user.upperCoordinator.role}</p>
+                {user.upperCoordinator.email && (
+                  <p className="text-xs text-blue-600 mt-1">📧 {user.upperCoordinator.email}</p>
+                )}
+                {user.upperCoordinator.phone && (
+                  <p className="text-xs text-blue-600">📱 {user.upperCoordinator.phone}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Referral Code Display */}
         {user.referralCode && (

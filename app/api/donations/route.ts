@@ -6,13 +6,36 @@ import { Donation, donationCreationSchema } from '@/models/Donation'
 import { ReferralCode, referralCodeUtils } from '@/models/ReferralCode'
 import { Program } from '@/models/Program'
 
+/**
+ * Extract IP address from request headers
+ * Handles proxy headers for Vercel and other platforms
+ */
+function getClientIp(request: NextRequest): string | undefined {
+  // Check various headers in order of priority
+  const forwarded = request.headers.get('x-forwarded-for')
+  if (forwarded) {
+    // x-forwarded-for can contain multiple IPs, get the first one
+    const ips = forwarded.split(',').map(ip => ip.trim())
+    return ips[0]
+  }
+  
+  const realIp = request.headers.get('x-real-ip')
+  if (realIp) return realIp
+  
+  const cfConnectingIp = request.headers.get('cf-connecting-ip') // Cloudflare
+  if (cfConnectingIp) return cfConnectingIp
+  
+  // Fallback for local development
+  return '127.0.0.1'
+}
+
 // Request validation schemas
 const createDonationSchema = z.object({
   donorName: z.string().min(2).max(100),
   donorEmail: z.string().email().optional(),
   donorPhone: z.string().min(10).max(15).optional(),
   amount: z.number().min(100).max(10000000), // Amount in paise (₹1 to ₹100,000)
-  programId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
+  programId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Please select a program'), // Made required
   referralCode: z.string().min(3).max(50).optional(),
 })
 
@@ -135,16 +158,13 @@ export async function POST(request: NextRequest) {
 
     const { donorName, donorEmail, donorPhone, amount, programId, referralCode } = validationResult.data
 
-    // Validate program if provided
-    let program = null
-    if (programId) {
-      program = await Program.findById(programId)
-      if (!program || !program.active) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid or inactive program' },
-          { status: 400 }
-        )
-      }
+    // Validate program (REQUIRED)
+    const program = await Program.findById(programId)
+    if (!program || !program.active) {
+      return NextResponse.json(
+        { success: false, error: 'Please select a valid program for your donation' },
+        { status: 400 }
+      )
     }
 
     // Validate and resolve referral code if provided
@@ -159,11 +179,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Get client IP and user agent for tracking
-    const clientIP = request.headers.get('x-forwarded-for') ||
-      request.headers.get('x-real-ip') ||
-      'unknown'
-    const userAgent = request.headers.get('user-agent') || 'unknown'
+    // Auto-detect client IP and user agent for tracking
+    const clientIP = getClientIp(request)
+    const userAgent = request.headers.get('user-agent') || undefined
 
     // Create Razorpay order
     const orderInput: CreateOrderInput = {
@@ -187,13 +205,15 @@ export async function POST(request: NextRequest) {
       donorPhone,
       amount,
       currency: 'INR',
-      programId: programId || undefined,
+      programId,
       paymentStatus: 'PENDING',
       razorpayOrderId: razorpayOrder.id,
       referralCodeId: referralCodeDoc?._id,
       attributedToUserId: referralCodeDoc?.ownerUserId,
       ipAddress: clientIP,
-      userAgent: userAgent.substring(0, 500) // Limit length
+      userAgent: userAgent ? userAgent.substring(0, 500) : undefined,
+      privacyConsentGiven: true,
+      dataProcessingConsent: true
     })
 
     await donation.save()

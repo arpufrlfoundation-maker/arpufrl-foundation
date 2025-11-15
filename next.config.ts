@@ -61,14 +61,28 @@ const nextConfig: NextConfig = {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
           },
-          // Performance headers
+        ],
+      },
+      // CRITICAL: HTML pages should NOT be cached during development
+      {
+        source: '/dashboard/:path*',
+        headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: 'no-store, no-cache, must-revalidate, max-age=0',
           },
         ],
       },
-      // Static assets caching
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, max-age=0',
+          },
+        ],
+      },
+      // Static assets caching (images, fonts, etc.)
       {
         source: '/images/(.*)',
         headers: [
@@ -87,13 +101,13 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // API routes caching
+      // Programs API - short cache
       {
         source: '/api/programs',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, s-maxage=300, stale-while-revalidate=600',
+            value: 'public, s-maxage=60, stale-while-revalidate=120',
           },
         ],
       },

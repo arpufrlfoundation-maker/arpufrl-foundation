@@ -12,8 +12,8 @@ async function testAPI(path, method = 'GET', data = null, cookies = '') {
       path: path,
       method: method,
       headers: {
-        'Content-Type': method === 'POST' && path.includes('auth') 
-          ? 'application/x-www-form-urlencoded' 
+        'Content-Type': method === 'POST' && path.includes('auth')
+          ? 'application/x-www-form-urlencoded'
           : 'application/json',
         'Cookie': cookies
       }
@@ -69,7 +69,7 @@ async function getAuthenticatedSession() {
   };
 
   const loginResult = await testAPI('/api/auth/callback/credentials', 'POST', loginData, cookies);
-  
+
   // Update cookies with login session
   if (loginResult.headers['set-cookie']) {
     const newCookies = loginResult.headers['set-cookie'].map(cookie => cookie.split(';')[0]).join('; ');
@@ -106,7 +106,7 @@ async function testDonationAndRevenue() {
 
   const donationResult = await testAPI('/api/donations', 'POST', donationData);
   console.log(`Status: ${donationResult.status}`);
-  
+
   if (donationResult.status === 200) {
     const donation = JSON.parse(donationResult.body);
     console.log('✅ Donation Created:');
@@ -122,7 +122,7 @@ async function testDonationAndRevenue() {
 
       const distributionResult = await testAPI('/api/revenue/distribute', 'POST', distributionData, cookies);
       console.log(`Distribution Status: ${distributionResult.status}`);
-      
+
       if (distributionResult.status === 200) {
         const distribution = JSON.parse(distributionResult.body);
         console.log('✅ Revenue Distribution:');
@@ -137,7 +137,7 @@ async function testDonationAndRevenue() {
     console.log('');
   }
 
-  // Check admin donations API  
+  // Check admin donations API
   console.log('📊 Getting Admin Donations Data:');
   const adminDonationsResult = await testAPI('/api/admin/donations', 'GET', null, cookies);
   console.log(`Status: ${adminDonationsResult.status}`);

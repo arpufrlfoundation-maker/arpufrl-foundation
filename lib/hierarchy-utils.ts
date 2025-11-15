@@ -270,6 +270,24 @@ export async function getDashboardStats(userId: mongoose.Types.ObjectId | string
   const activeMembers = subordinates.filter(s => s.status === 'ACTIVE').length
   const pendingMembers = subordinates.filter(s => s.status === 'PENDING').length
 
+  // Get upper coordinator information
+  let upperCoordinator = null
+  if (user.parentCoordinatorId) {
+    const coordinator = await User.findById(user.parentCoordinatorId)
+      .select('name email role phone')
+      .lean()
+
+    if (coordinator) {
+      upperCoordinator = {
+        id: coordinator._id.toString(),
+        name: coordinator.name,
+        role: RoleDisplayNames[coordinator.role as UserRoleType] || coordinator.role,
+        email: coordinator.email,
+        phone: coordinator.phone
+      }
+    }
+  }
+
   return {
     user: {
       id: user._id,
@@ -277,7 +295,8 @@ export async function getDashboardStats(userId: mongoose.Types.ObjectId | string
       role: user.role,
       roleDisplay: RoleDisplayNames[user.role],
       region: user.region,
-      referralCode: user.referralCode
+      referralCode: user.referralCode,
+      upperCoordinator
     },
     donations: {
       total: totalDonations,

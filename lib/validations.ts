@@ -29,9 +29,8 @@ export const donationFormSchema = z.object({
 
   // Program selection
   programId: z.string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid program selection')
-    .optional()
-    .or(z.literal('')),
+    .min(1, 'Please select a program')
+    .regex(/^[0-9a-fA-F]{24}$/, 'Please select a valid program'),
 
   // Referral code
   referralCode: z.string()

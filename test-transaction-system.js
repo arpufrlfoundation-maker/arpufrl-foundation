@@ -12,8 +12,8 @@ async function testAPI(path, method = 'GET', data = null, cookies = '') {
       path: path,
       method: method,
       headers: {
-        'Content-Type': method === 'POST' && path.includes('auth') 
-          ? 'application/x-www-form-urlencoded' 
+        'Content-Type': method === 'POST' && path.includes('auth')
+          ? 'application/x-www-form-urlencoded'
           : 'application/json',
         'Cookie': cookies
       }
@@ -69,7 +69,7 @@ async function getAuthenticatedSession() {
   };
 
   const loginResult = await testAPI('/api/auth/callback/credentials', 'POST', loginData, cookies);
-  
+
   // Update cookies with login session
   if (loginResult.headers['set-cookie']) {
     const newCookies = loginResult.headers['set-cookie'].map(cookie => cookie.split(';')[0]).join('; ');
@@ -100,7 +100,7 @@ async function testTransactionSystem() {
 
   const transactionResult = await testAPI('/api/transactions/create', 'POST', transactionData, cookies);
   console.log(`Status: ${transactionResult.status}`);
-  
+
   if (transactionResult.status === 200) {
     const transaction = JSON.parse(transactionResult.body);
     console.log('✅ Transaction Created:');
@@ -128,7 +128,7 @@ async function testTransactionSystem() {
 
   // Test creating a manual donation record to test revenue distribution
   console.log('🧪 Testing Manual Revenue Distribution:');
-  
+
   // Let's try using the revenue distribution with a fake successful donation ID
   const fakeDistributionData = {
     donationId: '507f1f77bcf86cd799439011' // Fake but valid ObjectId format

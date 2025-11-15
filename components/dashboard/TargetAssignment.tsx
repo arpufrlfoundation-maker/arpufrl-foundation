@@ -179,12 +179,22 @@ export default function TargetAssignment({ mode, parentTargetId, parentTargetAmo
     setSuccess(null)
 
     try {
-      const response = await fetch('/api/targets/divide', {
+      // Prepare subdivisions for API
+      const subdivisions = divisions.map(div => ({
+        userId: div.assignedToId,
+        amount: div.amount,
+        description: div.description
+      }))
+
+      const response = await fetch('/api/targets/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          parentTargetId,
-          divisions
+          targetAmount: parentTargetAmount || totalDivision,
+          subdivisions,
+          startDate,
+          endDate,
+          description: description || `Target divided among team members`
         })
       })
 

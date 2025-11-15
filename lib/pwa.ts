@@ -24,6 +24,21 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     return null
   }
 
+  // DISABLE SERVICE WORKER IN DEVELOPMENT MODE
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Service Worker disabled in development mode')
+
+    // Unregister any existing service workers
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      for (let registration of registrations) {
+        registration.unregister()
+        console.log('Development: Unregistered service worker')
+      }
+    })
+
+    return null
+  }
+
   try {
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/',

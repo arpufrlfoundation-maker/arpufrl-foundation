@@ -402,13 +402,18 @@ const donationSchema = new Schema<IDonation>({
   // Metadata
   ipAddress: {
     type: String,
+    required: false,
     validate: {
       validator: function (v: string) {
-        if (!v) return true
-        // Basic IP validation (IPv4 and IPv6)
+        if (!v) return true // Allow empty/undefined
+        // Basic IP validation (IPv4 and IPv6) - also allow comma-separated IPs from proxies
         const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
         const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/
-        return ipv4Regex.test(v) || ipv6Regex.test(v)
+        const localhostRegex = /^(localhost|127\.0\.0\.1|::1)$/
+        
+        // Check if it's a single IP or comma-separated list (from x-forwarded-for)
+        const ips = v.split(',').map(ip => ip.trim())
+        return ips.every(ip => ipv4Regex.test(ip) || ipv6Regex.test(ip) || localhostRegex.test(ip))
       },
       message: 'Invalid IP address format'
     }

@@ -1,6 +1,6 @@
-const CACHE_NAME = 'arpu-foundation-v1'
-const STATIC_CACHE = 'arpu-static-v1'
-const DYNAMIC_CACHE = 'arpu-dynamic-v1'
+const CACHE_NAME = 'arpu-foundation-v2-fresh' // UPDATED VERSION
+const STATIC_CACHE = 'arpu-static-v2-fresh'
+const DYNAMIC_CACHE = 'arpu-dynamic-v2-fresh'
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -43,23 +43,35 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activating...')
+  console.log('Service Worker: Activating and clearing old caches...')
 
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-            console.log('Service Worker: Deleting old cache', cacheName)
+    Promise.all([
+      // Delete ALL old caches
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+              console.log('Service Worker: Deleting old cache', cacheName)
+              return caches.delete(cacheName)
+            }
+          })
+        )
+      }),
+      // Clear all caches for fresh start (development mode)
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            console.log('Service Worker: Clearing cache for fresh reload', cacheName)
             return caches.delete(cacheName)
-          }
-        })
-      )
-    })
+          })
+        )
+      })
+    ])
   )
 
   // Ensure the service worker takes control immediately
-  self.clients.claim()
+  return self.clients.claim()
 })
 
 // Fetch event - implement caching strategies
@@ -77,26 +89,40 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Handle API requests with network-first strategy
+  // IMPORTANT: Skip caching for HTML pages and API routes during development
+  // This ensures you always get fresh content
+  const isHTMLRequest = request.headers.get('accept')?.includes('text/html')
+  const isAPIRequest = url.pathname.startsWith('/api/')
+  const isDashboardRequest = url.pathname.startsWith('/dashboard')
+
+  // Always fetch fresh for HTML pages, API routes, and dashboard
+  if (isHTMLRequest || isAPIRequest || isDashboardRequest) {
+    event.respondWith(fetch(request).catch(() => {
+      // Only fallback to offline page for navigation failures
+      if (request.mode === 'navigate') {
+        return caches.match('/offline').then(response =>
+          response || new Response('Offline', { status: 503 })
+        )
+      }
+      throw new Error('Network error')
+    }))
+    return
+  }
+
+  // Handle API requests with network-first strategy (legacy endpoints)
   if (API_ROUTES.some(route => url.pathname.startsWith(route))) {
     event.respondWith(networkFirstStrategy(request))
     return
   }
 
-  // Handle static assets with cache-first strategy
+  // Handle static assets with cache-first strategy (images, fonts, etc.)
   if (isStaticAsset(url)) {
     event.respondWith(cacheFirstStrategy(request))
     return
   }
 
-  // Handle navigation requests with network-first, fallback to offline page
-  if (request.mode === 'navigate') {
-    event.respondWith(navigationStrategy(request))
-    return
-  }
-
-  // Default: network-first strategy
-  event.respondWith(networkFirstStrategy(request))
+  // Default: network-first strategy (ensures fresh content)
+  event.respondWith(fetch(request))
 })
 
 // Cache-first strategy for static assets

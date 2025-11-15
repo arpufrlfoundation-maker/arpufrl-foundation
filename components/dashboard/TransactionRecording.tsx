@@ -22,9 +22,12 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [recentTransactions, setRecentTransactions] = useState<any[]>([])
+  const [verifiedTransactions, setVerifiedTransactions] = useState<any[]>([])
   const [showHistory, setShowHistory] = useState(false)
+  const [showVerified, setShowVerified] = useState(false)
   const [uploadingProof, setUploadingProof] = useState(false)
   const [proofImages, setProofImages] = useState<string[]>([])
+  const [programs, setPrograms] = useState<any[]>([])
 
   // Form fields
   const [amount, setAmount] = useState('')
@@ -35,11 +38,14 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
   const [donorContact, setDonorContact] = useState('')
   const [donorEmail, setDonorEmail] = useState('')
   const [purpose, setPurpose] = useState('')
+  const [selectedProgram, setSelectedProgram] = useState('')
   const [notes, setNotes] = useState('')
   const [collectionDate, setCollectionDate] = useState(new Date().toISOString().split('T')[0])
 
   useEffect(() => {
     fetchRecentTransactions()
+    fetchVerifiedTransactions()
+    fetchPrograms()
   }, [])
 
   const fetchRecentTransactions = async () => {
@@ -54,11 +60,42 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
     }
   }
 
+  const fetchVerifiedTransactions = async () => {
+    try {
+      const response = await fetch('/api/transactions/create?limit=20&status=verified')
+      const data = await response.json()
+      if (response.ok) {
+        setVerifiedTransactions(data.transactions || [])
+      }
+    } catch (error) {
+      console.error('Error fetching verified transactions:', error)
+    }
+  }
+
+  const fetchPrograms = async () => {
+    try {
+      const response = await fetch('/api/programs?active=true')
+      const data = await response.json()
+      if (response.ok) {
+        setPrograms(data.programs || [])
+      }
+    } catch (error) {
+      console.error('Error fetching programs:', error)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     setSuccess(null)
+
+    // Validate program selection
+    if (!selectedProgram || selectedProgram.trim() === '') {
+      setError('Please select a program for this transaction')
+      setLoading(false)
+      return
+    }
 
     try {
       const response = await fetch('/api/transactions/create', {
@@ -73,6 +110,7 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
           donorContact: donorContact || undefined,
           donorEmail: donorEmail || undefined,
           purpose: purpose || undefined,
+          programId: selectedProgram,
           notes: notes || undefined,
           collectionDate,
           attachments: proofImages
@@ -95,11 +133,13 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
       setDonorContact('')
       setDonorEmail('')
       setPurpose('')
+      setSelectedProgram('')
       setNotes('')
       setCollectionDate(new Date().toISOString().split('T')[0])
       setProofImages([])
 
       fetchRecentTransactions()
+      fetchVerifiedTransactions()
 
       setTimeout(() => {
         if (onSuccess) onSuccess()
@@ -180,8 +220,14 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
 
   return (
     <div className="space-y-6">
-      {/* Toggle Button */}
-      <div className="flex justify-end">
+      {/* Toggle Buttons */}
+      <div className="flex justify-end space-x-3">
+        <button
+          onClick={() => setShowVerified(!showVerified)}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        >
+          {showVerified ? 'Hide Accepted' : 'View Accepted Transactions'}
+        </button>
         <button
           onClick={() => setShowHistory(!showHistory)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -189,6 +235,60 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
           {showHistory ? 'Hide History' : 'View Transaction History'}
         </button>
       </div>
+
+      {/* Verified/Accepted Transactions */}
+      {showVerified && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+            Accepted Transactions (Added to Your Total)
+          </h3>
+          {verifiedTransactions.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No accepted transactions yet</p>
+          ) : (
+            <div className="space-y-3">
+              {verifiedTransactions.map((txn) => (
+                <div key={txn.id} className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-lg text-gray-900">{formatCurrency(txn.amount)}</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Accepted ✓
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <span className="capitalize">{txn.paymentMode?.replace('_', ' ')}</span>
+                      {txn.receiptNumber && <span> • Receipt: {txn.receiptNumber}</span>}
+                      {txn.programName && <span> • Program: {txn.programName}</span>}
+                    </div>
+                    {txn.donorName && (
+                      <div className="text-sm text-gray-500 mt-1">Donor: {txn.donorName}</div>
+                    )}
+                    {txn.verifiedBy && (
+                      <div className="text-xs text-green-600 mt-1">Verified by: {txn.verifiedBy.name}</div>
+                    )}
+                  </div>
+                  <div className="text-right text-sm text-gray-500">
+                    {formatDate(txn.collectionDate || txn.createdAt)}
+                  </div>
+                </div>
+              ))}
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-blue-900">Total Accepted Amount:</span>
+                  <span className="text-xl font-bold text-blue-700">
+                    {formatCurrency(verifiedTransactions.reduce((sum, txn) => sum + txn.amount, 0))}
+                  </span>
+                </div>
+                <p className="text-xs text-blue-600 mt-1">
+                  This amount has been added to your collection total
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Recent Transactions */}
       {showHistory && recentTransactions.length > 0 && (
@@ -407,6 +507,27 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Program (Optional)
+              </label>
+              <select
+                value={selectedProgram}
+                onChange={(e) => setSelectedProgram(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              >
+                <option value="">-- Select a Program --</option>
+                {programs.map((program) => (
+                  <option key={program._id || program.id} value={program._id || program.id}>
+                    {program.name}
+                  </option>
+                ))}
+              </select>
+              {programs.length === 0 && (
+                <p className="text-xs text-gray-500 mt-1">No programs available</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Notes / Comments
               </label>
               <textarea
@@ -498,6 +619,7 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
               setDonorContact('')
               setDonorEmail('')
               setPurpose('')
+              setSelectedProgram('')
               setNotes('')
               setError(null)
             }}

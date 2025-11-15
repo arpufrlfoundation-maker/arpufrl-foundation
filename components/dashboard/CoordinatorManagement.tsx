@@ -712,18 +712,20 @@ export default function CoordinatorManagement() {
 
                 {/* Referral Information */}
                 <div>
-                  <h4 className="text-md font-medium text-gray-900 mb-3">Referral Information</h4>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Referral & Hierarchy Information</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Referral Code</label>
-                      <p className="text-sm font-mono text-gray-900">{selectedCoordinator.referralCode || 'Not assigned'}</p>
+                      <p className="text-sm font-mono text-gray-900 bg-gray-50 px-3 py-2 rounded">
+                        {selectedCoordinator.referralCode || 'Not assigned'}
+                      </p>
                     </div>
-                    {selectedCoordinator.parentCoordinatorName && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Parent Coordinator</label>
-                        <p className="text-sm text-gray-900">{selectedCoordinator.parentCoordinatorName}</p>
-                      </div>
-                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Upper Level Coordinator</label>
+                      <p className="text-sm text-gray-900 bg-blue-50 px-3 py-2 rounded">
+                        {selectedCoordinator.parentCoordinatorName || 'No parent coordinator'}
+                      </p>
+                    </div>
                   </div>
                 </div>
 

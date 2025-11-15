@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DollarSign, Loader2 } from 'lucide-react'
 
 interface PaymentWidgetProps {
@@ -22,12 +22,43 @@ export function PaymentWidget({ referralCode, userId, userName, className = '' }
   const [customAmount, setCustomAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const [showCustom, setShowCustom] = useState(false)
+  const [programs, setPrograms] = useState<any[]>([])
+  const [selectedProgram, setSelectedProgram] = useState('')
+  const [loadingPrograms, setLoadingPrograms] = useState(true)
+
+  useEffect(() => {
+    fetchPrograms()
+  }, [])
+
+  const fetchPrograms = async () => {
+    try {
+      setLoadingPrograms(true)
+      const response = await fetch('/api/programs?active=true')
+      const data = await response.json()
+      if (response.ok && data.programs) {
+        setPrograms(data.programs)
+        // Auto-select first program if available
+        if (data.programs.length > 0) {
+          setSelectedProgram(data.programs[0]._id || data.programs[0].id)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching programs:', error)
+    } finally {
+      setLoadingPrograms(false)
+    }
+  }
 
   const handlePayment = async () => {
     const amount = selectedAmount || parseInt(customAmount)
 
     if (!amount || amount < 21) {
       alert('Please select or enter an amount of at least ₹21')
+      return
+    }
+
+    if (!selectedProgram) {
+      alert('Please select a program for your donation')
       return
     }
 
@@ -40,13 +71,15 @@ export function PaymentWidget({ referralCode, userId, userName, className = '' }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount,
+          programId: selectedProgram,
           referralCode: referralCode || undefined,
           referredBy: userId || undefined
         })
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create order')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create order')
       }
 
       const { orderId, amount: orderAmount } = await response.json()
@@ -90,9 +123,9 @@ export function PaymentWidget({ referralCode, userId, userName, className = '' }
 
       const razorpay = new (window as any).Razorpay(options)
       razorpay.open()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment error:', error)
-      alert('Failed to process payment. Please try again.')
+      alert(error.message || 'Failed to process payment. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -106,8 +139,37 @@ export function PaymentWidget({ referralCode, userId, userName, className = '' }
       </div>
 
       <p className="text-sm text-gray-600 mb-4">
-        Support our cause with a contribution. Select an amount below:
+        Support our cause with a contribution. Select a program and amount below:
       </p>
+
+      {/* Program Selection */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Select Program <span className="text-red-500">*</span>
+        </label>
+        {loadingPrograms ? (
+          <div className="flex items-center justify-center py-2">
+            <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+            <span className="ml-2 text-sm text-gray-600">Loading programs...</span>
+          </div>
+        ) : (
+          <select
+            value={selectedProgram}
+            onChange={(e) => setSelectedProgram(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          >
+            <option value="">-- Select a Program --</option>
+            {programs.map((program) => (
+              <option key={program._id || program.id} value={program._id || program.id}>
+                {program.name}
+              </option>
+            ))}
+          </select>
+        )}
+        {programs.length === 0 && !loadingPrograms && (
+          <p className="text-xs text-red-500 mt-1">No programs available</p>
+        )}
+      </div>
 
       {/* Predefined Amounts */}
       <div className="grid grid-cols-4 gap-3 mb-4">
@@ -120,8 +182,8 @@ export function PaymentWidget({ referralCode, userId, userName, className = '' }
               setCustomAmount('')
             }}
             className={`py-3 px-2 text-sm font-medium rounded-lg border-2 transition-all ${selectedAmount === amount
-                ? 'border-green-600 bg-green-50 text-green-700'
-                : 'border-gray-200 hover:border-green-300 text-gray-700'
+              ? 'border-green-600 bg-green-50 text-green-700'
+              : 'border-gray-200 hover:border-green-300 text-gray-700'
               }`}
           >
             ₹{amount}

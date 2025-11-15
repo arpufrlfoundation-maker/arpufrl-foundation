@@ -111,7 +111,7 @@ export default function HeroSection() {
                   className={
                     index === 0
                       ? "bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-3 text-lg"
-                      : "border-white text-white hover:bg-white hover:text-blue-900 px-8 py-3 text-lg"
+                      : "border-white text-blue-600 hover:bg-white hover:text-blue-900 px-8 py-3 text-lg"
                   }
                   variant={index === 0 ? "default" : "outline"}
                 >

@@ -179,31 +179,37 @@ export default function DonationForm({
         </div>
 
         {/* Program Selection */}
-        {programs.length > 0 && (
-          <div className="space-y-3">
-            <label className="block text-lg font-semibold text-gray-900">
-              Select Program (Optional)
-            </label>
-            <select
-              {...register('programId')}
-              className={cn(
-                'w-full px-4 py-3 border-2 rounded-lg',
-                'focus:border-blue-500 focus:outline-none',
-                errors.programId ? 'border-red-500' : 'border-gray-200'
+        <div className="space-y-3">
+          <label className="block text-lg font-semibold text-gray-900">
+            Select Program <span className="text-red-500">*</span>
+          </label>
+          {programs.length === 0 ? (
+            <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-500">
+              Loading programs...
+            </div>
+          ) : (
+            <>
+              <select
+                {...register('programId')}
+                className={cn(
+                  'w-full px-4 py-3 border-2 rounded-lg',
+                  'focus:border-blue-500 focus:outline-none',
+                  errors.programId ? 'border-red-500' : 'border-gray-200'
+                )}
+              >
+                <option value="">-- Select a Program --</option>
+                {programs.map((program) => (
+                  <option key={program._id} value={program._id}>
+                    {program.name}
+                  </option>
+                ))}
+              </select>
+              {errors.programId && (
+                <p className="text-red-600 text-sm">{errors.programId.message}</p>
               )}
-            >
-              <option value="">General Donation</option>
-              {programs.map((program) => (
-                <option key={program._id} value={program._id}>
-                  {program.name}
-                </option>
-              ))}
-            </select>
-            {errors.programId && (
-              <p className="text-red-600 text-sm">{errors.programId.message}</p>
-            )}
-          </div>
-        )}
+            </>
+          )}
+        </div>
 
         {/* Donor Information */}
         <div className="space-y-4">

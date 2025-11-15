@@ -45,11 +45,11 @@ function DonatePageContent() {
 
   const fetchPrograms = async () => {
     try {
-      const response = await fetch('/api/programs')
+      const response = await fetch('/api/programs?active=true')
       if (response.ok) {
         const data = await response.json()
-        if (data.success) {
-          setPrograms(data.data || [])
+        if (data.success && data.data && data.data.programs) {
+          setPrograms(data.data.programs)
         }
       }
     } catch (error) {
@@ -61,6 +61,12 @@ function DonatePageContent() {
   const handleDonationSubmit = async (data: DonationFormData) => {
     setSubmitError(null)
     clearError()
+
+    // Validate program selection
+    if (!data.programId || data.programId.trim() === '') {
+      setSubmitError('Please select a program for your donation')
+      return
+    }
 
     try {
       // Create donation order
@@ -74,8 +80,8 @@ function DonatePageContent() {
           donorEmail: data.donorEmail || undefined,
           donorPhone: data.donorPhone || undefined,
           amount: data.amount,
-          programId: data.programId || undefined,
-          referralCode: data.referralCode || undefined,
+          programId: data.programId,
+          referralCode: data.referralCode && data.referralCode.trim() !== '' ? data.referralCode : undefined,
         }),
       })
 

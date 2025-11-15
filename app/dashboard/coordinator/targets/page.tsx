@@ -230,10 +230,10 @@ function HierarchyRanking() {
               </div>
               <div className="text-right">
                 <p className="text-xl font-bold text-gray-900">
-                  ₹{entry.totalCollected.toLocaleString()}
+                  ₹{(entry.totalCollected || 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-green-600">
-                  {entry.achievementPercentage.toFixed(1)}% achieved
+                  {(entry.achievementPercentage || 0).toFixed(1)}% achieved
                 </p>
               </div>
             </div>

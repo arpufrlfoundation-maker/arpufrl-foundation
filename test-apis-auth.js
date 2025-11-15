@@ -13,8 +13,8 @@ async function testAPI(path, method = 'GET', data = null, cookies = '') {
       path: path,
       method: method,
       headers: {
-        'Content-Type': method === 'POST' && path.includes('auth') 
-          ? 'application/x-www-form-urlencoded' 
+        'Content-Type': method === 'POST' && path.includes('auth')
+          ? 'application/x-www-form-urlencoded'
           : 'application/json',
         'Cookie': cookies
       }
@@ -77,7 +77,7 @@ async function runAuthenticatedTests() {
 
   const loginResult = await testAPI('/api/auth/callback/credentials', 'POST', loginData, cookies);
   console.log(`   Login Status: ${loginResult.status}`);
-  
+
   // Update cookies with login session
   if (loginResult.headers['set-cookie']) {
     const newCookies = loginResult.headers['set-cookie'].map(cookie => cookie.split(';')[0]).join('; ');
@@ -119,7 +119,7 @@ async function runAuthenticatedTests() {
       console.log(`Testing ${test.name}: ${test.path}`);
       const result = await testAPI(test.path, 'GET', null, cookies);
       console.log(`  Status: ${result.status}`);
-      
+
       if (result.status === 200) {
         try {
           const jsonBody = JSON.parse(result.body);

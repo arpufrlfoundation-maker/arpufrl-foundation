@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
       // Create the target
       const target = await Target.create({
         assignedTo: targetUser._id,
-        assignedBy: session.user.id === 'demo-admin' ? null : assigner._id,
+        assignedBy: session.user.id === 'demo-admin' ? 'demo-admin' : assigner._id,
         targetAmount,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
@@ -167,7 +167,8 @@ export async function POST(req: NextRequest) {
       })
 
       await target.populate('assignedTo', 'name email role')
-      if (target.assignedBy) {
+      // Only populate assignedBy if it's not demo-admin
+      if (target.assignedBy && target.assignedBy !== 'demo-admin') {
         await target.populate('assignedBy', 'name email role')
       }
 
@@ -242,7 +243,7 @@ export async function POST(req: NextRequest) {
 
         const target = await Target.create({
           assignedTo: user._id,
-          assignedBy: session.user.id === 'demo-admin' ? null : assigner._id,
+          assignedBy: session.user.id === 'demo-admin' ? 'demo-admin' : assigner._id,
           targetAmount: subdivision.amount,
           startDate: new Date(startDate),
           endDate: new Date(endDate),
@@ -260,6 +261,10 @@ export async function POST(req: NextRequest) {
         })
 
         await target.populate('assignedTo', 'name email role')
+        // Only populate assignedBy if it's not demo-admin
+        if (target.assignedBy && target.assignedBy !== 'demo-admin') {
+          await target.populate('assignedBy', 'name email role')
+        }
         createdTargets.push(target)
       }
 

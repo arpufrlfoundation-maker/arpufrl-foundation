@@ -289,7 +289,7 @@ const targetSchema = new Schema<ITarget>(
     },
 
     assignedBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.Mixed, // Allow both ObjectId and string (for demo-admin)
       ref: 'User',
       index: true
     },

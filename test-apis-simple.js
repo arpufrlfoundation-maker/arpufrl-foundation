@@ -59,7 +59,7 @@ async function runTests() {
       console.log(`Testing ${test.name}: ${test.path}`);
       const result = await testAPI(test.path);
       console.log(`  ✅ Status: ${result.status}`);
-      
+
       // Try to parse JSON response
       try {
         const jsonBody = JSON.parse(result.body);
