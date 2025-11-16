@@ -108,7 +108,11 @@ export async function POST(req: NextRequest) {
 
     // Get updated target with current stats
     const updatedTarget = await Target.findById(activeTarget._id)
-      .populate('assignedBy', 'name email role')
+    
+    // Manually populate assignedBy if it's not demo-admin
+    if (updatedTarget && updatedTarget.assignedBy && updatedTarget.assignedBy.toString() !== 'demo-admin') {
+      await updatedTarget.populate('assignedBy', 'name email role')
+    }
 
     return NextResponse.json({
       success: true,

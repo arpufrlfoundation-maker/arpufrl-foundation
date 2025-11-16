@@ -3,6 +3,9 @@ import { connectToDatabase } from '@/lib/db'
 import { Donation, PaymentStatus, PublicDonationDisplay } from '@/models/Donation'
 import { PrivacyAuditor, privacyAuditUtils } from '@/lib/privacy-audit'
 
+// Make this route publicly accessible
+export const dynamic = 'force-dynamic'
+
 // Interface for donor highlight data (extended with privacy controls)
 interface DonorHighlight {
   id: string

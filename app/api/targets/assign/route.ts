@@ -34,11 +34,20 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch all targets
-    const targets = await Target.find({})
+    const allTargets = await Target.find({})
       .populate('assignedTo', 'name email role state district zone block')
-      .populate('assignedBy', 'name email role')
       .sort({ createdAt: -1 })
       .limit(200)
+    
+    // Manually populate assignedBy for non-demo-admin
+    const targets = await Promise.all(
+      allTargets.map(async (target) => {
+        if (target.assignedBy && target.assignedBy.toString() !== 'demo-admin') {
+          await target.populate('assignedBy', 'name email role')
+        }
+        return target
+      })
+    )
 
     return NextResponse.json({
       success: true,
@@ -168,7 +177,7 @@ export async function POST(req: NextRequest) {
 
       await target.populate('assignedTo', 'name email role')
       // Only populate assignedBy if it's not demo-admin
-      if (target.assignedBy && target.assignedBy !== 'demo-admin') {
+      if (target.assignedBy && target.assignedBy.toString() !== 'demo-admin') {
         await target.populate('assignedBy', 'name email role')
       }
 
@@ -262,7 +271,7 @@ export async function POST(req: NextRequest) {
 
         await target.populate('assignedTo', 'name email role')
         // Only populate assignedBy if it's not demo-admin
-        if (target.assignedBy && target.assignedBy !== 'demo-admin') {
+        if (target.assignedBy && target.assignedBy.toString() !== 'demo-admin') {
           await target.populate('assignedBy', 'name email role')
         }
         createdTargets.push(target)

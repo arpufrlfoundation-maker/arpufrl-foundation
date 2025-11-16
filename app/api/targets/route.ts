@@ -29,11 +29,20 @@ export async function GET(req: NextRequest) {
     let userId: mongoose.Types.ObjectId
     if (session.user.id === 'demo-admin') {
       // For admin, return all targets
-      const targets = await Target.find({})
+      const allTargets = await Target.find({})
         .populate('assignedTo', 'name email role')
-        .populate('assignedBy', 'name email role')
         .sort({ createdAt: -1 })
         .limit(100)
+      
+      // Manually populate assignedBy only for non-demo-admin
+      const targets = await Promise.all(
+        allTargets.map(async (target) => {
+          if (target.assignedBy && target.assignedBy.toString() !== 'demo-admin') {
+            await target.populate('assignedBy', 'name email role')
+          }
+          return target
+        })
+      )
 
       return NextResponse.json({
         success: true,
@@ -58,12 +67,21 @@ export async function GET(req: NextRequest) {
       targets = await Target.findByUser(userId)
     } else {
       // Get active and pending targets
-      targets = await Target.find({
+      const allTargets = await Target.find({
         assignedTo: userId,
         status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS, TargetStatus.OVERDUE] }
       })
-        .populate('assignedBy', 'name email role')
         .sort({ createdAt: -1 })
+      
+      // Manually populate assignedBy for non-demo-admin
+      targets = await Promise.all(
+        allTargets.map(async (target) => {
+          if (target.assignedBy && target.assignedBy.toString() !== 'demo-admin') {
+            await target.populate('assignedBy', 'name email role')
+          }
+          return target
+        })
+      )
     }
 
     // Get summary

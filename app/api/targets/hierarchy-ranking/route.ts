@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
     const targets = await Target.find({
       assignedTo: { $in: peerIds },
       status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS, TargetStatus.COMPLETED] }
-    }).select('assignedTo targetAmount collectedAmount teamCollectedAmount status')
+    }).select('assignedTo targetAmount personalCollection teamCollection status')
 
     // Build ranking data
     const rankingData = peers.map(peer => {
@@ -76,8 +76,8 @@ export async function GET(req: NextRequest) {
         t => t.assignedTo.toString() === peer._id.toString()
       )
 
-      const personalCollection = peerTarget?.collectedAmount || 0
-      const teamCollection = peerTarget?.teamCollectedAmount || 0
+      const personalCollection = peerTarget?.personalCollection || 0
+      const teamCollection = peerTarget?.teamCollection || 0
       const totalCollection = personalCollection + teamCollection
       const targetAmount = peerTarget?.targetAmount || 0
       const achievementPercentage = targetAmount > 0

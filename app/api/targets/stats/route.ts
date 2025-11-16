@@ -68,8 +68,12 @@ export async function GET(req: NextRequest) {
       assignedTo: targetUserId,
       status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS] }
     })
-      .populate('assignedBy', 'name email role')
       .sort({ createdAt: -1 })
+    
+    // Manually populate assignedBy if it's not demo-admin
+    if (target && target.assignedBy && target.assignedBy.toString() !== 'demo-admin') {
+      await target.populate('assignedBy', 'name email role')
+    }
 
     if (!target) {
       return NextResponse.json({
@@ -91,8 +95,8 @@ export async function GET(req: NextRequest) {
     const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
 
     // Calculate collected amounts
-    const personalCollection = target.collectedAmount || 0
-    const teamCollection = target.teamCollectedAmount || 0
+    const personalCollection = target.personalCollection || 0
+    const teamCollection = target.teamCollection || 0
     const totalCollected = personalCollection + teamCollection
 
     // Calculate remaining and percentage
@@ -120,14 +124,14 @@ export async function GET(req: NextRequest) {
     // Get subordinates' targets and collections
     const subordinateTargets = await Target.find({
       assignedTo: { $in: subordinateIds }
-    }).select('assignedTo collectedAmount teamCollectedAmount')
+    }).select('assignedTo personalCollection teamCollection')
 
     const teamBreakdown = subordinates.map(sub => {
       const subTarget = subordinateTargets.find(
         t => t.assignedTo.toString() === sub._id.toString()
       )
       const collected = subTarget
-        ? (subTarget.collectedAmount || 0) + (subTarget.teamCollectedAmount || 0)
+        ? (subTarget.personalCollection || 0) + (subTarget.teamCollection || 0)
         : 0
       const percentage = target.targetAmount > 0
         ? (collected / target.targetAmount) * 100
@@ -223,10 +227,11 @@ export async function GET(req: NextRequest) {
         dailyAverageNeeded: Math.round(dailyAverageNeeded),
         description: target.description,
         level: target.level,
-        assignedBy: target.assignedBy ? {
-          name: target.assignedBy.name,
-          email: target.assignedBy.email
-        } : null
+        assignedBy: target.assignedBy ? (
+          typeof target.assignedBy === 'string' 
+            ? { name: 'Demo Admin', email: 'admin@demo.com' }
+            : { name: (target.assignedBy as any).name, email: (target.assignedBy as any).email }
+        ) : null
       },
       hierarchy: {
         personalCollection,
