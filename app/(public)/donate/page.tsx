@@ -48,9 +48,15 @@ function DonatePageContent() {
       const response = await fetch('/api/programs?active=true')
       if (response.ok) {
         const data = await response.json()
+        console.log('Programs API response:', data)
         if (data.success && data.data && data.data.programs) {
           setPrograms(data.data.programs)
+          console.log('Programs loaded:', data.data.programs.length)
+        } else {
+          console.error('Invalid programs data structure:', data)
         }
+      } else {
+        console.error('Failed to fetch programs:', response.status)
       }
     } catch (error) {
       console.error('Error fetching programs:', error)

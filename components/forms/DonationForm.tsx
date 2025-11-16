@@ -184,18 +184,19 @@ export default function DonationForm({
             Select Program <span className="text-red-500">*</span>
           </label>
           {programs.length === 0 ? (
-            <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-500">
-              Loading programs...
+            <div className="w-full px-4 py-3 border-2 border-yellow-300 rounded-lg bg-yellow-50 text-yellow-800">
+              ⚠️ Loading programs... If programs don't appear, please refresh the page.
             </div>
           ) : (
             <>
               <select
-                {...register('programId')}
+                {...register('programId', { required: 'Please select a program' })}
                 className={cn(
                   'w-full px-4 py-3 border-2 rounded-lg',
                   'focus:border-blue-500 focus:outline-none',
                   errors.programId ? 'border-red-500' : 'border-gray-200'
                 )}
+                disabled={programs.length === 0}
               >
                 <option value="">-- Select a Program --</option>
                 {programs.map((program) => (
@@ -205,8 +206,11 @@ export default function DonationForm({
                 ))}
               </select>
               {errors.programId && (
-                <p className="text-red-600 text-sm">{errors.programId.message}</p>
+                <p className="text-red-600 text-sm mt-1">{errors.programId.message}</p>
               )}
+              <p className="text-sm text-gray-600">
+                {programs.length} program{programs.length !== 1 ? 's' : ''} available
+              </p>
             </>
           )}
         </div>

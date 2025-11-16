@@ -408,6 +408,20 @@ export const DonorHighlights: React.FC = () => {
     return { displayDonors, animationDuration, itemsPerPage, cardSpacing }
   }, [donors, isMobile, isTablet, optimizationSettings.enableAnimations, animationKey])
 
+  // Duplicate donors for seamless scrolling (performance optimized) - MOVED BEFORE CONDITIONAL RETURNS
+  const duplicatedDonors = useMemo(() => {
+    const { displayDonors } = displaySettings
+    if (displayDonors.length === 0) return []
+
+    // Only duplicate if we have enough donors to justify it
+    if (displayDonors.length < 5) {
+      return [...displayDonors, ...displayDonors, ...displayDonors] // Triple for short lists
+    }
+
+    return [...displayDonors, ...displayDonors] // Double for longer lists
+  }, [displaySettings])
+
+  // NOW conditional returns can happen
   if (isLoading) {
     return <DonorHighlightsSkeleton />
   }
@@ -431,18 +445,6 @@ export const DonorHighlights: React.FC = () => {
 
   // Destructure displaySettings
   const { displayDonors, animationDuration, itemsPerPage, cardSpacing } = displaySettings
-
-  // Duplicate donors for seamless scrolling (performance optimized)
-  const duplicatedDonors = useMemo(() => {
-    if (displayDonors.length === 0) return []
-
-    // Only duplicate if we have enough donors to justify it
-    if (displayDonors.length < 5) {
-      return [...displayDonors, ...displayDonors, ...displayDonors] // Triple for short lists
-    }
-
-    return [...displayDonors, ...displayDonors] // Double for longer lists
-  }, [displayDonors])
 
   // Auto-pagination for large donor lists
   useEffect(() => {

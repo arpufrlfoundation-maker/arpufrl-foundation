@@ -9,6 +9,7 @@ interface PaymentData {
   donationId: string
   programName?: string
   referralCode?: string
+  razorpayKeyId?: string
 }
 
 interface DonorInfo {
@@ -68,9 +69,15 @@ export function usePayment() {
         throw new Error('Failed to load payment gateway. Please try again.')
       }
 
+      // Check if Razorpay key is configured
+      const razorpayKey = paymentData.razorpayKeyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+      if (!razorpayKey) {
+        throw new Error('Payment configuration error: Razorpay key is missing. Please contact support.')
+      }
+
       // Prepare Razorpay options
       const razorpayOptions = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: razorpayKey,
         amount: paymentData.amount,
         currency: paymentData.currency,
         name: 'ARPU Future Rise Life Foundation',

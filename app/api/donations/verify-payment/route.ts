@@ -6,6 +6,7 @@ import { Donation } from '@/models/Donation'
 import { Program } from '@/models/Program'
 import { ReferralCode, referralCodeUtils } from '@/models/ReferralCode'
 import { User } from '@/models/User'
+import { sendDonationConfirmationEmail, sendDonationNotificationToAdmin, sendReferralNotificationToCoordinator } from '@/lib/email'
 
 /**
  * Extract IP address from request headers
@@ -63,11 +64,11 @@ export async function POST(request: NextRequest) {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = validationResult.data
 
     // Verify payment signature
-    const isValid = RazorpayService.verifyPaymentSignature(
-      razorpayOrderId,
-      razorpayPaymentId,
-      razorpaySignature
-    )
+    const isValid = RazorpayService.verifyPaymentSignature({
+      razorpay_order_id: razorpayOrderId,
+      razorpay_payment_id: razorpayPaymentId,
+      razorpay_signature: razorpaySignature
+    })
 
     if (!isValid) {
       return NextResponse.json(
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
     // Update program donation stats
     if (program) {
       program.donationCount = (program.donationCount || 0) + 1
-      program.totalDonations = (program.totalDonations || 0) + amount
+      program.raisedAmount = (program.raisedAmount || 0) + amount
       await program.save()
     }
 
@@ -146,6 +147,56 @@ export async function POST(request: NextRequest) {
       attributedUser.totalDonationsReferred = (attributedUser.totalDonationsReferred || 0) + 1
       attributedUser.totalAmountReferred = (attributedUser.totalAmountReferred || 0) + amount
       await attributedUser.save()
+    }
+
+    // Send confirmation email to donor (if email provided)
+    if (donation.donorEmail) {
+      try {
+        await sendDonationConfirmationEmail(
+          donation.donorEmail,
+          donation.donorName,
+          amount,
+          program?.name || 'General Donation',
+          donation._id.toString(),
+          razorpayPaymentId
+        )
+        console.log(`Donation confirmation email sent to ${donation.donorEmail}`)
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError)
+        // Don't fail the request if email fails
+      }
+    }
+
+    // Send notification to admin
+    try {
+      await sendDonationNotificationToAdmin(
+        donation.donorName,
+        amount,
+        program?.name || 'General Donation',
+        donation._id.toString()
+      )
+      console.log('Donation notification sent to admin')
+    } catch (emailError) {
+      console.error('Failed to send admin notification:', emailError)
+      // Don't fail the request if email fails
+    }
+
+    // Send notification to coordinator if referral code was used
+    if (attributedUser && attributedUser.email && notes.referralCode) {
+      try {
+        await sendReferralNotificationToCoordinator(
+          attributedUser.email,
+          attributedUser.name,
+          donation.donorName,
+          amount,
+          program?.name || 'General Donation',
+          notes.referralCode
+        )
+        console.log(`Referral notification sent to coordinator ${attributedUser.email}`)
+      } catch (emailError) {
+        console.error('Failed to send coordinator notification:', emailError)
+        // Don't fail the request if email fails
+      }
     }
 
     return NextResponse.json({

@@ -227,7 +227,8 @@ export async function POST(request: NextRequest) {
         currency: razorpayOrder.currency,
         donationId: donation._id,
         programName: program?.name,
-        referralCode: referralCodeDoc?.code
+        referralCode: referralCodeDoc?.code,
+        razorpayKeyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
       }
     })
 

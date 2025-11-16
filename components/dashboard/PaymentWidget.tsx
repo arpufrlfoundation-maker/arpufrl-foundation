@@ -82,11 +82,17 @@ export function PaymentWidget({ referralCode, userId, userName, className = '' }
         throw new Error(errorData.error || 'Failed to create order')
       }
 
-      const { orderId, amount: orderAmount } = await response.json()
+      const { orderId, amount: orderAmount, razorpayKeyId } = await response.json()
+
+      // Check if Razorpay key is available
+      const razorpayKey = razorpayKeyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+      if (!razorpayKey) {
+        throw new Error('Payment configuration error. Please contact support.')
+      }
 
       // Initialize Razorpay
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: razorpayKey,
         amount: orderAmount,
         currency: 'INR',
         name: 'Samarpan Sahayog Abhiyan',

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectToDatabase } from '@/lib/db'
 import { User } from '@/models/User'
-import { generateReferralCode } from '@/lib/generateReferral'
+import { generateReferralCode } from '@/lib/referral-utils'
 
 /**
  * POST /api/user/generate-referral
@@ -40,7 +40,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate new referral code
-    const referralCode = await generateReferralCode(user.name, user._id.toString())
+    const referralCode = await generateReferralCode(
+      user.name,
+      user.role,
+      user.state || user.district || undefined
+    )
 
     // Update user with referral code
     user.referralCode = referralCode
