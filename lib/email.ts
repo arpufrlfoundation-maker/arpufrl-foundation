@@ -57,7 +57,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<boolean> => 
     }
 
     const transport = getTransporter()
-    
+
     await transport.sendMail({
       from: process.env.EMAIL_FROM || process.env.EMAIL_SERVER_USER,
       to: options.to,
@@ -86,7 +86,7 @@ export const sendDonationConfirmationEmail = async (
   razorpayPaymentId?: string
 ): Promise<boolean> => {
   const subject = 'Thank You for Your Donation! 🙏'
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -181,68 +181,68 @@ export const sendDonationConfirmationEmail = async (
       <div class="header">
         <h1>🙏 Thank You for Your Donation!</h1>
       </div>
-      
+
       <div class="content">
         <p>Dear <strong>${donorName}</strong>,</p>
-        
+
         <p>Thank you for your generous donation to <strong>Samarpan Sahayog Abhiyan</strong>. Your contribution makes a real difference in the lives of those we serve.</p>
-        
+
         <div class="amount">₹${amount.toLocaleString('en-IN')}</div>
-        
+
         <div class="donation-details">
           <h3 style="margin-top: 0; color: #667eea;">Donation Details</h3>
-          
+
           <div class="detail-row">
             <span class="detail-label">Program:</span>
             <span class="detail-value">${programName}</span>
           </div>
-          
+
           <div class="detail-row">
             <span class="detail-label">Amount:</span>
             <span class="detail-value">₹${amount.toLocaleString('en-IN')}</span>
           </div>
-          
+
           <div class="detail-row">
             <span class="detail-label">Donation ID:</span>
             <span class="detail-value">${donationId}</span>
           </div>
-          
+
           <div class="detail-row">
             <span class="detail-label">Payment ID:</span>
             <span class="detail-value">${razorpayPaymentId || 'N/A'}</span>
           </div>
-          
+
           <div class="detail-row">
             <span class="detail-label">Date:</span>
-            <span class="detail-value">${new Date().toLocaleDateString('en-IN', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            <span class="detail-value">${new Date().toLocaleDateString('en-IN', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}</span>
           </div>
         </div>
-        
+
         <div class="thank-you">
           Your donation is making a difference! 💚
         </div>
-        
+
         <p style="margin-top: 30px;">
           <strong>Tax Benefits:</strong><br>
           Your donation is eligible for tax deduction under Section 80G of the Income Tax Act. An official receipt will be sent to you shortly.
         </p>
-        
+
         <p style="text-align: center;">
           <a href="${process.env.APP_URL || 'http://localhost:3000'}/donate" class="button">
             Donate Again
           </a>
         </p>
-        
+
         <p style="font-size: 14px; color: #666; margin-top: 30px;">
-          If you have any questions about your donation, please contact us at 
+          If you have any questions about your donation, please contact us at
           <a href="mailto:support@arpufrl.org" style="color: #667eea;">support@arpufrl.org</a>
         </p>
       </div>
-      
+
       <div class="footer">
         <p style="margin: 5px 0;">
           <strong>Samarpan Sahayog Abhiyan</strong>
@@ -299,15 +299,15 @@ export const sendDonationNotificationToAdmin = async (
 ): Promise<boolean> => {
   const adminEmail = process.env.EMAIL_SERVER_USER || 'admin@arpufrl.org'
   const subject = `New Donation Received: ₹${amount.toLocaleString('en-IN')}`
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
       <h2 style="color: #667eea;">🎉 New Donation Received!</h2>
-      
+
       <p>A new donation has been received through the website.</p>
-      
+
       <div style="background: #f4f4f4; padding: 15px; border-left: 4px solid #667eea; margin: 20px 0;">
         <p><strong>Donor:</strong> ${donorName}</p>
         <p><strong>Amount:</strong> ₹${amount.toLocaleString('en-IN')}</p>
@@ -315,9 +315,9 @@ export const sendDonationNotificationToAdmin = async (
         <p><strong>Donation ID:</strong> ${donationId}</p>
         <p><strong>Date:</strong> ${new Date().toLocaleString('en-IN')}</p>
       </div>
-      
+
       <p>Please log in to the admin dashboard to view more details.</p>
-      
+
       <p style="margin-top: 30px; color: #666; font-size: 12px;">
         This is an automated notification from Samarpan Sahayog Abhiyan.
       </p>
@@ -344,7 +344,7 @@ export const sendReferralNotificationToCoordinator = async (
   referralCode: string
 ): Promise<boolean> => {
   const subject = `🎯 Your Referral Code Was Used! ₹${amount.toLocaleString('en-IN')} Donation`
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -437,16 +437,16 @@ export const sendReferralNotificationToCoordinator = async (
       <div class="header">
         <h1>🎯 Referral Success!</h1>
       </div>
-      
+
       <div class="content">
         <p>Dear ${coordinatorName},</p>
-        
+
         <p>Great news! Your referral code <strong>${referralCode}</strong> was just used for a donation.</p>
-        
+
         <div class="amount">
           ₹${amount.toLocaleString('en-IN')}
         </div>
-        
+
         <div class="referral-details">
           <div class="detail-row">
             <span class="detail-label">Donor Name:</span>
@@ -469,18 +469,18 @@ export const sendReferralNotificationToCoordinator = async (
             <span class="detail-value">${new Date().toLocaleString('en-IN')}</span>
           </div>
         </div>
-        
+
         <div class="highlight">
           <strong>💡 Impact:</strong> This donation will be tracked in your referral statistics and may contribute to your commission calculations.
         </div>
-        
+
         <p>Keep up the great work spreading awareness about Samarpan Sahayog Abhiyan!</p>
-        
+
         <div style="text-align: center;">
           <a href="${process.env.NEXTAUTH_URL || 'https://arpufrl.org'}/dashboard" class="button">View Dashboard</a>
         </div>
       </div>
-      
+
       <div class="footer">
         <p>This is an automated notification from Samarpan Sahayog Abhiyan</p>
         <p>© ${new Date().getFullYear()} Samarpan Sahayog Abhiyan. All rights reserved.</p>

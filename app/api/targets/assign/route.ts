@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       .populate('assignedTo', 'name email role state district zone block')
       .sort({ createdAt: -1 })
       .limit(200)
-    
+
     // Manually populate assignedBy for non-demo-admin
     const targets = await Promise.all(
       allTargets.map(async (target) => {

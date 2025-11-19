@@ -4,6 +4,7 @@ import { connectToDatabase } from '../../../../../lib/db'
 import { User, UserRole, UserStatus } from '../../../../../models/User'
 import { Donation } from '../../../../../models/Donation'
 import { Program } from '../../../../../models/Program'
+import VolunteerRequest, { VolunteerRequestStatus } from '../../../../../models/VolunteerRequest'
 
 // Define coordinator roles array
 const coordinatorRoles = [
@@ -161,6 +162,19 @@ export async function GET(request: NextRequest) {
       })
     ])
 
+    // Get volunteer request statistics
+    const [
+      totalVolunteerRequests,
+      pendingVolunteerRequests,
+      acceptedVolunteerRequests,
+      recentVolunteerRequests
+    ] = await Promise.all([
+      VolunteerRequest.countDocuments(),
+      VolunteerRequest.countDocuments({ status: VolunteerRequestStatus.PENDING }),
+      VolunteerRequest.countDocuments({ status: VolunteerRequestStatus.ACCEPTED }),
+      VolunteerRequest.countDocuments({ submittedAt: { $gte: last7Days } })
+    ])
+
     // Prepare response data
     const stats = {
       totalDonations: {
@@ -183,10 +197,16 @@ export async function GET(request: NextRequest) {
         active: activeCoordinators,
         pending: pendingCoordinators
       },
+      volunteers: {
+        total: totalVolunteerRequests,
+        pending: pendingVolunteerRequests,
+        accepted: acceptedVolunteerRequests
+      },
       recentActivity: {
         donations: recentDonations,
         registrations: recentRegistrations,
-        programs: recentProgramUpdates
+        programs: recentProgramUpdates,
+        volunteers: recentVolunteerRequests
       }
     }
 

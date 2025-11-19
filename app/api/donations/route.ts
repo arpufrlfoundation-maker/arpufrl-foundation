@@ -18,13 +18,13 @@ function getClientIp(request: NextRequest): string | undefined {
     const ips = forwarded.split(',').map(ip => ip.trim())
     return ips[0]
   }
-  
+
   const realIp = request.headers.get('x-real-ip')
   if (realIp) return realIp
-  
+
   const cfConnectingIp = request.headers.get('cf-connecting-ip') // Cloudflare
   if (cfConnectingIp) return cfConnectingIp
-  
+
   // Fallback for local development
   return '127.0.0.1'
 }

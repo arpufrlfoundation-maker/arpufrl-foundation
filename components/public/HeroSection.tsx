@@ -9,7 +9,7 @@ export default function HeroSection() {
 
   if (loading) {
     return (
-      <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white">
+      <section className="relative bg-[url('https://res.cloudinary.com/dyvv2furt/image/upload/v1763560903/slider1_thcvpe.jpg')] bg-cover bg-center text-white">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative container mx-auto px-4 py-16 md:py-24 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
@@ -28,7 +28,7 @@ export default function HeroSection() {
 
   if (error || !content) {
     return (
-      <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white">
+      <section className="relative bg-[url('https://res.cloudinary.com/dyvv2furt/image/upload/v1763560903/slider1_thcvpe.jpg')] bg-cover bg-center text-white">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative container mx-auto px-4 py-16 md:py-24 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
@@ -55,7 +55,7 @@ export default function HeroSection() {
   const { hero_section } = content
 
   return (
-    <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white">
+    <section className="relative bg-[url('https://res.cloudinary.com/dyvv2furt/image/upload/v1763560903/slider1_thcvpe.jpg')] bg-cover bg-center text-white">
       {/* Background overlay */}
       <div className="absolute inset-0 bg-black/20"></div>
 

@@ -7,6 +7,7 @@ import { Program } from '@/models/Program'
 import { ReferralCode, referralCodeUtils } from '@/models/ReferralCode'
 import { User } from '@/models/User'
 import { sendDonationConfirmationEmail, sendDonationNotificationToAdmin, sendReferralNotificationToCoordinator } from '@/lib/email'
+import { processCommissionDistribution } from '@/lib/commission-utils'
 
 /**
  * Extract IP address from request headers
@@ -20,13 +21,13 @@ function getClientIp(request: NextRequest): string | undefined {
     const ips = forwarded.split(',').map(ip => ip.trim())
     return ips[0]
   }
-  
+
   const realIp = request.headers.get('x-real-ip')
   if (realIp) return realIp
-  
+
   const cfConnectingIp = request.headers.get('cf-connecting-ip') // Cloudflare
   if (cfConnectingIp) return cfConnectingIp
-  
+
   // Fallback for local development
   return '127.0.0.1'
 }
@@ -196,6 +197,24 @@ export async function POST(request: NextRequest) {
       } catch (emailError) {
         console.error('Failed to send coordinator notification:', emailError)
         // Don't fail the request if email fails
+      }
+
+      // Process commission distribution for referral donation
+      try {
+        const commissionResult = await processCommissionDistribution(
+          donation._id,
+          attributedUser._id,
+          amount
+        )
+        console.log('Commission distribution processed:', {
+          donationId: donation._id,
+          totalCommission: commissionResult.totalCommission,
+          distributions: commissionResult.distributions.length,
+          organizationFund: commissionResult.organizationFund
+        })
+      } catch (commissionError) {
+        console.error('Failed to process commission distribution:', commissionError)
+        // Don't fail the donation if commission processing fails
       }
     }
 

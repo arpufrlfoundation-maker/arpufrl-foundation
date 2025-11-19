@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     // Verify email configuration
     const isConfigured = await verifyEmailConfig()
-    
+
     if (!isConfigured) {
       return NextResponse.json(
         {
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const isConfigured = await verifyEmailConfig()
-    
+
     return NextResponse.json({
       success: true,
       configured: isConfigured,

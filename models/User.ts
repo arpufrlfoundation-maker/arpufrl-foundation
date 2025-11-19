@@ -378,12 +378,15 @@ const userSchema = new Schema<IUser>({
   },
 
   parentCoordinatorId: {
-    type: Schema.Types.ObjectId,
+    type: Schema.Types.Mixed, // Allow both ObjectId and string (for demo-admin)
     ref: 'User',
     index: true,
     validate: {
-      validator: async function (this: IUser, value: mongoose.Types.ObjectId) {
+      validator: async function (this: IUser, value: any) {
         if (!value) return true
+
+        // Allow 'demo-admin' string as special case
+        if (value === 'demo-admin') return true
 
         // Validate that parent coordinator exists and has appropriate role
         const parentUser = await mongoose.model('User').findById(value)

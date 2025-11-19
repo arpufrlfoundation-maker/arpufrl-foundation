@@ -18,7 +18,8 @@ import {
   Target,
   ClipboardList,
   Receipt,
-  TrendingUp
+  TrendingUp,
+  UserPlus
 } from 'lucide-react'
 
 interface AdminDashboardLayoutProps {
@@ -86,6 +87,12 @@ const navigation: NavItem[] = [
     href: '/dashboard/admin/programs',
     icon: FileText,
     description: 'Program management and analytics'
+  },
+  {
+    name: 'Volunteers',
+    href: '/dashboard/admin/volunteers',
+    icon: UserPlus,
+    description: 'Volunteer requests and management'
   }
 ]
 

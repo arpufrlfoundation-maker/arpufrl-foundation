@@ -91,14 +91,14 @@ export async function POST(request: NextRequest) {
 
     // Auto-assign ADMIN as parent for STATE_PRESIDENT and STATE_COORDINATOR
     if (role === UserRole.STATE_PRESIDENT || role === UserRole.STATE_COORDINATOR) {
+      // Try to find a real admin user, or use demo-admin as fallback
       const adminUser = await User.findOne({ role: UserRole.ADMIN })
-      if (!adminUser) {
-        return NextResponse.json(
-          { error: 'No admin user found in the system. Please contact support.' },
-          { status: 400 }
-        )
+      if (adminUser) {
+        parentCoordinatorId = adminUser._id
+      } else {
+        // Use demo-admin as parent if no real admin exists
+        parentCoordinatorId = 'demo-admin' as any
       }
-      parentCoordinatorId = adminUser._id
     } else if (parentId && parentId.trim() !== '') {
       // Only validate parent if it's provided and not empty string
       if (!mongoose.Types.ObjectId.isValid(parentId)) {

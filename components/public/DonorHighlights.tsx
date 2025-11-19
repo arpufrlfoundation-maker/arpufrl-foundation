@@ -413,40 +413,23 @@ export const DonorHighlights: React.FC = () => {
     const { displayDonors } = displaySettings
     if (displayDonors.length === 0) return []
 
-    // Only duplicate if we have enough donors to justify it
+    // For seamless infinite scrolling animation, duplicate the array
+    // But only if we have enough unique donors to justify it
+    // If less than 5 unique donors, show them as-is without tripling
+    // to avoid showing same names too many times
     if (displayDonors.length < 5) {
-      return [...displayDonors, ...displayDonors, ...displayDonors] // Triple for short lists
+      // For very few donors (1-4), duplicate once for smooth loop
+      return displayDonors.length >= 3 ? [...displayDonors, ...displayDonors] : displayDonors
     }
 
-    return [...displayDonors, ...displayDonors] // Double for longer lists
+    // For 5+ donors, duplicate for seamless scrolling
+    return [...displayDonors, ...displayDonors]
   }, [displaySettings])
 
-  // NOW conditional returns can happen
-  if (isLoading) {
-    return <DonorHighlightsSkeleton />
-  }
-
-  if (error) {
-    return <ErrorState onRetry={handleRetry} />
-  }
-
-  if (donors.length === 0) {
-    return (
-      <div className="donor-highlights-container bg-gradient-to-r from-blue-50 to-green-50 py-4">
-        <div className="flex items-center justify-center px-4">
-          <div className="flex items-center space-x-2 text-gray-600">
-            <Heart className="w-5 h-5" />
-            <span className="text-sm">Be the first to make a donation!</span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Destructure displaySettings
+  // Destructure displaySettings early
   const { displayDonors, animationDuration, itemsPerPage, cardSpacing } = displaySettings
 
-  // Auto-pagination for large donor lists
+  // Auto-pagination for large donor lists - MOVED BEFORE CONDITIONAL RETURNS
   useEffect(() => {
     if (donors.length <= itemsPerPage) return
 
@@ -458,7 +441,7 @@ export const DonorHighlights: React.FC = () => {
     return () => clearInterval(pageInterval)
   }, [donors.length, itemsPerPage, animationDuration])
 
-  // Performance-optimized animation frame management
+  // Performance-optimized animation frame management - MOVED BEFORE CONDITIONAL RETURNS
   useEffect(() => {
     if (!isVisible || !optimizationSettings.enableAnimations) return
 
@@ -494,7 +477,7 @@ export const DonorHighlights: React.FC = () => {
     }
   }, [isVisible, optimizationSettings.enableAnimations, animationPaused])
 
-  // Throttled scroll handler for performance
+  // Throttled scroll handler for performance - MOVED BEFORE CONDITIONAL RETURNS
   const handleMouseEnter = useMemo(
     () => performanceUtils.throttle(() => {
       if (optimizationSettings.enableAnimations) {
@@ -510,6 +493,28 @@ export const DonorHighlights: React.FC = () => {
     }, 100),
     []
   )
+
+  // NOW conditional returns can happen - ALL HOOKS ARE ABOVE THIS LINE
+  if (isLoading) {
+    return <DonorHighlightsSkeleton />
+  }
+
+  if (error) {
+    return <ErrorState onRetry={handleRetry} />
+  }
+
+  if (donors.length === 0) {
+    return (
+      <div className="donor-highlights-container bg-gradient-to-r from-blue-50 to-green-50 py-4">
+        <div className="flex items-center justify-center px-4">
+          <div className="flex items-center space-x-2 text-gray-600">
+            <Heart className="w-5 h-5" />
+            <span className="text-sm">Be the first to make a donation!</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div

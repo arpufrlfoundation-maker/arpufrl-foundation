@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connectToDatabase } from '@/lib/db'
 import { Donation } from '@/models/Donation'
+import { sendEmail } from '@/lib/email'
+import { generateReceiptHTML } from '@/lib/receipt-html'
 
 // Receipt request schema
 const receiptRequestSchema = z.object({
@@ -61,29 +63,48 @@ export async function POST(request: NextRequest) {
     // Generate receipt data
     const receiptData = generateReceiptData(donation)
 
-    // TODO: Implement actual email sending
-    // For now, we'll simulate email sending
-    console.log('Sending receipt email to:', donation.donorEmail)
-    console.log('Receipt data:', receiptData)
+    // Generate HTML receipt
+    const receiptHtml = generateReceiptHTML(receiptData)
 
-    // In a real implementation, you would:
-    // 1. Use a service like SendGrid, AWS SES, or Nodemailer
-    // 2. Generate HTML email template
-    // 3. Send the email
-    // 4. Handle email sending errors
+    // Send receipt email
+    try {
+      await sendEmail({
+        to: donation.donorEmail,
+        subject: `Donation Receipt - ${receiptData.receiptNumber}`,
+        html: receiptHtml,
+        text: `Thank you for your donation of ₹${receiptData.amount.toLocaleString('en-IN')} to ${receiptData.programName}.
 
-    // Simulate email sending delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
+Receipt Number: ${receiptData.receiptNumber}
+Payment ID: ${receiptData.paymentId}
+Date: ${new Date(receiptData.donationDate).toLocaleDateString('en-IN')}
 
-    return NextResponse.json({
-      success: true,
-      message: 'Receipt sent successfully',
-      data: {
-        donationId: donation._id,
-        email: donation.donorEmail,
-        receiptNumber: receiptData.receiptNumber
-      }
-    })
+This donation is eligible for tax deduction under Section 80G of the Income Tax Act.
+
+Thank you for supporting Samarpan Sahayog Abhiyan!`
+      })
+
+      console.log('Donation receipt sent to:', donation.donorEmail)
+
+      return NextResponse.json({
+        success: true,
+        message: 'Receipt sent successfully to ' + donation.donorEmail,
+        data: {
+          donationId: donation._id,
+          email: donation.donorEmail,
+          receiptNumber: receiptData.receiptNumber
+        }
+      })
+    } catch (emailError) {
+      console.error('Failed to send receipt email:', emailError)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to send receipt email',
+          message: emailError instanceof Error ? emailError.message : 'Unknown error'
+        },
+        { status: 500 }
+      )
+    }
 
   } catch (error) {
     console.error('Error sending receipt:', error)

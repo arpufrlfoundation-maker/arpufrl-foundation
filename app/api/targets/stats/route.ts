@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
       status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS] }
     })
       .sort({ createdAt: -1 })
-    
+
     // Manually populate assignedBy if it's not demo-admin
     if (target && target.assignedBy && target.assignedBy.toString() !== 'demo-admin') {
       await target.populate('assignedBy', 'name email role')
@@ -228,7 +228,7 @@ export async function GET(req: NextRequest) {
         description: target.description,
         level: target.level,
         assignedBy: target.assignedBy ? (
-          typeof target.assignedBy === 'string' 
+          typeof target.assignedBy === 'string'
             ? { name: 'Demo Admin', email: 'admin@demo.com' }
             : { name: (target.assignedBy as any).name, email: (target.assignedBy as any).email }
         ) : null

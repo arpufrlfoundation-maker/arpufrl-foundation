@@ -34,10 +34,16 @@ interface DashboardStats {
     active: number
     pending: number
   }
+  volunteers: {
+    total: number
+    pending: number
+    accepted: number
+  }
   recentActivity: {
     donations: number
     registrations: number
     programs: number
+    volunteers: number
   }
 }
 
@@ -179,7 +185,7 @@ export default function AdminOverview() {
       {/* Key Metrics */}
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Key Metrics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <StatsCard
             title="Total Donations"
             value={formatCurrency(stats.totalDonations.amount)}
@@ -215,13 +221,20 @@ export default function AdminOverview() {
             description={`${stats.coordinators.active} active, ${stats.coordinators.pending} pending`}
             icon={<UserCheck className="w-6 h-6 text-orange-600" />}
           />
+
+          <StatsCard
+            title="Volunteer Requests"
+            value={stats.volunteers.total}
+            description={`${stats.volunteers.pending} pending, ${stats.volunteers.accepted} accepted`}
+            icon={<Users className="w-6 h-6 text-pink-600" />}
+          />
         </div>
       </div>
 
       {/* Recent Activity */}
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity (Last 7 Days)</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -249,6 +262,16 @@ export default function AdminOverview() {
                 <p className="text-2xl font-bold text-gray-900">{stats.recentActivity.programs}</p>
               </div>
               <Target className="w-8 h-8 text-purple-600" />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Volunteer Requests</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.recentActivity.volunteers}</p>
+              </div>
+              <UserCheck className="w-8 h-8 text-pink-600" />
             </div>
           </div>
         </div>

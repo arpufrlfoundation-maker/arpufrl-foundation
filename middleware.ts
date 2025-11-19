@@ -44,11 +44,15 @@ const publicRoutes = [
   '/donate',
   '/stories',
   '/login',
+  '/volunteer', // Public volunteer application page
   '/api/auth',
   '/api/content',
   '/api/donations',
+  '/api/donors', // Public donor highlights
   '/api/programs',
   '/api/webhooks',
+  '/api/volunteer/requests', // Public volunteer submission (POST only, GET is protected)
+  '/api/referrals/validate', // Public referral code validation
   '/survey',
   '/api/surveys', // Allow public survey submissions
 ]

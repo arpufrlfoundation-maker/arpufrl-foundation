@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         .populate('assignedTo', 'name email role')
         .sort({ createdAt: -1 })
         .limit(100)
-      
+
       // Manually populate assignedBy only for non-demo-admin
       const targets = await Promise.all(
         allTargets.map(async (target) => {
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
         status: { $in: [TargetStatus.PENDING, TargetStatus.IN_PROGRESS, TargetStatus.OVERDUE] }
       })
         .sort({ createdAt: -1 })
-      
+
       // Manually populate assignedBy for non-demo-admin
       targets = await Promise.all(
         allTargets.map(async (target) => {

@@ -40,6 +40,7 @@ interface SubCoordinatorFormData {
   region: string
   role: string
   password: string
+  confirmPassword?: string
 }
 
 export default function SubCoordinatorManagement() {
@@ -59,7 +60,8 @@ export default function SubCoordinatorManagement() {
     phone: '',
     region: '',
     role: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   })
 
   useEffect(() => {
@@ -116,6 +118,12 @@ export default function SubCoordinatorManagement() {
 
     if (!session?.user?.id) return
 
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
     try {
       setCreating(true)
       setError(null)
@@ -147,7 +155,8 @@ export default function SubCoordinatorManagement() {
         phone: '',
         region: '',
         role: '',
-        password: ''
+        password: '',
+        confirmPassword: ''
       })
     } catch (error) {
       console.error('Error creating sub-coordinator:', error)
@@ -365,15 +374,8 @@ export default function SubCoordinatorManagement() {
                   <input
                     type={showPassword ? "text" : "password"}
                     required
-                    value={formData.password}
-                    onChange={(e) => {
-                      // This validates password match on the fly
-                      if (formData.password !== e.target.value) {
-                        e.target.setCustomValidity('Passwords do not match')
-                      } else {
-                        e.target.setCustomValidity('')
-                      }
-                    }}
+                    value={formData.confirmPassword || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Confirm password"
                     minLength={8}
@@ -390,6 +392,9 @@ export default function SubCoordinatorManagement() {
                     )}
                   </button>
                 </div>
+                {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                  <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
+                )}
               </div>
 
               <div className="flex space-x-3 pt-4">
@@ -403,8 +408,8 @@ export default function SubCoordinatorManagement() {
                 </button>
                 <button
                   type="submit"
-                  disabled={creating}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  disabled={creating || formData.password !== formData.confirmPassword}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {creating ? 'Creating...' : 'Create Sub-Coordinator'}
                 </button>
