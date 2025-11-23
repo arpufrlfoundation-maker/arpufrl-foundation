@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
       // Get top-level coordinators (no parent) - exclude volunteers from top level
       query.role = {
         $in: [
+
           UserRole.CENTRAL_PRESIDENT,
           UserRole.STATE_PRESIDENT,
           UserRole.STATE_COORDINATOR,
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
       query.$or = [
         { parentCoordinatorId: null },
         { parentCoordinatorId: { $exists: false } },
-        { role: UserRole.CENTRAL_PRESIDENT }
+        { role: UserRole.CENTRAL_PRESIDENT },
       ]
     }
 

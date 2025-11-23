@@ -44,20 +44,37 @@ export default function ContactForm() {
     setSubmitStatus('idle')
 
     try {
-      // Simulate API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Mock success response
-      setSubmitStatus('success')
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        inquiryType: 'general',
-        message: ''
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setSubmitStatus('success')
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          inquiryType: 'general',
+          message: ''
+        })
+
+        // Scroll to success message
+        setTimeout(() => {
+          setSubmitStatus('idle')
+        }, 5000)
+      } else {
+        setSubmitStatus('error')
+        console.error('Contact form error:', data.error || data.message)
+      }
     } catch (error) {
+      console.error('Failed to submit contact form:', error)
       setSubmitStatus('error')
     } finally {
       setIsSubmitting(false)

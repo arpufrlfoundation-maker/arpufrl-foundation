@@ -11,9 +11,10 @@
     "copyright_year": 2025,
     "logo_image": "/ARPU-Logo.png",
     "social_links": {
-      "facebook": "https://www.facebook.com/profile.php?id=61580192438544&mibextid=ZbWKwL",
-      "youtube": "https://www.youtube.com/@ARPUFUTURERISELIFEFOUNDATION",
-      "instagram": "https://www.instagram.com/arpufuture?igsh=N2N0M2NhM3p2d3lz"
+      "facebook": "https://www.facebook.com/share/1PNHJHKMLa/",
+      "youtube": "https://youtube.com/@arpufutureriselifefoundation?si=QNYF9QTmHu57ztle",
+      "instagram": "https://www.instagram.com/arpufuture?igsh=N2N0M2NhM3p2d3lz",
+      "twitter": "https://x.com/ArpufrlF?t=Cvm-s7tY65911VLiK2wJoA&s=08"
     }
   },
   "navigation": [
@@ -33,6 +34,11 @@
       "link": "/programs"
     },
     {
+      "id": 3,
+      "label": "DOCUMENTS",
+      "link": "/documents"
+    },
+    {
       "id": 4,
       "label": "CONTACT",
       "link": "/contact"
@@ -50,7 +56,7 @@
     "buttons": [
       {
         "label": "JOIN US",
-        "link": null
+        "link": "/about"
       },
       {
         "label": "CHARITY",

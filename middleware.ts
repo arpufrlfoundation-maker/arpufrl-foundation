@@ -40,12 +40,14 @@ const publicRoutes = [
   '/',
   '/about',
   '/programs',
+  '/documents',
   '/contact',
   '/donate',
   '/stories',
   '/login',
   '/volunteer', // Public volunteer application page
   '/api/auth',
+  '/api/contact', // Public contact form submission
   '/api/content',
   '/api/donations',
   '/api/donors', // Public donor highlights

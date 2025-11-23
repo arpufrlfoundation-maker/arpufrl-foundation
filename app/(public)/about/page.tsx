@@ -3,6 +3,7 @@ import MissionVision from '@/components/public/MissionVision'
 import TeamSection from '@/components/public/TeamSection'
 import SuccessStories from '@/components/public/SuccessStories'
 import OrganizationStats from '@/components/public/OrganizationStats'
+import FounderSection from '@/components/public/FounderSection'
 import { generateMetadata, pageMetadata, generateBreadcrumbStructuredData } from '@/lib/seo'
 
 export const metadata = generateMetadata(pageMetadata.about)
@@ -34,6 +35,9 @@ export default function AboutPage() {
 
         {/* Organization Stats */}
         <OrganizationStats />
+
+        {/* Founder Section */}
+        <FounderSection />
 
         {/* Team Section */}
         <TeamSection />

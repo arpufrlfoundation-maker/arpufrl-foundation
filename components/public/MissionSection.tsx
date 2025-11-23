@@ -67,10 +67,23 @@ export default function MissionSection() {
                   className="w-full h-auto rounded-lg shadow-lg"
                 />
               ) : (
-                <div className="w-full h-64 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
-                  <div className="text-blue-400 text-8xl">🎯</div>
-                </div>
+                <img
+                  src="/pic/about_our.jpg"
+                  alt="Our Mission"
+                  className="w-full h-auto rounded-lg shadow-lg object-cover"
+                  onError={(e) => {
+                    // Fallback to placeholder if image doesn't load
+                    e.currentTarget.style.display = 'none'
+                    const placeholder = e.currentTarget.nextElementSibling as HTMLElement
+                    if (placeholder) placeholder.style.display = 'flex'
+                  }}
+                />
               )}
+              <div className="hidden w-full h-64 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg items-center justify-center">
+                <div className="text-blue-400 text-8xl">
+                  🤝
+                </div>
+              </div>
             </div>
           </div>
         </div>

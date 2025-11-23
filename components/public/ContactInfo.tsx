@@ -1,30 +1,32 @@
+import info from '@/data/info.json'
+
 export default function ContactInfo() {
+  const org = info.organization
+
   const contactMethods = [
     {
       icon: '📧',
       title: 'Email Us',
       details: [
-        'General Inquiries: info@arpufoundation.org',
-        'Partnerships: partnerships@arpufoundation.org',
-        'Donations: donations@arpufoundation.org'
+        `General Inquiries: ${org.email}`,
+        'Quick response within 24 hours',
+        'Support available for all queries'
       ]
     },
     {
       icon: '📞',
       title: 'Call Us',
-      details: [
-        'Main Office: +91 11 2345 6789',
-        'Toll Free: 1800 123 4567',
-        'WhatsApp: +91 98765 43210'
-      ]
+      details: org.phone_numbers.map((phone, index) =>
+        index === 0 ? `Main: ${phone}` : phone
+      )
     },
     {
       icon: '🏢',
       title: 'Visit Our Office',
       details: [
-        'ARPU Future Rise Life Foundation',
-        '123 Social Sector Hub',
-        'New Delhi - 110001, India'
+        org.name,
+        org.head_office_address,
+        'India'
       ]
     },
     {
@@ -39,11 +41,26 @@ export default function ContactInfo() {
   ]
 
   const socialLinks = [
-    { name: 'Facebook', icon: '📘', url: '#' },
-    { name: 'Twitter', icon: '🐦', url: '#' },
-    { name: 'LinkedIn', icon: '💼', url: '#' },
-    { name: 'Instagram', icon: '📷', url: '#' },
-    { name: 'YouTube', icon: '📺', url: '#' }
+    {
+      name: 'Facebook',
+      icon: '📘',
+      url: org.social_links.facebook
+    },
+    {
+      name: 'Instagram',
+      icon: '📷',
+      url: org.social_links.instagram
+    },
+    {
+      name: 'Twitter',
+      icon: '𝕏',
+      url: org.social_links.twitter || '#'
+    },
+    {
+      name: 'YouTube',
+      icon: '📺',
+      url: org.social_links.youtube
+    }
   ]
 
   return (
@@ -81,6 +98,8 @@ export default function ContactInfo() {
             <a
               key={index}
               href={social.url}
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-10 h-10 bg-gray-100 hover:bg-blue-100 rounded-lg flex items-center justify-center transition-colors"
               title={social.name}
             >

@@ -19,7 +19,8 @@ import {
   ClipboardList,
   Receipt,
   TrendingUp,
-  UserPlus
+  UserPlus,
+  Mail
 } from 'lucide-react'
 
 interface AdminDashboardLayoutProps {
@@ -93,6 +94,12 @@ const navigation: NavItem[] = [
     href: '/dashboard/admin/volunteers',
     icon: UserPlus,
     description: 'Volunteer requests and management'
+  },
+  {
+    name: 'Contact Messages',
+    href: '/dashboard/admin/contacts',
+    icon: Mail,
+    description: 'View and manage contact form submissions'
   }
 ]
 

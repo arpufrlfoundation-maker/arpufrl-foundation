@@ -3,7 +3,7 @@ require('dotenv').config({ path: '.env.local' });
 
 async function testEmail() {
   console.log('Testing email configuration...\n');
-  
+
   // Display configuration (hiding password)
   console.log('Configuration:');
   console.log('- Host:', process.env.EMAIL_SERVER_HOST);
@@ -63,7 +63,7 @@ async function testEmail() {
   } catch (error) {
     console.error('✗ Email test failed:');
     console.error(error.message);
-    
+
     if (error.message.includes('Invalid login')) {
       console.log('\n⚠️  Invalid credentials. Please check:');
       console.log('1. Your email address is correct');

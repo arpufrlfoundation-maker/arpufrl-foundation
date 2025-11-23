@@ -1,6 +1,6 @@
 import HeroSection from '@/components/public/HeroSection'
 import MissionSection from '@/components/public/MissionSection'
-import DonorHighlights from '@/components/public/DonorHighlights'
+import DonorHighlights from '@/components/public/DonorHighlightsNew'
 import AchievementsSection from '@/components/public/AchievementsSection'
 import CallToActionSection from '@/components/public/CallToActionSection'
 import FeaturedPrograms from '@/components/public/FeaturedPrograms'
