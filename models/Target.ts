@@ -360,8 +360,7 @@ const targetSchema = new Schema<ITarget>(
 
     parentTargetId: {
       type: Schema.Types.ObjectId,
-      ref: 'Target',
-      index: true
+      ref: 'Target'
     },
 
     level: {

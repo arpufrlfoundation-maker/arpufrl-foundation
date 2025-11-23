@@ -98,6 +98,7 @@ export async function PATCH(
         const { User, UserRole, UserStatus } = await import('@/models/User')
         const { ReferralCode } = await import('@/models/ReferralCode')
         const bcrypt = await import('bcryptjs')
+        const crypto = await import('crypto')
         const mongoose = await import('mongoose')
 
         // Check if user already exists
@@ -107,8 +108,9 @@ export async function PATCH(
           // Determine role - default to VOLUNTEER if not specified
           const userRole = assignedRole || UserRole.VOLUNTEER
 
-          // Create user account with default password
-          const hashedPassword = await bcrypt.hash('Password123!', 12)
+          // Generate secure random password
+          const randomPassword = crypto.randomBytes(16).toString('hex')
+          const hashedPassword = await bcrypt.hash(randomPassword, 12)
 
           const userData: any = {
             name: volunteerRequest.name,
@@ -141,7 +143,33 @@ export async function PATCH(
             parentCoordinatorId: newUser.parentCoordinatorId
           }
 
-          console.log(`Created user account for volunteer: ${newUser.email} with role ${userRole}`)
+          // Send welcome email with credentials
+          try {
+            const { sendEmail } = await import('@/lib/email')
+            const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'https://yourapp.com'
+            
+            await sendEmail({
+              to: newUser.email,
+              subject: 'Welcome to ARPU Foundation - Account Created',
+              text: `Welcome ${newUser.name}!\n\nYour account has been created successfully.\n\nEmail: ${newUser.email}\nPassword: ${randomPassword}\nRole: ${userRole}\n\nLogin at: ${appUrl}/login\n\nPlease change your password after first login.\n\nThank you for joining ARPU Foundation!`,
+              html: `
+                <h2>Welcome ${newUser.name}!</h2>
+                <p>Your account has been created successfully.</p>
+                <p><strong>Login Credentials:</strong></p>
+                <ul>
+                  <li>Email: <strong>${newUser.email}</strong></li>
+                  <li>Password: <strong>${randomPassword}</strong></li>
+                  <li>Role: ${userRole}</li>
+                </ul>
+                <p><a href="${appUrl}/login" style="background: #10b981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Login Now</a></p>
+                <p><strong>Important:</strong> Please change your password after first login.</p>
+                <p>Thank you for joining ARPU Foundation!</p>
+              `
+            })
+          } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError)
+          }
+
         }
       } catch (userCreationError) {
         console.error('Failed to create user account:', userCreationError)

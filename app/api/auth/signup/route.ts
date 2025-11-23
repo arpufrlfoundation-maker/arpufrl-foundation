@@ -3,12 +3,14 @@ import { connectToDatabase } from '@/lib/db'
 import { User, userRegistrationSchema, UserRole, UserStatus } from '@/models/User'
 import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
+import { withApiHandler, rateLimiters } from '@/lib/api-handler'
 
 /**
  * New user signup endpoint with comprehensive validation
  * All new accounts are created as ACTIVE (no approval needed)
+ * Rate limited to prevent abuse
  */
-export async function POST(request: NextRequest) {
+async function signupHandler(request: NextRequest) {
   try {
     const body = await request.json()
 
@@ -180,3 +182,9 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// Apply rate limiting to signup endpoint
+export const POST = withApiHandler(signupHandler, {
+  rateLimit: rateLimiters.strict // 5 requests per 15 minutes
+})
+

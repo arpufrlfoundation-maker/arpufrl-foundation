@@ -4,6 +4,7 @@ import { User } from '../../../../models/User'
 import { z } from 'zod'
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
+import { withApiHandler, rateLimiters } from '@/lib/api-handler'
 
 // Password reset request schema
 const resetRequestSchema = z.object({
@@ -23,7 +24,7 @@ const resetConfirmSchema = z.object({
 })
 
 // Request password reset
-export async function POST(request: NextRequest) {
+async function requestResetHandler(request: NextRequest) {
   try {
     const body = await request.json()
 
@@ -65,7 +66,6 @@ export async function POST(request: NextRequest) {
 
     // TODO: Send email with reset link
     // For now, we'll just return the token (in production, this should be sent via email)
-    console.log(`Password reset token for ${email}: ${resetToken}`)
 
     return NextResponse.json(
       { message: 'If an account with that email exists, a password reset link has been sent.' },
@@ -80,6 +80,11 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// Apply rate limiting - strict for password reset
+export const POST = withApiHandler(requestResetHandler, {
+  rateLimit: rateLimiters.strict // 5 requests per 15 minutes
+})
 
 // Confirm password reset
 export async function PUT(request: NextRequest) {

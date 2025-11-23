@@ -83,7 +83,7 @@ This donation is eligible for tax deduction under Section 80G of the Income Tax 
 Thank you for supporting Samarpan Sahayog Abhiyan!`
       })
 
-      console.log('Donation receipt sent to:', donation.donorEmail)
+      // Donation receipt sent successfully
 
       return NextResponse.json({
         success: true,

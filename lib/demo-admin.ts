@@ -137,15 +137,18 @@ export const logDemoAdminStatus = (): void => {
   const config = getDemoAdminConfig()
   const validation = validateDemoAdminConfig()
 
-  console.log('Demo Admin Configuration Status:', {
-    email: config.email,
-    name: config.name,
-    role: config.role,
-    status: config.status,
-    source: process.env.DEMO_ADMIN_EMAIL ? 'environment' : 'fallback',
-    isValid: validation.isValid,
-    errors: validation.errors
-  })
+  // Only log in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Demo Admin Configuration Status:', {
+      email: config.email,
+      name: config.name,
+      role: config.role,
+      status: config.status,
+      source: process.env.DEMO_ADMIN_EMAIL ? 'environment' : 'fallback',
+      isValid: validation.isValid,
+      errors: validation.errors
+    })
+  }
 }
 
 // Demo admin utility functions

@@ -64,8 +64,7 @@ export async function POST(request: NextRequest) {
     })
 
     // TODO: Send verification email
-    // For now, we'll just log the token (in production, this should be sent via email)
-    console.log(`Email verification token for ${email}: ${verificationToken}`)
+    // For now, we'll just return the token (in production, this should be sent via email)
 
     return NextResponse.json(
       { message: 'Verification email sent successfully' },

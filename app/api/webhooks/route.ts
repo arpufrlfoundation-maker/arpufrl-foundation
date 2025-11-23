@@ -116,7 +116,7 @@ async function processWebhookEvent(event: WebhookEvent): Promise<WebhookProcessi
       return await handleRefundProcessed(event)
 
     default:
-      console.log(`Unhandled webhook event type: ${eventType}`)
+      // Unhandled webhook event type
       return {
         success: true,
         message: `Event type ${eventType} acknowledged but not processed`

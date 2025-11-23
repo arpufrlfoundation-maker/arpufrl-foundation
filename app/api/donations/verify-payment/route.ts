@@ -8,6 +8,7 @@ import { ReferralCode, referralCodeUtils } from '@/models/ReferralCode'
 import { User } from '@/models/User'
 import { sendDonationConfirmationEmail, sendDonationNotificationToAdmin, sendReferralNotificationToCoordinator } from '@/lib/email'
 import { processCommissionDistribution } from '@/lib/commission-utils'
+import { withApiHandler, rateLimiters } from '@/lib/api-handler'
 
 /**
  * Extract IP address from request headers
@@ -43,7 +44,7 @@ const verifyPaymentSchema = z.object({
  * POST /api/donations/verify-payment
  * Verify Razorpay payment and create donation record
  */
-export async function POST(request: NextRequest) {
+async function verifyPaymentHandler(request: NextRequest) {
   try {
     await connectToDatabase()
 
@@ -175,7 +176,7 @@ export async function POST(request: NextRequest) {
           }
 
           await activeTarget.save()
-          console.log(`Updated target for user ${attributedUser._id}: +${amount} to personal collection (Target period: ${activeTarget.startDate} to ${activeTarget.endDate})`)
+          // Target updated for user personal collection
 
           // Propagate to parent coordinators
           let currentParentId = attributedUser.parentCoordinatorId
@@ -204,9 +205,9 @@ export async function POST(request: NextRequest) {
               }
 
               await parentTarget.save()
-              console.log(`Updated parent target ${currentParentId}: +${amount} to team collection (Target period: ${parentTarget.startDate} to ${parentTarget.endDate})`)
+              // Parent target updated for team collection
             } else {
-              console.log(`No active target in date range for parent ${currentParentId}`)
+              // No active target in date range for parent
             }
 
             // Get next parent
@@ -217,7 +218,7 @@ export async function POST(request: NextRequest) {
             if (visited.size >= 20) break
           }
         } else {
-          console.log(`No active target in date range for user ${attributedUser._id} (Donation date: ${donationDate})`)
+          // No active target in date range for user
         }
       } catch (targetError) {
         console.error('Failed to update target collections:', targetError)
@@ -238,7 +239,7 @@ export async function POST(request: NextRequest) {
           notes.referralCode || undefined,
           attributedUser?.name || undefined
         )
-        console.log(`Donation confirmation email sent to ${donation.donorEmail}`)
+        // Donation confirmation email sent
       } catch (emailError) {
         console.error('Failed to send confirmation email:', emailError)
         // Don't fail the request if email fails
@@ -253,7 +254,7 @@ export async function POST(request: NextRequest) {
         program?.name || 'General Donation',
         donation._id.toString()
       )
-      console.log('Donation notification sent to admin')
+      // Donation notification sent to admin
     } catch (emailError) {
       console.error('Failed to send admin notification:', emailError)
       // Don't fail the request if email fails
@@ -270,7 +271,7 @@ export async function POST(request: NextRequest) {
           program?.name || 'General Donation',
           notes.referralCode
         )
-        console.log(`Referral notification sent to coordinator ${attributedUser.email}`)
+        // Referral notification sent to coordinator
       } catch (emailError) {
         console.error('Failed to send coordinator notification:', emailError)
         // Don't fail the request if email fails
@@ -318,3 +319,8 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// Apply rate limiting for payment verification
+export const POST = withApiHandler(verifyPaymentHandler, {
+  rateLimit: rateLimiters.payment // 10 requests per hour
+})

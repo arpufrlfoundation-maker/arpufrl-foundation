@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       {
         success: true,
         message: 'Thank you for your message! We will get back to you within 24 hours.',
-        contactId: contact._id.toString()
+        contactId: String(contact._id)
       },
       { status: 201 }
     )

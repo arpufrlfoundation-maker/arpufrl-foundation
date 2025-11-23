@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/db'
 import { Program } from '@/models/Program'
+import { auth } from '@/lib/auth'
+import { UserRole } from '@/models/User'
 
 // GET /api/programs - Fetch active programs for donation form
 export async function GET(request: NextRequest) {
@@ -66,13 +68,53 @@ export async function GET(request: NextRequest) {
 // POST /api/programs - Create new program (admin only)
 export async function POST(request: NextRequest) {
   try {
+    // Authentication check
+    const session = await auth()
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - Please login' },
+        { status: 401 }
+      )
+    }
+
+    // Admin role check
+    if (session.user.role !== UserRole.ADMIN) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      )
+    }
+
     await connectToDatabase()
 
-    // TODO: Add authentication check for admin role
-    // For now, return method not allowed
+    const body = await request.json()
+    
+    // Validate required fields
+    const { name, description, impact, image, isActive } = body
+    
+    if (!name || !description) {
+      return NextResponse.json(
+        { success: false, error: 'Name and description are required' },
+        { status: 400 }
+      )
+    }
+
+    const program = await Program.create({
+      name,
+      description,
+      impact: impact || '',
+      image: image || '',
+      isActive: isActive !== undefined ? isActive : true
+    })
+
     return NextResponse.json(
-      { success: false, error: 'Method not implemented' },
-      { status: 501 }
+      {
+        success: true,
+        message: 'Program created successfully',
+        data: program
+      },
+      { status: 201 }
     )
 
   } catch (error) {
