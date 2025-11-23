@@ -4,12 +4,13 @@ import { CommissionLog } from '@/models/CommissionLog'
 
 /**
  * Commission Rules:
- * - Volunteer: 5% personal, all upper levels get 2% each
+ * - Volunteer: 0% personal (no commission)
+ *   - If volunteer has a parent coordinator: parent gets 5% commission
  * - Non-Volunteer (any coordinator/officer): 15% personal, all upper levels get 2% each
  */
 
-const VOLUNTEER_COMMISSION = 5 // 5%
 const NON_VOLUNTEER_COMMISSION = 15 // 15%
+const VOLUNTEER_PARENT_COMMISSION = 5 // 5% for volunteer's parent coordinator
 const HIERARCHY_COMMISSION = 2 // 2% for each upper level
 
 const VOLUNTEER_ROLES = ['VOLUNTEER']
@@ -58,27 +59,31 @@ export async function calculateCommissionDistribution(
   // Determine personal commission percentage
   const isVolunteer = VOLUNTEER_ROLES.includes(recipient.role)
   const personalCommissionPercentage = isVolunteer
-    ? VOLUNTEER_COMMISSION
+    ? 0 // Volunteers get 0% commission
     : NON_VOLUNTEER_COMMISSION
 
   const personalCommission = (donationAmount * personalCommissionPercentage) / 100
 
-  // Add recipient's commission
-  distributions.push({
-    userId: recipient._id,
-    userName: recipient.name,
-    userRole: recipient.role,
-    hierarchyLevel: getHierarchyLevel(recipient.role),
-    commissionAmount: personalCommission,
-    commissionPercentage: personalCommissionPercentage
-  })
+  // Add recipient's commission (only if not a volunteer)
+  if (!isVolunteer) {
+    distributions.push({
+      userId: recipient._id,
+      userName: recipient.name,
+      userRole: recipient.role,
+      hierarchyLevel: getHierarchyLevel(recipient.role),
+      commissionAmount: personalCommission,
+      commissionPercentage: personalCommissionPercentage
+    })
 
-  totalCommission += personalCommission
+    totalCommission += personalCommission
+  }
 
   // Calculate hierarchy commissions (traverse upward)
+  // Special rule: If recipient is volunteer, parent gets 5% instead of 2%
   const hierarchyCommissions = await calculateHierarchyCommissions(
     recipient,
-    donationAmount
+    donationAmount,
+    isVolunteer
   )
 
   distributions.push(...hierarchyCommissions.distributions)
@@ -104,7 +109,8 @@ export async function calculateCommissionDistribution(
  */
 async function calculateHierarchyCommissions(
   startUser: any,
-  donationAmount: number
+  donationAmount: number,
+  isVolunteer: boolean = false
 ): Promise<{ distributions: CommissionDistribution[]; totalCommission: number }> {
   const distributions: CommissionDistribution[] = []
   let totalCommission = 0
@@ -114,6 +120,7 @@ async function calculateHierarchyCommissions(
   visited.add(startUser._id.toString())
 
   // Traverse up the hierarchy
+  let isFirstParent = true
   while (currentUserId && !visited.has(currentUserId.toString())) {
     visited.add(currentUserId.toString())
 
@@ -122,7 +129,18 @@ async function calculateHierarchyCommissions(
 
     if (!parent) break
 
-    const hierarchyCommission = (donationAmount * HIERARCHY_COMMISSION) / 100
+    // If volunteer and this is their direct parent, give 5% commission
+    let hierarchyCommission: number
+    let commissionPercentage: number
+
+    if (isVolunteer && isFirstParent) {
+      hierarchyCommission = (donationAmount * VOLUNTEER_PARENT_COMMISSION) / 100
+      commissionPercentage = VOLUNTEER_PARENT_COMMISSION
+      isFirstParent = false
+    } else {
+      hierarchyCommission = (donationAmount * HIERARCHY_COMMISSION) / 100
+      commissionPercentage = HIERARCHY_COMMISSION
+    }
 
     distributions.push({
       userId: parent._id,
@@ -130,7 +148,7 @@ async function calculateHierarchyCommissions(
       userRole: parent.role,
       hierarchyLevel: getHierarchyLevel(parent.role),
       commissionAmount: hierarchyCommission,
-      commissionPercentage: HIERARCHY_COMMISSION
+      commissionPercentage
     })
 
     totalCommission += hierarchyCommission

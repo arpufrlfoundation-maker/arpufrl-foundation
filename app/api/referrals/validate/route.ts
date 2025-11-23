@@ -27,29 +27,28 @@ export async function POST(request: NextRequest) {
     // Resolve referral code
     const referralCode = await referralCodeUtils.resolveReferralCode(code)
 
-    if (!referralCode) {
+    if (!referralCode || !referralCode.active) {
       return NextResponse.json({
         valid: false,
         message: 'Referral code not found or inactive'
       })
     }
 
-    // Populate owner information
-    await referralCode.populate('ownerUserId', 'name region role')
+    // Populate owner information if not already populated
+    if (!referralCode.ownerUserId || typeof referralCode.ownerUserId === 'string') {
+      await referralCode.populate('ownerUserId', 'name region role')
+    }
+
+    const owner = referralCode.ownerUserId as any
 
     return NextResponse.json({
       valid: true,
-      referralCode: {
-        id: referralCode._id,
-        code: referralCode.code,
-        type: referralCode.type,
-        region: referralCode.region,
-        owner: {
-          name: (referralCode.ownerUserId as any).name,
-          region: (referralCode.ownerUserId as any).region,
-          role: (referralCode.ownerUserId as any).role
-        }
-      }
+      code: referralCode.code,
+      codeType: referralCode.type,
+      region: referralCode.region,
+      ownerName: owner?.name || 'Unknown',
+      ownerRegion: owner?.region || '',
+      ownerRole: owner?.role || ''
     })
 
   } catch (error) {
@@ -79,29 +78,28 @@ export async function GET(request: NextRequest) {
     // Resolve referral code
     const referralCode = await referralCodeUtils.resolveReferralCode(code)
 
-    if (!referralCode) {
+    if (!referralCode || !referralCode.active) {
       return NextResponse.json({
         valid: false,
         message: 'Referral code not found or inactive'
       })
     }
 
-    // Populate owner information
-    await referralCode.populate('ownerUserId', 'name region role')
+    // Populate owner information if not already populated
+    if (!referralCode.ownerUserId || typeof referralCode.ownerUserId === 'string') {
+      await referralCode.populate('ownerUserId', 'name region role')
+    }
+
+    const owner = referralCode.ownerUserId as any
 
     return NextResponse.json({
       valid: true,
-      referralCode: {
-        id: referralCode._id,
-        code: referralCode.code,
-        type: referralCode.type,
-        region: referralCode.region,
-        owner: {
-          name: (referralCode.ownerUserId as any).name,
-          region: (referralCode.ownerUserId as any).region,
-          role: (referralCode.ownerUserId as any).role
-        }
-      }
+      code: referralCode.code,
+      codeType: referralCode.type,
+      region: referralCode.region,
+      ownerName: owner?.name || 'Unknown',
+      ownerRegion: owner?.region || '',
+      ownerRole: owner?.role || ''
     })
 
   } catch (error) {

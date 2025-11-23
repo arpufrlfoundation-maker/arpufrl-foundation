@@ -49,7 +49,7 @@ async function testCommissionSystem() {
     // Create a test donation
     const testAmount = 10000 // ₹10,000
     console.log(`💰 Creating test donation of ₹${testAmount}...`)
-    
+
     const donation = await Donation.create({
       donorName: 'Test Donor',
       donorEmail: 'test@example.com',

@@ -36,12 +36,12 @@ async function setupTestData() {
     // 2. Create referral codes for users
     console.log('\n2️⃣  CREATING REFERRAL CODES');
     console.log('-'.repeat(60));
-    
+
     let created = 0;
     for (const user of users) {
       // Check if already has a referral code
       const existing = await referralCodesCollection.findOne({ ownerUserId: user._id });
-      
+
       if (existing) {
         console.log(`   ⏭️  ${user.name} already has code: ${existing.code}`);
         continue;

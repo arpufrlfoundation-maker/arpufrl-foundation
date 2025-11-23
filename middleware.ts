@@ -55,6 +55,9 @@ const publicRoutes = [
   '/api/referrals/validate', // Public referral code validation
   '/survey',
   '/api/surveys', // Allow public survey submissions
+  '/api/team', // Public team information
+  '/api/test-email' // Public test email endpoint
+
 ]
 
 // Auth routes that should redirect if already authenticated

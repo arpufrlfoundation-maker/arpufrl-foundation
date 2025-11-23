@@ -12,7 +12,9 @@ const updateRequestSchema = z.object({
     VolunteerRequestStatus.ACCEPTED,
     VolunteerRequestStatus.REJECTED
   ]),
-  notes: z.string().max(500).optional()
+  notes: z.string().max(500).optional(),
+  parentCoordinatorId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
+  assignedRole: z.enum(['VOLUNTEER', 'BLOCK_COORDINATOR', 'NODAL_OFFICER', 'PRERAK', 'PRERNA_SAKHI']).optional()
 })
 
 /**
@@ -59,7 +61,7 @@ export async function PATCH(
       )
     }
 
-    const { status, notes } = validationResult.data
+    const { status, notes, parentCoordinatorId, assignedRole } = validationResult.data
     const { id } = await params
 
     // Find and update volunteer request
@@ -77,14 +79,75 @@ export async function PATCH(
     if (notes !== undefined) {
       volunteerRequest.notes = notes
     }
-    
+
     // Set review info if status changed from PENDING
     if (volunteerRequest.isModified('status') && status !== VolunteerRequestStatus.PENDING) {
       volunteerRequest.reviewedAt = new Date()
-      volunteerRequest.reviewedBy = session.user.id === 'demo-admin' ? 'demo-admin' as any : session.user.id as any
+      // Only set reviewedBy if not demo-admin
+      if (session.user.id !== 'demo-admin') {
+        volunteerRequest.reviewedBy = session.user.id as any
+      }
     }
 
     await volunteerRequest.save()
+
+    // If accepted, create user account
+    let createdUser = null
+    if (status === VolunteerRequestStatus.ACCEPTED) {
+      try {
+        const { User, UserRole, UserStatus } = await import('@/models/User')
+        const { ReferralCode } = await import('@/models/ReferralCode')
+        const bcrypt = await import('bcryptjs')
+        const mongoose = await import('mongoose')
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email: volunteerRequest.email })
+
+        if (!existingUser) {
+          // Determine role - default to VOLUNTEER if not specified
+          const userRole = assignedRole || UserRole.VOLUNTEER
+
+          // Create user account with default password
+          const hashedPassword = await bcrypt.hash('Password123!', 12)
+
+          const userData: any = {
+            name: volunteerRequest.name,
+            email: volunteerRequest.email,
+            phone: volunteerRequest.phone,
+            state: volunteerRequest.state,
+            city: volunteerRequest.city,
+            role: userRole,
+            status: UserStatus.ACTIVE,
+            hashedPassword,
+            emailVerified: new Date()
+          }
+
+          // Add parent coordinator if provided
+          if (parentCoordinatorId) {
+            userData.parentCoordinatorId = new mongoose.Types.ObjectId(parentCoordinatorId)
+          }
+
+          const newUser = await User.create(userData)
+
+          // Create referral code with parent if specified
+          const parentId = parentCoordinatorId ? new mongoose.Types.ObjectId(parentCoordinatorId) : undefined
+          await ReferralCode.createForUser(newUser._id, parentId)
+
+          createdUser = {
+            id: newUser._id,
+            name: newUser.name,
+            email: newUser.email,
+            role: newUser.role,
+            parentCoordinatorId: newUser.parentCoordinatorId
+          }
+
+          console.log(`Created user account for volunteer: ${newUser.email} with role ${userRole}`)
+        }
+      } catch (userCreationError) {
+        console.error('Failed to create user account:', userCreationError)
+        // Don't fail the request if user creation fails
+      }
+    }
 
     // TODO: Send status update email to volunteer
 
@@ -94,7 +157,9 @@ export async function PATCH(
       data: {
         id: volunteerRequest._id,
         status: volunteerRequest.status,
-        reviewedAt: volunteerRequest.reviewedAt
+        reviewedAt: volunteerRequest.reviewedAt,
+        userCreated: !!createdUser,
+        user: createdUser
       }
     })
 

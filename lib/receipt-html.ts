@@ -43,7 +43,7 @@ export function generateReceiptHTML(data: {
     <div class="content">
       <h2 style="color: #667eea;">Thank You for Your Generosity!</h2>
       <p>We sincerely appreciate your support for <strong>${data.organizationName}</strong>. Your contribution helps us make a meaningful difference.</p>
-      
+
       <div class="amount-box">
         <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Donation Amount</div>
         <div class="amount">₹${data.amount.toLocaleString('en-IN')}</div>
@@ -82,7 +82,7 @@ export function generateReceiptHTML(data: {
       </div>
 
       <p style="font-size: 14px; color: #888; margin-top: 30px; line-height: 1.8;">
-        <strong>Note:</strong> This is a computer-generated receipt. Please keep this for your tax records. 
+        <strong>Note:</strong> This is a computer-generated receipt. Please keep this for your tax records.
         For queries, contact us at <a href="mailto:info@arpufrl.org" style="color: #667eea;">info@arpufrl.org</a> quoting the receipt number.
       </p>
     </div>

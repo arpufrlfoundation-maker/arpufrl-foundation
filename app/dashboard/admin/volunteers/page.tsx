@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
-  User as UserIcon, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  User as UserIcon,
+  CheckCircle,
+  XCircle,
   Eye,
   Trash2,
   Filter,
@@ -87,9 +87,9 @@ export default function VolunteersAdminPage() {
       setLoading(true)
       const statusParam = selectedStatus !== 'all' ? `&status=${selectedStatus}` : ''
       const response = await fetch(`/api/volunteer/requests?page=${page}&limit=10${statusParam}`)
-      
+
       if (!response.ok) throw new Error('Failed to fetch requests')
-      
+
       const data = await response.json()
       setRequests(data.data.requests || [])
       // API returns 'stats' not 'statusCounts'
@@ -200,51 +200,46 @@ export default function VolunteersAdminPage() {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <div 
+        <div
           onClick={() => setSelectedStatus('all')}
-          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-            selectedStatus === 'all' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-          }`}
+          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedStatus === 'all' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+            }`}
         >
           <p className="text-2xl font-bold text-gray-900">{statusCounts?.total || 0}</p>
           <p className="text-sm text-gray-600">All Requests</p>
         </div>
-        
-        <div 
+
+        <div
           onClick={() => setSelectedStatus('PENDING')}
-          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-            selectedStatus === 'PENDING' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200 hover:border-gray-300'
-          }`}
+          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedStatus === 'PENDING' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200 hover:border-gray-300'
+            }`}
         >
           <p className="text-2xl font-bold text-yellow-700">{statusCounts?.pending || 0}</p>
           <p className="text-sm text-gray-600">Pending</p>
         </div>
 
-        <div 
+        <div
           onClick={() => setSelectedStatus('REVIEWED')}
-          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-            selectedStatus === 'REVIEWED' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-          }`}
+          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedStatus === 'REVIEWED' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+            }`}
         >
           <p className="text-2xl font-bold text-blue-700">{statusCounts?.reviewed || 0}</p>
           <p className="text-sm text-gray-600">Reviewed</p>
         </div>
 
-        <div 
+        <div
           onClick={() => setSelectedStatus('ACCEPTED')}
-          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-            selectedStatus === 'ACCEPTED' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
-          }`}
+          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedStatus === 'ACCEPTED' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
+            }`}
         >
           <p className="text-2xl font-bold text-green-700">{statusCounts?.accepted || 0}</p>
           <p className="text-sm text-gray-600">Accepted</p>
         </div>
 
-        <div 
+        <div
           onClick={() => setSelectedStatus('REJECTED')}
-          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-            selectedStatus === 'REJECTED' ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-300'
-          }`}
+          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedStatus === 'REJECTED' ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+            }`}
         >
           <p className="text-2xl font-bold text-red-700">{statusCounts?.rejected || 0}</p>
           <p className="text-sm text-gray-600">Rejected</p>
@@ -319,7 +314,7 @@ export default function VolunteersAdminPage() {
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
                         {request.interests.slice(0, 2).map((interest) => (
-                          <span 
+                          <span
                             key={interest}
                             className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded"
                           >
@@ -454,7 +449,7 @@ export default function VolunteersAdminPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Areas of Interest</h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedRequest.interests.map((interest) => (
-                    <span 
+                    <span
                       key={interest}
                       className="px-3 py-1 text-sm font-medium bg-purple-100 text-purple-800 rounded-full"
                     >
@@ -539,7 +534,7 @@ export default function VolunteersAdminPage() {
                       Reject
                     </Button>
                   )}
-                  
+
                   {selectedRequest.status === 'PENDING' && (
                     <Button
                       onClick={() => handleStatusUpdate(selectedRequest._id, 'REVIEWED')}

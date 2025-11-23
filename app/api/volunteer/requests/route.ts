@@ -98,14 +98,14 @@ export async function POST(request: NextRequest) {
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
           <h1 style="color: white; margin: 0; font-size: 28px;">Thank You for Volunteering!</h1>
         </div>
-        
+
         <div style="background: white; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
           <p style="font-size: 16px; margin-bottom: 20px;">Dear ${data.name},</p>
-          
+
           <p style="font-size: 14px; margin-bottom: 15px;">
             Thank you for your interest in volunteering with us! We have received your application and our team will review it shortly.
           </p>
-          
+
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #667eea; margin-top: 0;">Application Details:</h3>
             <p style="margin: 5px 0;"><strong>Areas of Interest:</strong> ${data.interests.join(', ')}</p>
@@ -113,28 +113,28 @@ export async function POST(request: NextRequest) {
             <p style="margin: 5px 0;"><strong>Location:</strong> ${data.city ? data.city + ', ' : ''}${data.state || ''}</p>
             <p style="margin: 5px 0;"><strong>Submitted:</strong> ${new Date().toLocaleDateString('en-IN')}</p>
           </div>
-          
+
           <p style="font-size: 14px; margin-bottom: 15px;">
             We will contact you at <strong>${data.email}</strong> or <strong>${data.phone}</strong> once your application has been reviewed.
           </p>
-          
+
           <p style="font-size: 14px; margin-bottom: 15px;">
             If you have any questions in the meantime, please don't hesitate to reach out to us.
           </p>
-          
+
           <p style="font-size: 14px; margin-top: 30px;">
             Best regards,<br>
             <strong>The Team</strong>
           </p>
         </div>
-        
+
         <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
           <p>This is an automated message. Please do not reply to this email.</p>
         </div>
       </body>
       </html>
     `
-    
+
     const volunteerEmailText = `Dear ${data.name},
 
 Thank you for your interest in volunteering with us! We have received your application and our team will review it shortly.
@@ -173,10 +173,10 @@ The Team`
           <div style="background: #667eea; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
             <h2 style="color: white; margin: 0;">🆕 New Volunteer Application</h2>
           </div>
-          
+
           <div style="background: white; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
             <p style="font-size: 16px; margin-bottom: 20px;">A new volunteer application has been submitted:</p>
-            
+
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #667eea; margin-top: 0;">Applicant Information:</h3>
               <p style="margin: 8px 0;"><strong>Name:</strong> ${data.name}</p>
@@ -189,26 +189,26 @@ The Team`
                 ${data.interests.map(interest => `<li>${interest}</li>`).join('')}
               </ul>
             </div>
-            
+
             <div style="background: #fff9e6; padding: 15px; border-left: 4px solid #ffc107; border-radius: 4px; margin: 20px 0;">
               <p style="margin: 0; font-size: 14px;"><strong>Message:</strong></p>
               <p style="margin: 5px 0 0 0; font-size: 14px;">${data.message}</p>
             </div>
-            
+
             ${data.experience ? `
             <div style="background: #e8f5e9; padding: 15px; border-left: 4px solid #4caf50; border-radius: 4px; margin: 20px 0;">
               <p style="margin: 0; font-size: 14px;"><strong>Previous Experience:</strong></p>
               <p style="margin: 5px 0 0 0; font-size: 14px;">${data.experience}</p>
             </div>
             ` : ''}
-            
+
             <div style="text-align: center; margin-top: 30px;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/admin/volunteers" 
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/admin/volunteers"
                  style="display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                 View in Dashboard
               </a>
             </div>
-            
+
             <p style="font-size: 12px; color: #666; margin-top: 30px; text-align: center;">
               Submitted on ${new Date().toLocaleString('en-IN')}
             </p>
@@ -216,7 +216,7 @@ The Team`
         </body>
         </html>
       `
-      
+
       const adminEmailText = `New Volunteer Application
 
 Applicant Information:

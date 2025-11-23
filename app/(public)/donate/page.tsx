@@ -52,15 +52,24 @@ function DonatePageContent() {
         if (data.success && data.data && data.data.programs) {
           setPrograms(data.data.programs)
           console.log('Programs loaded:', data.data.programs.length)
+        } else if (data.programs) {
+          // Handle alternate response structure
+          setPrograms(data.programs)
+          console.log('Programs loaded (alternate structure):', data.programs.length)
         } else {
           console.error('Invalid programs data structure:', data)
+          // Retry after 1 second
+          setTimeout(fetchPrograms, 1000)
         }
       } else {
         console.error('Failed to fetch programs:', response.status)
+        // Retry after 1 second
+        setTimeout(fetchPrograms, 1000)
       }
     } catch (error) {
       console.error('Error fetching programs:', error)
-      // Continue without programs if fetch fails
+      // Retry after 2 seconds
+      setTimeout(fetchPrograms, 2000)
     }
   }
 

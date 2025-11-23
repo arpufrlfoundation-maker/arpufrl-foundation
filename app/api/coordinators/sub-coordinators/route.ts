@@ -23,10 +23,11 @@ export async function GET(request: NextRequest) {
 
     await connectToDatabase()
 
-    // Build query for sub-coordinators
+    // Build query for sub-coordinators and volunteers
     const query: any = {
       referredBy: session.user.id,
-      role: 'coordinator'
+      // Include both coordinators and volunteers
+      role: { $in: ['coordinator', 'VOLUNTEER'] }
     }
 
     // Add search filter
@@ -44,9 +45,9 @@ export async function GET(request: NextRequest) {
       query.status = UserStatus.ACTIVE
     }
 
-    // Get sub-coordinators
+    // Get sub-coordinators and volunteers
     const subCoordinators = await User.find(query)
-      .select('name email status createdAt')
+      .select('name email role status createdAt')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -57,13 +58,13 @@ export async function GET(request: NextRequest) {
     // Get stats
     const pendingCount = await User.countDocuments({
       referredBy: session.user.id,
-      role: 'coordinator',
+      role: { $in: ['coordinator', 'VOLUNTEER'] },
       status: UserStatus.PENDING
     })
 
     const approvedCount = await User.countDocuments({
       referredBy: session.user.id,
-      role: 'coordinator',
+      role: { $in: ['coordinator', 'VOLUNTEER'] },
       status: UserStatus.ACTIVE
     })
 
@@ -72,6 +73,7 @@ export async function GET(request: NextRequest) {
         id: coord._id.toString(),
         name: coord.name,
         email: coord.email,
+        role: coord.role, // Include role
         isApproved: coord.status === UserStatus.ACTIVE,
         joinedDate: coord.createdAt
       })),

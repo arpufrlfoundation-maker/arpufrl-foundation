@@ -35,15 +35,37 @@ export function PaymentWidget({ referralCode, userId, userName, className = '' }
       setLoadingPrograms(true)
       const response = await fetch('/api/programs?active=true')
       const data = await response.json()
-      if (response.ok && data.programs) {
-        setPrograms(data.programs)
-        // Auto-select first program if available
-        if (data.programs.length > 0) {
-          setSelectedProgram(data.programs[0]._id || data.programs[0].id)
+
+      if (response.ok) {
+        let programList = []
+
+        // Handle different response structures
+        if (data.success && data.data && data.data.programs) {
+          programList = data.data.programs
+        } else if (data.programs) {
+          programList = data.programs
+        } else if (Array.isArray(data)) {
+          programList = data
         }
+
+        setPrograms(programList)
+
+        // Auto-select first program if available
+        if (programList.length > 0) {
+          const firstProgramId = programList[0]._id || programList[0].id
+          setSelectedProgram(firstProgramId)
+        }
+
+        console.log('Programs loaded in PaymentWidget:', programList.length)
+      } else {
+        console.error('Failed to fetch programs:', response.status)
+        // Retry once after 1 second
+        setTimeout(fetchPrograms, 1000)
       }
     } catch (error) {
       console.error('Error fetching programs:', error)
+      // Retry once after 2 seconds
+      setTimeout(fetchPrograms, 2000)
     } finally {
       setLoadingPrograms(false)
     }

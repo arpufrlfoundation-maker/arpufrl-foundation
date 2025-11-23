@@ -114,7 +114,7 @@ if [ ! -z "$USER_ID" ]; then
     print_info "GET /api/hierarchy/$USER_ID"
     HIERARCHY_RESPONSE=$(curl -s "$SERVER_URL/api/hierarchy/$USER_ID")
     echo "$HIERARCHY_RESPONSE" | jq '.' 2>/dev/null || echo "$HIERARCHY_RESPONSE"
-    
+
     # Count hierarchy levels
     HIERARCHY_LEVELS=$(echo "$HIERARCHY_RESPONSE" | grep -o '"level":[0-9]*' | wc -l)
     print_info "Hierarchy has $HIERARCHY_LEVELS levels"

@@ -145,6 +145,7 @@ export interface ITarget extends Document {
   getTotalCollection(): number
   getRemainingAmount(): number
   subdivideTarget(subdivisions: { userId: mongoose.Types.ObjectId; amount: number }[]): Promise<ITarget[]>
+  updateFromSubdivisions(): Promise<ITarget>
 }
 
 // Static methods interface
@@ -156,6 +157,7 @@ export interface ITargetModel extends Model<ITarget> {
   createTarget(targetData: Partial<ITarget>): Promise<ITarget>
   bulkCreateTargets(targetsData: Partial<ITarget>[]): Promise<ITarget[]>
   aggregateTeamCollection(userId: mongoose.Types.ObjectId): Promise<number>
+  aggregateSubdivisionCollection(parentTargetId: mongoose.Types.ObjectId): Promise<number>
   propagateCollectionUpward(userId: mongoose.Types.ObjectId, amount: number): Promise<void>
   getHierarchyStats(userId: mongoose.Types.ObjectId): Promise<HierarchyStats>
   getDashboardData(userId: mongoose.Types.ObjectId): Promise<DashboardData>
@@ -614,13 +616,64 @@ targetSchema.statics.aggregateTeamCollection = async function (
 
   if (subordinateIds.length === 0) return 0
 
-  // Sum up their total collections
+  // Get current date for date-range filtering
+  const currentDate = new Date()
+
+  // Sum up their total collections (only from active targets within date range)
   const targets = await this.find({
     assignedTo: { $in: subordinateIds },
-    status: { $ne: TargetStatus.CANCELLED }
+    status: { $ne: TargetStatus.CANCELLED },
+    startDate: { $lte: currentDate },
+    endDate: { $gte: currentDate }
   })
 
   return targets.reduce((sum: number, target: ITarget) => sum + target.totalCollection, 0)
+}
+
+// New method: Aggregate subdivided target collections to parent
+targetSchema.statics.aggregateSubdivisionCollection = async function (
+  parentTargetId: mongoose.Types.ObjectId
+): Promise<number> {
+  // Find all child targets (subdivisions) of this parent
+  const childTargets = await this.find({
+    parentTargetId: parentTargetId,
+    status: { $ne: TargetStatus.CANCELLED }
+  })
+
+  if (childTargets.length === 0) return 0
+
+  // Sum up all child collections (both personal and team)
+  return childTargets.reduce((sum: number, target: ITarget) => sum + target.totalCollection, 0)
+}
+
+// Method to update parent target from subdivisions
+targetSchema.methods.updateFromSubdivisions = async function (this: ITarget): Promise<ITarget> {
+  if (!this.isDivided || this.subdivisions.length === 0) {
+    return this
+  }
+
+  const Model = this.constructor as ITargetModel
+
+  // Get all subdivision targets
+  const subdivisionTargets = await Model.find({
+    _id: { $in: this.subdivisions },
+    status: { $ne: TargetStatus.CANCELLED }
+  })
+
+  // Aggregate collections from all subdivisions
+  const totalSubdivisionCollection = subdivisionTargets.reduce(
+    (sum: number, target: ITarget) => sum + target.totalCollection,
+    0
+  )
+
+  // Update parent target's team collection with subdivision totals
+  this.teamCollection = totalSubdivisionCollection
+  // Parent's personal collection remains separate
+  // Total = personal + team (from subdivisions)
+  this.totalCollection = this.personalCollection + this.teamCollection
+
+  await this.save()
+  return this
 }
 
 targetSchema.statics.propagateCollectionUpward = async function (
@@ -640,10 +693,25 @@ targetSchema.statics.propagateCollectionUpward = async function (
     // Recalculate team collection from all subordinates
     const teamCollection = await Model.aggregateTeamCollection(user.parentCoordinatorId)
     parentTarget.teamCollection = teamCollection
-    await parentTarget.save()
+
+    // If parent has subdivisions, update from them
+    if (parentTarget.isDivided && parentTarget.subdivisions.length > 0) {
+      await parentTarget.updateFromSubdivisions()
+    } else {
+      await parentTarget.save()
+    }
 
     // Recursively propagate upward
     await Model.propagateCollectionUpward(user.parentCoordinatorId, amount)
+  }
+
+  // Also check if this user's target is a subdivision and update its parent
+  const userTarget = await Model.findActiveByUser(userId)
+  if (userTarget && userTarget.parentTargetId) {
+    const parentOfSubdivision = await Model.findById(userTarget.parentTargetId)
+    if (parentOfSubdivision) {
+      await parentOfSubdivision.updateFromSubdivisions()
+    }
   }
 }
 

@@ -29,7 +29,7 @@ const createCoordinatorSchema = z.object({
   region: z.string().min(2).max(50),
   role: z.enum(coordinatorRoles),
   parentCoordinatorId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
-  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number')
+  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number').default('Password123!')
 })
 
 const updateCoordinatorSchema = z.object({

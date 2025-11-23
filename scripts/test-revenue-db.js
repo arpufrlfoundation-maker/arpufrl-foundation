@@ -29,7 +29,7 @@ async function testRevenueSystem() {
       .find({ active: true })
       .limit(10)
       .toArray();
-    
+
     if (referralCodes.length === 0) {
       console.log('⚠️  No active referral codes found');
     } else {
@@ -50,7 +50,7 @@ async function testRevenueSystem() {
     if (referralCodes.length > 0) {
       const testCode = referralCodes[0];
       const testUser = await usersCollection.findOne({ _id: testCode.ownerUserId });
-      
+
       if (testUser) {
         console.log(`Testing with: ${testUser.name} (${testUser.role})`);
         console.log(`Referral Code: ${testCode.code}`);
@@ -68,7 +68,7 @@ async function testRevenueSystem() {
         while (currentUser.parentCoordinatorId && level < maxLevels) {
           const parent = await usersCollection.findOne({ _id: currentUser.parentCoordinatorId });
           if (!parent) break;
-          
+
           level++;
           console.log(`     └─ Level ${level}: ${parent.name} (${parent.role})`);
           currentUser = parent;
@@ -100,7 +100,7 @@ async function testRevenueSystem() {
     console.log('\n\n3️⃣  RECENT DONATIONS WITH REFERRALS');
     console.log('-'.repeat(60));
     const recentDonations = await donationsCollection
-      .find({ 
+      .find({
         referredBy: { $exists: true, $ne: null },
         paymentStatus: 'SUCCESS'
       })
@@ -135,7 +135,7 @@ async function testRevenueSystem() {
       console.log('   This means no donations with referrals have been completed.\n');
     } else {
       console.log(`✅ Found ${commissionLogs.length} commission entries:\n`);
-      
+
       // Group by donation
       const byDonation = {};
       for (const log of commissionLogs) {

@@ -20,7 +20,7 @@ interface Donation {
   donorEmail?: string
   amount: number
   programName?: string
-  referralCode: string
+  referralCode: string | { code: string; type: string }
   paymentStatus: string
   createdAt: string
 }
@@ -279,7 +279,7 @@ export default function CoordinatorDonations() {
                       Program
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Referral Code
+                      Ref. Code
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -310,7 +310,7 @@ export default function CoordinatorDonations() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <code className="text-sm font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                          {donation.referralCode}
+                          {typeof donation.referralCode === 'string' ? donation.referralCode : donation.referralCode?.code || 'N/A'}
                         </code>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

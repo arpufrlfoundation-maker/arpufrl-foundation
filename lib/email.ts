@@ -83,7 +83,9 @@ export const sendDonationConfirmationEmail = async (
   amount: number,
   programName: string,
   donationId: string,
-  razorpayPaymentId?: string
+  razorpayPaymentId?: string,
+  referralCode?: string,
+  referralCoordinatorName?: string
 ): Promise<boolean> => {
   const subject = 'Thank You for Your Donation! 🙏'
 
@@ -220,6 +222,22 @@ export const sendDonationConfirmationEmail = async (
               day: 'numeric'
             })}</span>
           </div>
+
+          ${referralCode ? `
+          <div class="detail-row" style="background-color: #f0f9ff; padding: 12px; border-radius: 6px; margin-top: 10px;">
+            <span class="detail-label" style="color: #0369a1;">Referral Code Used:</span>
+            <span class="detail-value" style="color: #0369a1; font-weight: bold;">${referralCode}</span>
+          </div>
+          ${referralCoordinatorName ? `
+          <div class="detail-row" style="background-color: #f0f9ff; padding: 12px; border-radius: 6px;">
+            <span class="detail-label" style="color: #0369a1;">Referred By:</span>
+            <span class="detail-value" style="color: #0369a1;">${referralCoordinatorName}</span>
+          </div>
+          ` : ''}
+          <p style="font-size: 13px; color: #0369a1; margin-top: 10px; padding: 10px; background-color: #e0f2fe; border-radius: 6px;">
+            <strong>Thank you for using a referral code!</strong> Your donation supports our coordinator network and helps us reach more people in need.
+          </p>
+          ` : ''}
         </div>
 
         <div class="thank-you">
@@ -270,6 +288,13 @@ export const sendDonationConfirmationEmail = async (
     - Amount: ₹${amount.toLocaleString('en-IN')}
     - Donation ID: ${donationId}
     - Payment ID: ${razorpayPaymentId}
+    ${referralCode ? `- Referral Code: ${referralCode}` : ''}
+    ${referralCoordinatorName ? `- Referred By: ${referralCoordinatorName}` : ''}
+    - Date: ${new Date().toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })}
     - Date: ${new Date().toLocaleDateString('en-IN')}
 
     Your donation is eligible for tax deduction under Section 80G.

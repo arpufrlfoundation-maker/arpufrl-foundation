@@ -111,7 +111,9 @@ const volunteerRequestSchema = new Schema<IVolunteerRequest>(
     },
     reviewedBy: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
+      required: false,
+      default: null
     },
     notes: {
       type: String,

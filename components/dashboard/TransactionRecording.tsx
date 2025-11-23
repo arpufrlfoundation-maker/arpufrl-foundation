@@ -75,12 +75,30 @@ export default function TransactionRecording({ onSuccess }: TransactionRecording
   const fetchPrograms = async () => {
     try {
       const response = await fetch('/api/programs?active=true')
-      const data = await response.json()
       if (response.ok) {
-        setPrograms(data.programs || [])
+        const data = await response.json()
+        console.log('Programs API response:', data)
+        if (data.success && data.data && data.data.programs) {
+          setPrograms(data.data.programs)
+          console.log('Programs loaded:', data.data.programs.length)
+        } else if (data.programs) {
+          // Handle alternate response structure
+          setPrograms(data.programs)
+          console.log('Programs loaded (alternate structure):', data.programs.length)
+        } else {
+          console.error('Invalid programs data structure:', data)
+          // Retry after 1 second
+          setTimeout(fetchPrograms, 1000)
+        }
+      } else {
+        console.error('Failed to fetch programs:', response.status)
+        // Retry after 1 second
+        setTimeout(fetchPrograms, 1000)
       }
     } catch (error) {
       console.error('Error fetching programs:', error)
+      // Retry after 2 seconds
+      setTimeout(fetchPrograms, 2000)
     }
   }
 

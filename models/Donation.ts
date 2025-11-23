@@ -133,6 +133,14 @@ export interface IDonation extends Document {
   // Referral tracking
   referralCodeId?: mongoose.Types.ObjectId
   attributedToUserId?: mongoose.Types.ObjectId
+  referredBy?: mongoose.Types.ObjectId
+
+  // Manual entry tracking
+  isManualEntry?: boolean
+  recordedBy?: mongoose.Types.ObjectId
+  paymentMethod?: string
+  transactionId?: string
+  notes?: string
 
   // Privacy settings
   isAnonymous?: boolean
@@ -331,6 +339,39 @@ const donationSchema = new Schema<IDonation>({
     type: Schema.Types.ObjectId,
     ref: 'User',
     index: true
+  },
+
+  referredBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
+  },
+
+  // Manual entry tracking
+  isManualEntry: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+
+  recordedBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  paymentMethod: {
+    type: String,
+    enum: ['RAZORPAY', 'CASH', 'BANK_TRANSFER', 'UPI', 'CHEQUE', 'OTHER'],
+    default: 'RAZORPAY'
+  },
+
+  transactionId: {
+    type: String
+  },
+
+  notes: {
+    type: String,
+    maxlength: [500, 'Notes must not exceed 500 characters']
   },
 
   // Privacy settings

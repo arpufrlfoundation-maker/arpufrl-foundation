@@ -153,11 +153,31 @@ export async function GET(req: NextRequest) {
       collected: t.collected
     }))
 
-    // Get transaction statistics
+    // Get transaction statistics (manual/offline)
     const transactions = await Transaction.find({
       collectedBy: targetUserId,
       status: 'verified'
     })
+
+    // Get online donations via referral code
+    const Donation = mongoose.model('Donation')
+    const onlineDonations = await Donation.find({
+      referredBy: targetUserId,
+      paymentStatus: 'SUCCESS'
+    })
+
+    // Get donations within target period if target exists
+    const targetPeriodDonations = target ? await Donation.find({
+      referredBy: targetUserId,
+      paymentStatus: 'SUCCESS',
+      createdAt: { $gte: target.startDate, $lte: target.endDate }
+    }) : []
+
+    const targetPeriodTransactions = target ? await Transaction.find({
+      collectedBy: targetUserId,
+      status: 'verified',
+      collectionDate: { $gte: target.startDate, $lte: target.endDate }
+    }) : []
 
     const transactionStats = {
       total: transactions.length,
@@ -171,10 +191,17 @@ export async function GET(req: NextRequest) {
       pending: await Transaction.countDocuments({
         collectedBy: targetUserId,
         status: 'pending'
-      })
+      }),
+      // Add online donations data
+      onlineDonationsCount: onlineDonations.length,
+      onlineDonationsAmount: onlineDonations.reduce((sum, d) => sum + d.amount, 0),
+      // Target period specific stats
+      targetPeriodCount: targetPeriodDonations.length + targetPeriodTransactions.length,
+      targetPeriodAmount: targetPeriodDonations.reduce((sum, d) => sum + d.amount, 0) +
+                          targetPeriodTransactions.reduce((sum, t) => sum + t.amount, 0)
     }
 
-    // Get monthly trends
+    // Get monthly trends (combining both transactions and donations)
     const sixMonthsAgo = new Date()
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
 
@@ -201,12 +228,62 @@ export async function GET(req: NextRequest) {
       }
     ])
 
-    const trends = monthlyTransactions.map(m => ({
-      month: m._id.month,
-      year: m._id.year,
-      amount: m.amount,
-      count: m.count
-    }))
+    const monthlyDonations = await Donation.aggregate([
+      {
+        $match: {
+          referredBy: new mongoose.Types.ObjectId(targetUserId),
+          paymentStatus: 'SUCCESS',
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: '$createdAt' },
+            year: { $year: '$createdAt' }
+          },
+          amount: { $sum: '$amount' },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1 }
+      }
+    ])
+
+    // Merge monthly data
+    const monthlyMap = new Map<string, { month: number; year: number; amount: number; count: number }>()
+
+    monthlyTransactions.forEach(m => {
+      const key = `${m._id.year}-${m._id.month}`
+      monthlyMap.set(key, {
+        month: m._id.month,
+        year: m._id.year,
+        amount: m.amount,
+        count: m.count
+      })
+    })
+
+    monthlyDonations.forEach(m => {
+      const key = `${m._id.year}-${m._id.month}`
+      const existing = monthlyMap.get(key)
+      if (existing) {
+        existing.amount += m.amount
+        existing.count += m.count
+      } else {
+        monthlyMap.set(key, {
+          month: m._id.month,
+          year: m._id.year,
+          amount: m.amount,
+          count: m.count
+        })
+      }
+    })
+
+    const trends = Array.from(monthlyMap.values()).sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year
+      return a.month - b.month
+    })
 
     // Prepare response
     const response = {

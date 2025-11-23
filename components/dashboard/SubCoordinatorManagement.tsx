@@ -451,6 +451,11 @@ export default function SubCoordinatorManagement() {
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(subCoordinator.status)}`}>
                         {subCoordinator.status}
                       </span>
+                      {subCoordinator.role && (
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                          {RoleDisplayNames[subCoordinator.role as UserRoleType] || subCoordinator.role}
+                        </span>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">

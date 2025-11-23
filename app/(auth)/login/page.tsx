@@ -304,6 +304,13 @@ function LoginPageContent() {
               <p className="text-xs text-blue-700">Email: admin@arpufrl.demo</p>
               <p className="text-xs text-blue-700">Password: DemoAdmin@2025</p>
             </div>
+
+            {/* Volunteer Default Password Info */}
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-xs font-semibold text-green-900 mb-1">📋 New Volunteers & Coordinators:</p>
+              <p className="text-xs text-green-700">Default Password: <span className="font-mono font-semibold">Password123!</span></p>
+              <p className="text-xs text-green-600 mt-1">Please change your password after first login</p>
+            </div>
           </div>
         </div>
       </div>

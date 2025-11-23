@@ -148,6 +148,81 @@ export async function POST(request: NextRequest) {
       attributedUser.totalDonationsReferred = (attributedUser.totalDonationsReferred || 0) + 1
       attributedUser.totalAmountReferred = (attributedUser.totalAmountReferred || 0) + amount
       await attributedUser.save()
+
+      // Update target collections for the user and propagate up hierarchy
+      try {
+        const Target = (await import('@/models/Target')).default
+        const donationDate = new Date()
+
+        const activeTarget = await Target.findOne({
+          assignedTo: attributedUser._id,
+          status: { $in: ['PENDING', 'IN_PROGRESS'] },
+          startDate: { $lte: donationDate },
+          endDate: { $gte: donationDate }
+        })
+
+        if (activeTarget) {
+          activeTarget.personalCollection = (activeTarget.personalCollection || 0) + amount
+          activeTarget.totalCollection = (activeTarget.totalCollection || 0) + amount
+          activeTarget.progressPercentage = (activeTarget.totalCollection / activeTarget.targetAmount) * 100
+
+          // Update status based on progress
+          if (activeTarget.status === 'PENDING') {
+            activeTarget.status = 'IN_PROGRESS'
+          }
+          if (activeTarget.progressPercentage >= 100) {
+            activeTarget.status = 'COMPLETED'
+          }
+
+          await activeTarget.save()
+          console.log(`Updated target for user ${attributedUser._id}: +${amount} to personal collection (Target period: ${activeTarget.startDate} to ${activeTarget.endDate})`)
+
+          // Propagate to parent coordinators
+          let currentParentId = attributedUser.parentCoordinatorId
+          const visited = new Set<string>()
+
+          while (currentParentId && !visited.has(currentParentId.toString())) {
+            visited.add(currentParentId.toString())
+
+            const parentTarget = await Target.findOne({
+              assignedTo: currentParentId,
+              status: { $in: ['PENDING', 'IN_PROGRESS'] },
+              startDate: { $lte: donationDate },
+              endDate: { $gte: donationDate }
+            })
+
+            if (parentTarget) {
+              parentTarget.teamCollection = (parentTarget.teamCollection || 0) + amount
+              parentTarget.totalCollection = parentTarget.personalCollection + parentTarget.teamCollection
+              parentTarget.progressPercentage = (parentTarget.totalCollection / parentTarget.targetAmount) * 100
+
+              if (parentTarget.status === 'PENDING') {
+                parentTarget.status = 'IN_PROGRESS'
+              }
+              if (parentTarget.progressPercentage >= 100 && parentTarget.status !== 'COMPLETED') {
+                parentTarget.status = 'COMPLETED'
+              }
+
+              await parentTarget.save()
+              console.log(`Updated parent target ${currentParentId}: +${amount} to team collection (Target period: ${parentTarget.startDate} to ${parentTarget.endDate})`)
+            } else {
+              console.log(`No active target in date range for parent ${currentParentId}`)
+            }
+
+            // Get next parent
+            const parentUser = await User.findById(currentParentId).select('parentCoordinatorId')
+            currentParentId = parentUser?.parentCoordinatorId
+
+            // Safety: max 20 levels
+            if (visited.size >= 20) break
+          }
+        } else {
+          console.log(`No active target in date range for user ${attributedUser._id} (Donation date: ${donationDate})`)
+        }
+      } catch (targetError) {
+        console.error('Failed to update target collections:', targetError)
+        // Don't fail the donation if target update fails
+      }
     }
 
     // Send confirmation email to donor (if email provided)
@@ -159,7 +234,9 @@ export async function POST(request: NextRequest) {
           amount,
           program?.name || 'General Donation',
           donation._id.toString(),
-          razorpayPaymentId
+          razorpayPaymentId,
+          notes.referralCode || undefined,
+          attributedUser?.name || undefined
         )
         console.log(`Donation confirmation email sent to ${donation.donorEmail}`)
       } catch (emailError) {

@@ -46,9 +46,33 @@ export async function GET(req: NextRequest) {
     // Get comprehensive dashboard data
     const dashboardData = await Target.getDashboardData(userId)
 
+    // Ensure all data is properly serialized
+    const serializedData = {
+      user: dashboardData.user ? {
+        id: dashboardData.user.id?.toString(),
+        name: dashboardData.user.name,
+        role: dashboardData.user.role,
+        level: dashboardData.user.level
+      } : null,
+      target: dashboardData.target,
+      team: {
+        ...dashboardData.team,
+        topPerformers: dashboardData.team?.topPerformers?.map((performer: any) => ({
+          ...performer,
+          userId: performer.userId?.toString()
+        }))
+      },
+      recentActivity: dashboardData.recentActivity?.map((activity: any) => ({
+        ...activity,
+        userId: activity.userId?.toString(),
+        date: activity.date?.toISOString()
+      })),
+      analytics: dashboardData.analytics
+    }
+
     return NextResponse.json({
       success: true,
-      data: dashboardData
+      data: serializedData
     })
 
   } catch (error: any) {

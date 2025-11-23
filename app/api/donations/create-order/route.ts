@@ -62,10 +62,26 @@ export async function POST(request: NextRequest) {
     // Validate referral code if provided
     let referralData = null
     if (referralCode) {
+      // First try to find in ReferralCode collection
       referralData = await referralCodeUtils.resolveReferralCode(referralCode)
+
+      // If not found, try User.referralCode as fallback
       if (!referralData) {
+        const { User } = await import('@/models/User')
+        const userWithCode = await User.findOne({
+          referralCode: referralCode.toUpperCase(),
+          status: 'ACTIVE'
+        })
+
+        if (userWithCode) {
+          // Valid referral code found in User collection
+          referralData = { code: referralCode, active: true, ownerUserId: userWithCode._id }
+        }
+      }
+
+      if (!referralData || !referralData.active) {
         return NextResponse.json(
-          { success: false, error: 'Invalid referral code' },
+          { success: false, error: 'Invalid or inactive referral code' },
           { status: 400 }
         )
       }

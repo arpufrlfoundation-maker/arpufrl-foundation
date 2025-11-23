@@ -1,8 +1,8 @@
 /**
- * Universal Dashboard Component
- * Adapts to all 11 hierarchy levels with role-based features
- * Samarpan Sahayog Abhiyan - National to Village Level Dashboard System
- */
+* Universal Dashboard Component
+* Adapts to all 11 hierarchy levels with role-based features
+* Samarpan Sahayog Abhiyan - National to Village Level Dashboard System
+*/
 
 'use client'
 
@@ -11,6 +11,8 @@ import { useSession } from 'next-auth/react'
 import { DashboardStatsGrid } from './DashboardStatsCards'
 import { PaymentWidget } from './PaymentWidget'
 import { TeamNetworkView } from './TeamNetworkView'
+import ManualDonationForm from './ManualDonationForm'
+import { VolunteerDonationsList } from './VolunteerDonationsList'
 import { Download, Share2, Bell, TrendingUp, BarChart3 } from 'lucide-react'
 
 interface DashboardData {
@@ -153,6 +155,7 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
   const { user, donations, team, hierarchy } = dashboardData
   const canViewTeam = hierarchy.level <= 10 // All except volunteer
   const canViewAnalytics = hierarchy.level <= 8 // Up to Nodal Officer
+  const isVolunteer = user.role === 'VOLUNTEER'
 
   return (
     <div className={`min-h-screen bg-gray-50 p-6 ${className}`}>
@@ -296,6 +299,14 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
             </div>
           )}
 
+          {/* Manual Donation Form */}
+          <ManualDonationForm />
+
+          {/* Volunteer Donations List */}
+          {isVolunteer && user.referralCode && (
+            <VolunteerDonationsList referralCode={user.referralCode} />
+          )}
+
           {/* Recent Activity */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
@@ -321,8 +332,8 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
 
         {/* Right Column - 1/3 width */}
         <div className="space-y-6">
-          {/* Payment Widget */}
-          {showPaymentWidget && (
+          {/* Payment Widget - Hidden for volunteers */}
+          {showPaymentWidget && !isVolunteer && (
             <PaymentWidget
               referralCode={user.referralCode}
               userId={user.id}

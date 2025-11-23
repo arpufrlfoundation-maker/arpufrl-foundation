@@ -50,6 +50,20 @@ export async function POST(req: NextRequest) {
     user.referralCode = referralCode
     await user.save()
 
+    // Create ReferralCode document
+    const { ReferralCode, ReferralCodeType } = await import('@/models/ReferralCode')
+    const parentCode = user.parentCoordinatorId ? await User.findById(user.parentCoordinatorId).select('referralCode') : null
+    const parentCodeDoc = parentCode?.referralCode ? await ReferralCode.findOne({ code: parentCode.referralCode }) : null
+
+    await ReferralCode.create({
+      code: referralCode,
+      ownerUserId: user._id,
+      parentCodeId: parentCodeDoc?._id,
+      type: user.role === 'VOLUNTEER' ? ReferralCodeType.SUB_COORDINATOR : ReferralCodeType.COORDINATOR,
+      region: user.state || user.district || 'General',
+      active: true
+    })
+
     return NextResponse.json({
       success: true,
       referralCode,

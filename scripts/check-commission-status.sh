@@ -43,7 +43,7 @@ mongosh "$MONGODB_URI" --quiet --eval '
     { commission_wallet: { $gt: 0 } },
     { name: 1, email: 1, role: 1, commission_wallet: 1 }
   ).sort({ commission_wallet: -1 }).toArray();
-  
+
   if (users.length === 0) {
     print("⚠️  No users with commission wallet balance found");
   } else {
@@ -62,12 +62,12 @@ echo "3. Checking Recent Donations with Referrals..."
 echo "----------------------------------------------"
 mongosh "$MONGODB_URI" --quiet --eval '
   const donations = db.donations.find(
-    { 
+    {
       referredBy: { $exists: true, $ne: null },
       paymentStatus: "SUCCESS"
     }
   ).sort({createdAt: -1}).limit(5).toArray();
-  
+
   if (donations.length === 0) {
     print("⚠️  No successful donations with referrals found yet");
   } else {
@@ -88,41 +88,41 @@ echo "4. Commission System Summary..."
 echo "-------------------------------"
 mongosh "$MONGODB_URI" --quiet --eval '
   const totalCommissions = db.commission_logs.aggregate([
-    { $group: { 
-      _id: null, 
+    { $group: {
+      _id: null,
       total: { $sum: "$commissionAmount" },
       count: { $sum: 1 }
     }}
   ]).toArray();
-  
+
   const pendingCommissions = db.commission_logs.aggregate([
     { $match: { status: "PENDING" } },
-    { $group: { 
-      _id: null, 
+    { $group: {
+      _id: null,
       total: { $sum: "$commissionAmount" },
       count: { $sum: 1 }
     }}
   ]).toArray();
-  
+
   const paidCommissions = db.commission_logs.aggregate([
     { $match: { status: "PAID" } },
-    { $group: { 
-      _id: null, 
+    { $group: {
+      _id: null,
       total: { $sum: "$commissionAmount" },
       count: { $sum: 1 }
     }}
   ]).toArray();
-  
+
   print("Total Commissions:");
   print(`  Amount: ₹${totalCommissions[0]?.total || 0}`);
   print(`  Count: ${totalCommissions[0]?.count || 0} transactions`);
   print("");
-  
+
   print("Pending Commissions:");
   print(`  Amount: ₹${pendingCommissions[0]?.total || 0}`);
   print(`  Count: ${pendingCommissions[0]?.count || 0} transactions`);
   print("");
-  
+
   print("Paid Commissions:");
   print(`  Amount: ₹${paidCommissions[0]?.total || 0}`);
   print(`  Count: ${paidCommissions[0]?.count || 0} transactions`);

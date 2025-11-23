@@ -47,7 +47,7 @@ if echo "$PROGRAMS_RESPONSE" | jq empty 2>/dev/null; then
     echo "$PROGRAMS_RESPONSE" | jq '.data.programs[] | {name: .name, _id: ._id, active: .active}' 2>/dev/null | head -20
     PROGRAM_ID=$(echo "$PROGRAMS_RESPONSE" | jq -r '.data.programs[0]._id' 2>/dev/null)
     PROGRAM_NAME=$(echo "$PROGRAMS_RESPONSE" | jq -r '.data.programs[0].name' 2>/dev/null)
-    
+
     if [ ! -z "$PROGRAM_ID" ] && [ "$PROGRAM_ID" != "null" ]; then
         print_success "Found program: $PROGRAM_NAME (ID: $PROGRAM_ID)"
     else
@@ -73,7 +73,7 @@ USER_ID=""
 for CODE in "${TEST_CODES[@]}"; do
     print_info "Testing code: $CODE"
     VALIDATE_RESPONSE=$(curl -s "$SERVER_URL/api/referrals/validate?code=$CODE")
-    
+
     if echo "$VALIDATE_RESPONSE" | jq empty 2>/dev/null; then
         IS_VALID=$(echo "$VALIDATE_RESPONSE" | jq -r '.valid' 2>/dev/null)
         if [ "$IS_VALID" = "true" ]; then
@@ -137,7 +137,7 @@ ORDER_RESPONSE=$(curl -s -X POST "$SERVER_URL/api/donations/create-order" \
 if echo "$ORDER_RESPONSE" | jq empty 2>/dev/null; then
     echo "$ORDER_RESPONSE" | jq '.'
     ORDER_ID=$(echo "$ORDER_RESPONSE" | jq -r '.orderId // .data.orderId' 2>/dev/null)
-    
+
     if [ ! -z "$ORDER_ID" ] && [ "$ORDER_ID" != "null" ]; then
         print_success "Order created successfully!"
         echo "   Order ID: $ORDER_ID"

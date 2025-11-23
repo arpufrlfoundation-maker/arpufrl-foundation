@@ -22,14 +22,21 @@ export async function GET(req: NextRequest) {
     await connectToDatabase()
 
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get('status')
+    const statusParam = searchParams.get('status')
     const includeHistory = searchParams.get('includeHistory') === 'true'
 
     // Handle demo-admin - they can view all targets
-    let userId: mongoose.Types.ObjectId
     if (session.user.id === 'demo-admin') {
+      // Build query for status filter
+      const query: any = {}
+      if (statusParam && statusParam !== 'active') {
+        query.status = statusParam
+      } else if (statusParam === 'active') {
+        query.status = { $in: [TargetStatus.IN_PROGRESS, TargetStatus.PENDING] }
+      }
+
       // For admin, return all targets
-      const allTargets = await Target.find({})
+      const allTargets = await Target.find(query)
         .populate('assignedTo', 'name email role')
         .sort({ createdAt: -1 })
         .limit(100)
@@ -56,10 +63,10 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    userId = new mongoose.Types.ObjectId(session.user.id)
+    const userId = new mongoose.Types.ObjectId(session.user.id)
 
     let targets
-    if (status === 'active') {
+    if (statusParam === 'active') {
       // Get only active target
       targets = [await Target.findActiveByUser(userId)].filter(Boolean)
     } else if (includeHistory) {
@@ -84,8 +91,27 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Get summary
-    const summary = await Target.getTargetSummary(userId)
+    // Get summary - skip for demo-admin since it's not a valid ObjectId
+    let summary
+    if (statusParam === 'active') {
+      summary = {
+        totalTargets: targets.length,
+        activeTarget: targets[0] || null,
+        completedTargets: 0,
+        inProgressTargets: targets.filter((t: any) => t.status === TargetStatus.IN_PROGRESS).length,
+        overdueTargets: targets.filter((t: any) => t.status === TargetStatus.OVERDUE).length,
+        averageProgress: 0
+      }
+    } else {
+      summary = {
+        totalTargets: targets.length,
+        activeTarget: null,
+        completedTargets: targets.filter((t: any) => t.status === TargetStatus.COMPLETED).length,
+        inProgressTargets: targets.filter((t: any) => t.status === TargetStatus.IN_PROGRESS).length,
+        overdueTargets: targets.filter((t: any) => t.status === TargetStatus.OVERDUE).length,
+        averageProgress: 0
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -25,15 +25,15 @@ async function fixReferralCodeCollection() {
 
     if (oldCount > 0) {
       console.log('Moving documents from referral_codes to referralcodes...');
-      
+
       // Get all documents from old collection
       const documents = await oldCollection.find({}).toArray();
-      
+
       // Insert into new collection
       if (documents.length > 0) {
         await newCollection.insertMany(documents);
         console.log(`✅ Moved ${documents.length} documents`);
-        
+
         // Optionally, drop the old collection
         //await oldCollection.drop();
         //console.log('✅ Dropped old collection');
