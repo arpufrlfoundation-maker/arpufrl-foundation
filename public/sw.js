@@ -1,9 +1,12 @@
-const CACHE_NAME = 'arpu-foundation-v2-fresh' // UPDATED VERSION
-const STATIC_CACHE = 'arpu-static-v2-fresh'
-const DYNAMIC_CACHE = 'arpu-dynamic-v2-fresh'
+const CACHE_NAME = 'arpu-foundation-v3-dev-disabled' // DEV: No caching
+const STATIC_CACHE = 'arpu-static-v3-dev-disabled'
+const DYNAMIC_CACHE = 'arpu-dynamic-v3-dev-disabled'
 
-// Assets to cache immediately
-const STATIC_ASSETS = [
+// Development mode: Minimal caching
+const IS_DEVELOPMENT = true // Set to false for production
+
+// Assets to cache immediately (only in production)
+const STATIC_ASSETS = IS_DEVELOPMENT ? [] : [
   '/',
   '/about',
   '/programs',
@@ -89,8 +92,21 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // IMPORTANT: Skip caching for HTML pages and API routes during development
-  // This ensures you always get fresh content
+  // DEVELOPMENT MODE: Skip ALL caching, always fetch fresh
+  if (IS_DEVELOPMENT) {
+    event.respondWith(
+      fetch(request).catch(() => {
+        // Only fallback to offline page for navigation failures
+        if (request.mode === 'navigate') {
+          return new Response('Offline - Development Mode', { status: 503 })
+        }
+        throw new Error('Network error')
+      })
+    )
+    return
+  }
+
+  // PRODUCTION MODE: Normal caching strategies below
   const isHTMLRequest = request.headers.get('accept')?.includes('text/html')
   const isAPIRequest = url.pathname.startsWith('/api/')
   const isDashboardRequest = url.pathname.startsWith('/dashboard')

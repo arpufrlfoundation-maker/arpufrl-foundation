@@ -30,13 +30,13 @@ export function sanitizeHtml(html: string): string {
 
   // List of allowed tags
   const allowedTags = ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
-  
+
   // Remove all tags except allowed ones
   const tagRegex = /<(\/?)([\w]+)([^>]*)>/gi
-  
+
   return html.replace(tagRegex, (match, slash, tag, attrs) => {
     const tagLower = tag.toLowerCase()
-    
+
     if (!allowedTags.includes(tagLower)) {
       return ''
     }
@@ -90,7 +90,7 @@ export function sanitizeMongoQuery(query: any): any {
 
   // Remove $where and other potentially dangerous operators
   const dangerousOperators = ['$where', '$function', '$accumulator']
-  
+
   const sanitized: any = Array.isArray(query) ? [] : {}
 
   for (const key in query) {
@@ -139,7 +139,7 @@ export function sanitizeUrl(url: string, allowedDomains: string[] = []): string 
 
     // If allowed domains specified, check if domain is in the list
     if (allowedDomains.length > 0) {
-      const isAllowed = allowedDomains.some(domain => 
+      const isAllowed = allowedDomains.some(domain =>
         parsedUrl.hostname === domain || parsedUrl.hostname.endsWith(`.${domain}`)
       )
 

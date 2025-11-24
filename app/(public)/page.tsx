@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import HeroSection from '@/components/public/HeroSection'
-import DonorHighlights from '@/components/public/DonorHighlights'
+import DonorHighlights from '@/components/public/DonorHighlightsNew'
 import HighlightCardsSection from '@/components/public/HighlightCardsSection'
 import MissionSection from '@/components/public/MissionSection'
 import AboutSection from '@/components/public/AboutSection'

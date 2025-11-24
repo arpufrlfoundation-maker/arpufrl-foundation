@@ -57,11 +57,11 @@ export async function GET(request: NextRequest) {
   try {
     const dbStartTime = Date.now()
     await connectToDatabase()
-    
+
     if (mongoose.connection.readyState === 1) {
       // Perform a simple query to verify database is responsive
       await mongoose.connection.db?.admin().ping()
-      
+
       result.checks.database = {
         status: 'up',
         responseTime: Date.now() - dbStartTime
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
   ]
 
   const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
-  
+
   result.checks.env = {
     nodeEnv: process.env.NODE_ENV || 'unknown',
     hasRequiredVars: missingVars.length === 0,

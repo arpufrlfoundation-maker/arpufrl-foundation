@@ -75,25 +75,25 @@ export const rateLimiters = {
   // Strict rate limit for sensitive operations (e.g., login, password reset)
   strict: rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5
+    maxRequests: 100
   }),
 
   // Moderate rate limit for API endpoints
   moderate: rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 30
+    maxRequests: 60
   }),
 
   // Lenient rate limit for public endpoints
   lenient: rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 100
+    maxRequests: 200
   }),
 
-  // Very strict for payment operations
+  // Payment operations rate limit
   payment: rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 10
+    maxRequests: 50
   })
 }
 

@@ -24,8 +24,9 @@ export async function GET(request: NextRequest) {
     await connectToDatabase()
 
     // Build query for sub-coordinators and volunteers
+    // Use parentCoordinatorId to find users assigned to this coordinator
     const query: any = {
-      referredBy: session.user.id,
+      parentCoordinatorId: session.user.id,
       // Include both coordinators and volunteers
       role: { $in: ['coordinator', 'VOLUNTEER'] }
     }
@@ -57,13 +58,13 @@ export async function GET(request: NextRequest) {
 
     // Get stats
     const pendingCount = await User.countDocuments({
-      referredBy: session.user.id,
+      parentCoordinatorId: session.user.id,
       role: { $in: ['coordinator', 'VOLUNTEER'] },
       status: UserStatus.PENDING
     })
 
     const approvedCount = await User.countDocuments({
-      referredBy: session.user.id,
+      parentCoordinatorId: session.user.id,
       role: { $in: ['coordinator', 'VOLUNTEER'] },
       status: UserStatus.ACTIVE
     })
@@ -128,10 +129,10 @@ export async function POST(request: NextRequest) {
 
     await connectToDatabase()
 
-    // Verify the coordinator is referred by the current user
+    // Verify the coordinator is assigned to the current user
     const coordinator = await User.findOne({
       _id: coordinatorId,
-      referredBy: session.user.id,
+      parentCoordinatorId: session.user.id,
       role: 'coordinator'
     })
 

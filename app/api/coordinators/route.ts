@@ -167,9 +167,22 @@ export async function POST(request: NextRequest) {
     if (currentUser.role === UserRole.ADMIN) {
       // Admins can create any coordinator
     } else if (coordinatorRoles.includes(currentUser.role as any)) {
+      // Import RoleHierarchy at runtime
+      const { RoleHierarchy } = await import('@/models/User')
+
       // Coordinators can create subordinates under themselves
       if (!parentCoordinatorId || parentCoordinatorId !== currentUser._id.toString()) {
         return NextResponse.json({ error: 'Subordinates must be created under your coordination' }, { status: 400 })
+      }
+
+      // Validate that the role being assigned is below the current user's role
+      const currentUserLevel = RoleHierarchy[currentUser.role as UserRoleType]
+      const newUserLevel = RoleHierarchy[role as UserRoleType]
+
+      if (newUserLevel <= currentUserLevel) {
+        return NextResponse.json({
+          error: `You can only create users with roles below your level. Your role level: ${currentUserLevel}, Requested role level: ${newUserLevel}`
+        }, { status: 403 })
       }
     } else {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })

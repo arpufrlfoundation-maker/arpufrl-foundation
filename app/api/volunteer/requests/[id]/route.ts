@@ -147,7 +147,7 @@ export async function PATCH(
           try {
             const { sendEmail } = await import('@/lib/email')
             const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'https://yourapp.com'
-            
+
             await sendEmail({
               to: newUser.email,
               subject: 'Welcome to ARPU Foundation - Account Created',

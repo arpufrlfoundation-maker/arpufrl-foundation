@@ -25,12 +25,12 @@ export default function DonorHighlights() {
     try {
       const response = await fetch('/api/donors/highlights?limit=1000')
       const data = await response.json()
-      
+
       if (data.success) {
         setDonors(data.data.donors)
         setStats({
           totalDonors: data.data.totalCount,
-          totalAmount: data.data.donors.reduce((sum: number, d: DonorHighlight) => 
+          totalAmount: data.data.donors.reduce((sum: number, d: DonorHighlight) =>
             sum + (d.amount || 0), 0
           )
         })
@@ -100,7 +100,7 @@ export default function DonorHighlights() {
   return (
     <section className="py-20 bg-gradient-to-br from-blue-50 via-gray-50 to-purple-50">
       <div className="container mx-auto px-4 max-w-7xl">
-        
+
         {/* Title Section - Centered */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -113,7 +113,7 @@ export default function DonorHighlights() {
 
         {/* Statistics Cards - Two Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 max-w-2xl mx-auto">
-          
+
           {/* Total Donors Card */}
           <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300">
             <div className="flex items-center gap-4">
@@ -153,13 +153,13 @@ export default function DonorHighlights() {
               const displayName = donor.displayFormat === 'anonymous' || donor.displayFormat === 'amount_only'
                 ? 'Anonymous Donor'
                 : donor.name
-              const displayAmount = donor.amount && 
+              const displayAmount = donor.amount &&
                 (donor.displayFormat === 'name_amount' || donor.displayFormat === 'amount_only')
                 ? donor.amount
                 : null
 
               return (
-                <div 
+                <div
                   key={`${donor.id}-${index}`}
                   className="flex-shrink-0 w-80 bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300"
                 >
@@ -210,11 +210,11 @@ export default function DonorHighlights() {
               transform: translateX(-50%);
             }
           }
-          
+
           .animate-scroll {
             animation: scroll 30s linear infinite;
           }
-          
+
           .animate-scroll:hover {
             animation-play-state: paused;
           }

@@ -11,8 +11,10 @@ export default function PWAProvider({ children }: PWAProviderProps) {
   const { isOnline, isOffline } = useNetworkStatus()
 
   useEffect(() => {
-    // Register service worker
-    registerServiceWorker()
+    // Only register service worker in production
+    if (process.env.NODE_ENV === 'production') {
+      registerServiceWorker()
+    }
 
     // Show network status notifications
     if (isOffline) {

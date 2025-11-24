@@ -299,11 +299,11 @@ function LoginPageContent() {
             </form>
 
             {/* Demo Admin Info */}
-            <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            {/* <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-xs font-semibold text-blue-900 mb-1">Demo Admin Login:</p>
               <p className="text-xs text-blue-700">Email: admin@arpufrl.demo</p>
               <p className="text-xs text-blue-700">Password: DemoAdmin@2025</p>
-            </div>
+            </div> */}
 
             {/* Volunteer Default Password Info */}
             <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">

@@ -284,12 +284,6 @@ async function verifyPaymentHandler(request: NextRequest) {
           attributedUser._id,
           amount
         )
-        console.log('Commission distribution processed:', {
-          donationId: donation._id,
-          totalCommission: commissionResult.totalCommission,
-          distributions: commissionResult.distributions.length,
-          organizationFund: commissionResult.organizationFund
-        })
       } catch (commissionError) {
         console.error('Failed to process commission distribution:', commissionError)
         // Don't fail the donation if commission processing fails

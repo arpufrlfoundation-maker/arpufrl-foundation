@@ -47,9 +47,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 
         {/* Favicon and app icons */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/ARPUICON.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="/ARPUICON.ico" type="image/x-icon" />
+        <link rel="apple-touch-icon" href="/ARPUICON.ico" />
 
         {/* Theme color for mobile browsers */}
         <meta name="theme-color" content="#059669" />

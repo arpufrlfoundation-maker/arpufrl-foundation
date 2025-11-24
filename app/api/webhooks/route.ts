@@ -67,13 +67,6 @@ export async function POST(request: NextRequest) {
     // Process webhook event based on type
     const result = await processWebhookEvent(webhookEvent)
 
-    // Log webhook processing result
-    console.log('Webhook processed:', {
-      event: webhookEvent.event,
-      accountId: webhookEvent.account_id,
-      result
-    })
-
     return NextResponse.json({
       success: true,
       data: result

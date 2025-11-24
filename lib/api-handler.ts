@@ -65,7 +65,7 @@ export function withApiHandler(
 
         // Add rate limit headers to response
         const response = await handler(request, context)
-        
+
         if (response instanceof NextResponse) {
           result.limit && response.headers.set('X-RateLimit-Limit', result.limit.toString())
           result.remaining !== undefined && response.headers.set('X-RateLimit-Remaining', result.remaining.toString())
@@ -143,7 +143,7 @@ export function withApiHandler(
         {
           success: false,
           error: 'Internal server error',
-          message: process.env.NODE_ENV === 'development' 
+          message: process.env.NODE_ENV === 'development'
             ? (error instanceof Error ? error.message : String(error))
             : 'An unexpected error occurred',
           ...(process.env.NODE_ENV === 'development' && error instanceof Error && { stack: error.stack })

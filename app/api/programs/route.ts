@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
   try {
     // Authentication check
     const session = await auth()
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - Please login' },
@@ -89,10 +89,10 @@ export async function POST(request: NextRequest) {
     await connectToDatabase()
 
     const body = await request.json()
-    
+
     // Validate required fields
     const { name, description, impact, image, isActive } = body
-    
+
     if (!name || !description) {
       return NextResponse.json(
         { success: false, error: 'Name and description are required' },

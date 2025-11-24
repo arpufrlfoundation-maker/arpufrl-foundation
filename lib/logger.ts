@@ -44,7 +44,7 @@ class Logger {
 
   error(message: string, error?: Error | any, data?: any) {
     const logEntry = this.formatLog('error', message, data)
-    
+
     if (error instanceof Error) {
       logEntry.stack = error.stack
     }
@@ -73,7 +73,7 @@ class Logger {
     // - Winston logger
     // - CloudWatch Logs
     // - Datadog
-    
+
     // For now, just use console in production (better than nothing)
     const logMethod = logEntry.level === 'error' ? console.error : console.log
     logMethod(JSON.stringify(logEntry))

@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   experimental: {
     // Enable server actions
     serverActions: {
-      allowedOrigins: ['localhost:3000'],
+      allowedOrigins: ['localhost:3000','arpufrl.in','arpufrl.vercel.app'],
     },
     // Enable optimized package imports
     optimizePackageImports: ['@/components', '@/lib'],
@@ -41,7 +41,12 @@ const nextConfig: NextConfig = {
   // Security and performance headers
   async headers() {
     const isDevelopment = process.env.NODE_ENV === 'development'
-    
+
+    // In development, disable all caching
+    const cacheControl = isDevelopment
+      ? 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
+      : 'public, max-age=0, must-revalidate'
+
     return [
       {
         source: '/(.*)',
@@ -75,6 +80,11 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()'
           },
+          // Disable caching in development
+          ...(isDevelopment ? [{
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
+          }] : []),
           // Content Security Policy (adjust as needed)
           ...(isDevelopment ? [] : [{
             key: 'Content-Security-Policy',
