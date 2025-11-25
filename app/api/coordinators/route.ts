@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectToDatabase } from '@/lib/db'
-import { User, UserRole, UserStatus, userUtils } from '@/models/User'
+import { User, UserRole, UserStatus, userUtils, RoleHierarchy, UserRoleType } from '@/models/User'
 import { ReferralCode } from '@/models/ReferralCode'
 import mongoose from 'mongoose'
 import { z } from 'zod'
@@ -167,28 +167,28 @@ export async function POST(request: NextRequest) {
     if (currentUser.role === UserRole.ADMIN) {
       // Admins can create any coordinator
     } else if (coordinatorRoles.includes(currentUser.role as any)) {
-      // Import RoleHierarchy at runtime
-      const { RoleHierarchy } = await import('@/models/User')
-
       // Coordinators can create subordinates under themselves
       if (!parentCoordinatorId || parentCoordinatorId !== currentUser._id.toString()) {
         return NextResponse.json({ error: 'Subordinates must be created under your coordination' }, { status: 400 })
       }
-
+      
       // Validate that the role being assigned is below the current user's role
-      const currentUserLevel = RoleHierarchy[currentUser.role as UserRoleType]
-      const newUserLevel = RoleHierarchy[role as UserRoleType]
-
-      if (newUserLevel <= currentUserLevel) {
-        return NextResponse.json({
-          error: `You can only create users with roles below your level. Your role level: ${currentUserLevel}, Requested role level: ${newUserLevel}`
-        }, { status: 403 })
+      const currentUserRole = currentUser.role as UserRoleType
+      const newUserRole = role as UserRoleType
+      
+      if (currentUserRole in RoleHierarchy && newUserRole in RoleHierarchy) {
+        const currentUserLevel = RoleHierarchy[currentUserRole]
+        const newUserLevel = RoleHierarchy[newUserRole]
+        
+        if (newUserLevel <= currentUserLevel) {
+          return NextResponse.json({ 
+            error: `You can only create users with roles below your level. Your role level: ${currentUserLevel}, Requested role level: ${newUserLevel}` 
+          }, { status: 403 })
+        }
       }
     } else {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
-    }
-
-    // Check if email already exists
+    }    // Check if email already exists
     const existingUser = await User.findByEmail(email)
     if (existingUser) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
