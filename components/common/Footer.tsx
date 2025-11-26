@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react'
 
 export default function Footer() {
   const quickLinks = [
@@ -23,11 +24,11 @@ export default function Footer() {
   ]
 
   const socialLinks = [
-    { name: 'Facebook', icon: '📘', href: '#' },
-    { name: 'Twitter', icon: '🐦', href: '#' },
-    { name: 'LinkedIn', icon: '💼', href: '#' },
-    { name: 'Instagram', icon: '📷', href: '#' },
-    { name: 'YouTube', icon: '📺', href: '#' }
+    { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/share/1PNHJHKMLa/' },
+    { name: 'Twitter', icon: Twitter, href: 'https://x.com/ArpufrlF?t=Cvm-s7tY65911VLiK2wJoA&s=08' },
+    { name: 'LinkedIn', icon: Linkedin, href: '#' },
+    { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/arpufuture?igsh=N2N0M2NhM3p2d3lz' },
+    { name: 'YouTube', icon: Youtube, href: 'https://youtube.com/@arpufutureriselifefoundation?si=QNYF9QTmHu57ztle' }
   ]
 
   return (
@@ -55,15 +56,15 @@ export default function Footer() {
             {/* Contact Info */}
             <div className="space-y-2 text-sm text-gray-300">
               <div className="flex items-center space-x-2">
-                <span>📧</span>
-                <span>info@arpufoundation.org</span>
+                <Mail className="w-4 h-4" />
+                <span>arpufrlfoundation@gmail.com</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span>📞</span>
-                <span>+91 11 2345 6789</span>
+                <Phone className="w-4 h-4" />
+                <span>+91 9919003332</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span>🏢</span>
+                <MapPin className="w-4 h-4" />
                 <span>New Delhi, India</span>
               </div>
             </div>
@@ -123,16 +124,21 @@ export default function Footer() {
             <div>
               <h4 className="font-medium mb-3">Follow Us</h4>
               <div className="flex space-x-3">
-                {socialLinks.map((social) => (
-                  <a
-                    key={social.name}
-                    href={social.href}
-                    className="w-8 h-8 bg-gray-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-colors"
-                    title={social.name}
-                  >
-                    <span className="text-sm">{social.icon}</span>
-                  </a>
-                ))}
+                {socialLinks.map((social) => {
+                  const IconComponent = social.icon
+                  return (
+                    <a
+                      key={social.name}
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-8 h-8 bg-gray-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-colors"
+                      title={social.name}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                    </a>
+                  )
+                })}
               </div>
             </div>
           </div>

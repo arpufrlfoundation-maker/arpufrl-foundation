@@ -171,18 +171,18 @@ export async function POST(request: NextRequest) {
       if (!parentCoordinatorId || parentCoordinatorId !== currentUser._id.toString()) {
         return NextResponse.json({ error: 'Subordinates must be created under your coordination' }, { status: 400 })
       }
-      
+
       // Validate that the role being assigned is below the current user's role
       const currentUserRole = currentUser.role as UserRoleType
       const newUserRole = role as UserRoleType
-      
+
       if (currentUserRole in RoleHierarchy && newUserRole in RoleHierarchy) {
         const currentUserLevel = RoleHierarchy[currentUserRole]
         const newUserLevel = RoleHierarchy[newUserRole]
-        
+
         if (newUserLevel <= currentUserLevel) {
-          return NextResponse.json({ 
-            error: `You can only create users with roles below your level. Your role level: ${currentUserLevel}, Requested role level: ${newUserLevel}` 
+          return NextResponse.json({
+            error: `You can only create users with roles below your level. Your role level: ${currentUserLevel}, Requested role level: ${newUserLevel}`
           }, { status: 403 })
         }
       }

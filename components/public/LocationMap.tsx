@@ -1,4 +1,5 @@
 import info from '@/data/info.json'
+import { Phone, Mail, MapPin, Instagram, Facebook, Twitter, Youtube } from 'lucide-react'
 
 export default function LocationMap() {
   const org = info.organization
@@ -27,7 +28,7 @@ export default function LocationMap() {
                   <p>{org.head_office_address}</p>
 
                   <div className="pt-4 border-t border-blue-200">
-                    <p className="font-semibold mb-2">📞 Phone</p>
+                    <p className="font-semibold mb-2 flex items-center"><Phone className="w-4 h-4 mr-2" /> Phone</p>
                     {org.phone_numbers.map((phone, index) => (
                       <p key={index}>
                         <a href={`tel:${phone}`} className="hover:text-blue-600">
@@ -38,7 +39,7 @@ export default function LocationMap() {
                   </div>
 
                   <div className="pt-4 border-t border-blue-200">
-                    <p className="font-semibold mb-2">📧 Email</p>
+                    <p className="font-semibold mb-2 flex items-center"><Mail className="w-4 h-4 mr-2" /> Email</p>
                     <a href={`mailto:${org.email}`} className="hover:text-blue-600">
                       {org.email}
                     </a>
@@ -50,8 +51,8 @@ export default function LocationMap() {
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">सदस्यता लेने के लिए संपर्क करे</h3>
                 <div className="space-y-4">
-                  <p className="text-lg">
-                    📱 <a href="tel:+919919003332" className="text-blue-600 hover:text-blue-700 font-semibold">9919003332</a>
+                  <p className="text-lg flex items-center">
+                    <Phone className="w-5 h-5 mr-2" /> <a href="tel:+919919003332" className="text-blue-600 hover:text-blue-700 font-semibold">9919003332</a>
                   </p>
 
                   <div>
@@ -63,7 +64,7 @@ export default function LocationMap() {
                         rel="noopener noreferrer"
                         className="flex items-center text-pink-600 hover:text-pink-700"
                       >
-                        <span className="text-2xl mr-2">📷</span>
+                        <Instagram className="w-6 h-6 mr-2" />
                         <span>Instagram</span>
                       </a>
                       <a
@@ -72,7 +73,7 @@ export default function LocationMap() {
                         rel="noopener noreferrer"
                         className="flex items-center text-blue-600 hover:text-blue-700"
                       >
-                        <span className="text-2xl mr-2">📘</span>
+                        <Facebook className="w-6 h-6 mr-2" />
                         <span>Facebook</span>
                       </a>
                       <a
@@ -81,7 +82,7 @@ export default function LocationMap() {
                         rel="noopener noreferrer"
                         className="flex items-center text-sky-500 hover:text-sky-600"
                       >
-                        <span className="text-2xl mr-2">𝕏</span>
+                        <Twitter className="w-6 h-6 mr-2" />
                         <span>Twitter / X</span>
                       </a>
                       <a
@@ -90,7 +91,7 @@ export default function LocationMap() {
                         rel="noopener noreferrer"
                         className="flex items-center text-red-600 hover:text-red-700"
                       >
-                        <span className="text-2xl mr-2">📺</span>
+                        <Youtube className="w-6 h-6 mr-2" />
                         <span>YouTube</span>
                       </a>
                     </div>
@@ -103,7 +104,9 @@ export default function LocationMap() {
           {/* Quick Contact Cards */}
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-gray-50 rounded-lg p-6 text-center">
-              <div className="text-3xl mb-3">🏢</div>
+              <div className="flex justify-center mb-3">
+                <MapPin className="w-8 h-8 text-gray-600" />
+              </div>
               <h3 className="font-semibold text-gray-900 mb-2">Main Office</h3>
               <p className="text-sm text-gray-600 mb-2">Headquarters</p>
               <p className="text-xs text-gray-500">
@@ -112,7 +115,9 @@ export default function LocationMap() {
             </div>
 
             <div className="bg-gray-50 rounded-lg p-6 text-center">
-              <div className="text-3xl mb-3">📞</div>
+              <div className="flex justify-center mb-3">
+                <Phone className="w-8 h-8 text-gray-600" />
+              </div>
               <h3 className="font-semibold text-gray-900 mb-2">Contact Us</h3>
               <p className="text-sm text-gray-600 mb-2">Get in Touch</p>
               <p className="text-xs text-gray-500">
