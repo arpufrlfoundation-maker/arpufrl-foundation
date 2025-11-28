@@ -139,10 +139,13 @@ export default function TeamSection() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Meet Our Team
+            Our Leadership Team
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Dedicated professionals working tirelessly to create positive change in communities
+            {selectedMemberId 
+              ? "Team members working under this leader"
+              : "State Presidents leading our mission across India"
+            }
           </p>
         </div>
 

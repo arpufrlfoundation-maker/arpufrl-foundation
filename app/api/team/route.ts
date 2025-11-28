@@ -39,8 +39,6 @@ export async function GET(req: NextRequest) {
       // Include all roles when fetching sub-coordinators (including volunteers)
       query.role = {
         $in: [
-          UserRole.CENTRAL_PRESIDENT,
-          UserRole.STATE_PRESIDENT,
           UserRole.STATE_COORDINATOR,
           UserRole.ZONE_COORDINATOR,
           UserRole.DISTRICT_PRESIDENT,
@@ -53,27 +51,8 @@ export async function GET(req: NextRequest) {
         ]
       }
     } else {
-      // Get top-level coordinators (no parent) - exclude volunteers from top level
-      query.role = {
-        $in: [
-
-          UserRole.CENTRAL_PRESIDENT,
-          UserRole.STATE_PRESIDENT,
-          UserRole.STATE_COORDINATOR,
-          UserRole.ZONE_COORDINATOR,
-          UserRole.DISTRICT_PRESIDENT,
-          UserRole.DISTRICT_COORDINATOR,
-          UserRole.BLOCK_COORDINATOR,
-          UserRole.NODAL_OFFICER,
-          UserRole.PRERAK,
-          UserRole.PRERNA_SAKHI
-        ]
-      }
-      query.$or = [
-        { parentCoordinatorId: null },
-        { parentCoordinatorId: { $exists: false } },
-        { role: UserRole.CENTRAL_PRESIDENT },
-      ]
+      // Get State Presidents at top level - they are the entry point for hierarchy
+      query.role = UserRole.STATE_PRESIDENT
     }
 
     const teamMembers = await User.find(query)
