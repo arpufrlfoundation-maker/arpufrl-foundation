@@ -58,8 +58,8 @@ const publicRoutes = [
   '/survey',
   '/api/surveys', // Allow public survey submissions
   '/api/team', // Public team information
-  '/api/test-email' // Public test email endpoint
-
+  '/api/test-email', // Public test email endpoint
+  '/forgot-password',
 ]
 
 // Auth routes that should redirect if already authenticated

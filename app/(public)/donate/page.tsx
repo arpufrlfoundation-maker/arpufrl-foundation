@@ -94,6 +94,7 @@ function DonatePageContent() {
           donorName: data.donorName,
           donorEmail: data.donorEmail || undefined,
           donorPhone: data.donorPhone || undefined,
+          donorPAN: data.donorPAN,
           amount: data.amount,
           programId: data.programId,
           referralCode: data.referralCode && data.referralCode.trim() !== '' ? data.referralCode : undefined,

@@ -283,6 +283,30 @@ export default function DonationForm({
               <p className="text-red-600 text-sm mt-1">{errors.donorPhone.message}</p>
             )}
           </div>
+
+          {/* PAN Number - Mandatory for 80G Certificate */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              PAN Number <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              {...register('donorPAN')}
+              className={cn(
+                'w-full px-4 py-3 border-2 rounded-lg uppercase',
+                'focus:border-blue-500 focus:outline-none',
+                errors.donorPAN ? 'border-red-500' : 'border-gray-200'
+              )}
+              placeholder="Enter your PAN (e.g., ABCDE1234F)"
+              maxLength={10}
+            />
+            {errors.donorPAN && (
+              <p className="text-red-600 text-sm mt-1">{errors.donorPAN.message}</p>
+            )}
+            <p className="text-gray-500 text-sm mt-1">
+              Required for 80G Tax Deduction Certificate
+            </p>
+          </div>
         </div>
 
         {/* Referral Code */}

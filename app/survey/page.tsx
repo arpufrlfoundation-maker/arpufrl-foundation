@@ -4,6 +4,11 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ClipboardList, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import BusinessSurveyForm from '@/components/forms/BusinessSurveyForm'
+import CitizenSurveyForm from '@/components/forms/CitizenSurveyForm'
+import HospitalSurveyForm from '@/components/forms/HospitalSurveyForm'
+import SchoolSurveyForm from '@/components/forms/SchoolSurveyForm'
+import PoliticalAnalysisSurveyForm from '@/components/forms/PoliticalAnalysisSurveyForm'
 
 interface SurveyFormData {
   surveyType: string
@@ -33,12 +38,35 @@ export default function PublicSurveyPage() {
   const [error, setError] = useState<string | null>(null)
 
   const surveyTypes = [
-    { value: 'HOSPITAL', label: 'Hospital Survey / अस्पताल सर्वेक्षण', icon: '🏥' },
-    { value: 'SCHOOL', label: 'School Survey / विद्यालय सर्वेक्षण', icon: '🏫' },
-    { value: 'HEALTH_CAMP', label: 'Health Camp Feedback / स्वास्थ्य शिविर प्रतिक्रिया', icon: '⛑️' },
-    { value: 'COMMUNITY_WELFARE', label: 'Community Welfare Report / सामुदायिक कल्याण रिपोर्ट', icon: '🤝' },
-    { value: 'STAFF_VOLUNTEER', label: 'Staff & Volunteer Feedback / कर्मचारी और स्वयंसेवक प्रतिक्रिया', icon: '👥' }
+    { value: 'HOSPITAL', label: 'Hospital Survey / अस्पताल सर्वे', icon: '🏥', hasCustomForm: true },
+    { value: 'SCHOOL', label: 'School Survey / स्कूल सर्वे', icon: '🏫', hasCustomForm: true },
+    { value: 'BUSINESS', label: 'Business Survey / व्यापार सर्वे', icon: '🏢', hasCustomForm: true },
+    { value: 'CITIZEN', label: 'Citizen Survey / नागरिक सर्वे', icon: '👨‍👩‍👧‍👦', hasCustomForm: true },
+    { value: 'POLITICAL_ANALYSIS', label: 'Political Analysis / राजनीतिक विश्लेषण', icon: '🗳️', hasCustomForm: true },
+    { value: 'HEALTH_CAMP', label: 'Health Camp / स्वास्थ्य शिविर', icon: '⛑️', hasCustomForm: false },
+    { value: 'COMMUNITY_WELFARE', label: 'Community Welfare / सामुदायिक कल्याण', icon: '🤝', hasCustomForm: false },
+    { value: 'STAFF_VOLUNTEER', label: 'Staff & Volunteer / कर्मचारी और स्वयंसेवक', icon: '👥', hasCustomForm: false }
   ]
+
+  // Render custom form based on survey type
+  const renderCustomForm = () => {
+    switch (surveyType) {
+      case 'HOSPITAL':
+        return <HospitalSurveyForm />
+      case 'SCHOOL':
+        return <SchoolSurveyForm />
+      case 'BUSINESS':
+        return <BusinessSurveyForm />
+      case 'CITIZEN':
+        return <CitizenSurveyForm />
+      case 'POLITICAL_ANALYSIS':
+        return <PoliticalAnalysisSurveyForm />
+      default:
+        return null
+    }
+  }
+
+  const hasCustomForm = surveyTypes.find(t => t.value === surveyType)?.hasCustomForm
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -172,7 +200,7 @@ export default function PublicSurveyPage() {
                   कृपया वह सर्वेक्षण प्रकार चुनें जिसे आप भरना चाहते हैं:
                 </span>
               </p>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {surveyTypes.map((type) => (
                   <button
                     key={type.value}
@@ -183,9 +211,38 @@ export default function PublicSurveyPage() {
                     <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
                       {type.label}
                     </h3>
+                    {type.hasCustomForm && (
+                      <p className="text-xs text-green-600 mt-2">✓ Hindi Form Available</p>
+                    )}
                   </button>
                 ))}
               </div>
+            </div>
+          ) : hasCustomForm ? (
+            /* Custom Hindi Survey Form */
+            <div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">
+                    {surveyTypes.find(t => t.value === surveyType)?.icon}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-blue-900">
+                      {surveyTypes.find(t => t.value === surveyType)?.label}
+                    </p>
+                    <p className="text-sm text-blue-700">Hindi Survey Form / हिंदी सर्वे फॉर्म</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSurveyType('')}
+                >
+                  Change / बदलें
+                </Button>
+              </div>
+              {renderCustomForm()}
             </div>
           ) : (
             /* Survey Form */

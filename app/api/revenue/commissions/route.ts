@@ -33,10 +33,29 @@ export async function GET(req: NextRequest) {
 
     let query: any = {}
 
+    // Validate ObjectId format before using
+    const isValidObjectId = (id: string) => {
+      return mongoose.Types.ObjectId.isValid(id) && id.length === 24
+    }
+
     // If not admin, only show own commissions
     if (!isAdmin) {
+      if (!isValidObjectId(session.user.id)) {
+        // Return empty data for invalid user IDs (demo users etc)
+        return NextResponse.json({
+          success: true,
+          commissions: [],
+          summary: {
+            totalEarned: 0,
+            pending: 0,
+            paid: 0,
+            failed: 0,
+            commissionCount: 0
+          }
+        })
+      }
       query.userId = new mongoose.Types.ObjectId(session.user.id)
-    } else if (userId) {
+    } else if (userId && isValidObjectId(userId)) {
       // Admin can query specific user
       query.userId = new mongoose.Types.ObjectId(userId)
     }
@@ -58,24 +77,64 @@ export async function GET(req: NextRequest) {
       .limit(100)
 
     // Get summary
-    const summaryUserId = userId
-      ? new mongoose.Types.ObjectId(userId)
-      : isAdmin
-        ? undefined
-        : new mongoose.Types.ObjectId(session.user.id)
+    let summary = {
+      totalEarned: 0,
+      pending: 0,
+      paid: 0,
+      failed: 0,
+      commissionCount: 0
+    }
 
-    const summary = summaryUserId
-      ? await getUserCommissionSummary(
+    try {
+      const summaryUserId = userId && isValidObjectId(userId)
+        ? new mongoose.Types.ObjectId(userId)
+        : isAdmin
+          ? undefined
+          : isValidObjectId(session.user.id)
+            ? new mongoose.Types.ObjectId(session.user.id)
+            : undefined
+
+      if (summaryUserId) {
+        const rawSummary = await getUserCommissionSummary(
           summaryUserId,
           startDate ? new Date(startDate) : undefined,
           endDate ? new Date(endDate) : undefined
         )
-      : await CommissionLog.getTotalCommissions(query)
+        if (rawSummary) {
+          summary = {
+            totalEarned: rawSummary.totalEarned || 0,
+            pending: rawSummary.pending || 0,
+            paid: rawSummary.paid || 0,
+            failed: 0, // Not tracked in getUserCommissionSummary
+            commissionCount: rawSummary.count || 0
+          }
+        }
+      } else if (isAdmin && CommissionLog.getTotalCommissions) {
+        const adminSummary = await CommissionLog.getTotalCommissions(query)
+        if (adminSummary) {
+          summary = {
+            totalEarned: adminSummary.total || 0,
+            pending: 0,
+            paid: adminSummary.total || 0,
+            failed: 0,
+            commissionCount: adminSummary.count || 0
+          }
+        }
+      }
+    } catch (summaryError) {
+      console.error('Error fetching summary:', summaryError)
+      // Keep default empty summary
+    }
 
     return NextResponse.json({
       success: true,
       commissions,
       summary
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache'
+      }
     })
 
   } catch (error: any) {

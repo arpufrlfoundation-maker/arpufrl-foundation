@@ -14,7 +14,8 @@ import {
   LogOut,
   Bell,
   User,
-  Target
+  Target,
+  Wallet
 } from 'lucide-react'
 
 interface CoordinatorDashboardLayoutProps {
@@ -58,6 +59,12 @@ const navigation: NavItem[] = [
     href: '/dashboard/coordinator/donations',
     icon: DollarSign,
     description: 'Track donations attributed to you'
+  },
+  {
+    name: 'Revenue',
+    href: '/dashboard/coordinator/revenue',
+    icon: Wallet,
+    description: 'View your commissions and earnings'
   }
 ]
 

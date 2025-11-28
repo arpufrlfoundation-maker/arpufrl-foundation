@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/db'
 import { Donation, PaymentStatus } from '@/models/Donation'
-import { generateReceiptHTML } from '@/lib/receipt-html'
-import puppeteer from 'puppeteer'
+import { generateReceiptPDF } from '@/lib/pdf-receipt'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,55 +37,33 @@ export async function GET(
       )
     }
 
+    // Generate receipt number
+    const receiptNumber = `REC-${donation._id.toString().slice(-8).toUpperCase()}`
+
     // Generate receipt data
     const receiptData = {
-      receiptNumber: `REC-${donation._id.toString().slice(-8).toUpperCase()}`,
-      donationId: donation._id,
+      receiptNumber,
       donorName: donation.donorName,
-      donorEmail: donation.donorEmail || '',
-      donorPhone: donation.donorPhone,
+      donorEmail: donation.donorEmail || undefined,
+      donorPhone: donation.donorPhone || undefined,
+      donorPAN: donation.donorPAN || undefined,
       amount: donation.amount,
       currency: donation.currency,
       programName: (donation.programId as any)?.name || 'General Donation',
       donationDate: donation.createdAt,
       paymentId: donation.razorpayPaymentId || donation._id.toString(),
-      referralCode: (donation.referralCodeId as any)?.code,
-      organizationName: 'ARPU Future Rise Life Foundation',
-      taxDeductionNote: 'This donation is eligible for tax deduction under Section 80G of the Income Tax Act.'
+      transactionId: donation.razorpayOrderId || undefined
     }
 
-    // Generate HTML receipt
-    const receiptHtml = generateReceiptHTML(receiptData)
-
-    // Generate PDF using Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    })
-
-    const page = await browser.newPage()
-    await page.setContent(receiptHtml, { waitUntil: 'networkidle0' })
-
-    // Generate PDF
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20px',
-        right: '20px',
-        bottom: '20px',
-        left: '20px'
-      }
-    })
-
-    await browser.close()
+    // Generate PDF using new receipt generator
+    const pdfBuffer = await generateReceiptPDF(receiptData)
 
     // Return PDF as download
-    return new NextResponse(Buffer.from(pdfBuffer), {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="donation-receipt-${receiptData.receiptNumber}.pdf"`,
+        'Content-Disposition': `attachment; filename="donation-receipt-${receiptNumber}.pdf"`,
         'Content-Length': pdfBuffer.length.toString()
       }
     })

@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Download, Mail } from 'lucide-react'
 
 interface DonationDetails {
   donationId: string
@@ -13,6 +13,8 @@ interface DonationDetails {
   currency: string
   donorName: string
   donorEmail?: string
+  donorPhone?: string
+  donorPAN?: string
   programName?: string
   referralCode?: string
   status: string
@@ -24,6 +26,8 @@ function DonationSuccessContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [receiptSent, setReceiptSent] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
 
   const searchParams = useSearchParams()
   const donationId = searchParams.get('donation')
@@ -79,6 +83,62 @@ function DonationSuccessContent() {
     } catch (error) {
       console.error('Error sending receipt:', error)
       // Don't show error to user for receipt sending failure
+    }
+  }
+
+  // Download PDF Receipt
+  const downloadReceipt = async () => {
+    if (!donation) return
+    setIsDownloading(true)
+    try {
+      const response = await fetch(`/api/donations/receipt/${donation.donationId}/download`)
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `donation-receipt-${generateReceiptNumber(donation.donationId, donation.createdAt)}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        alert('Failed to download receipt. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error downloading receipt:', error)
+      alert('Failed to download receipt. Please try again.')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  // Resend receipt email
+  const resendReceiptEmail = async () => {
+    if (!donation || !donation.donorEmail) return
+    setIsSendingEmail(true)
+    try {
+      const response = await fetch('/api/donations/receipt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          donationId: donation.donationId,
+        }),
+      })
+
+      if (response.ok) {
+        setReceiptSent(true)
+        alert('Receipt sent to your email!')
+      } else {
+        alert('Failed to send receipt. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error sending receipt:', error)
+      alert('Failed to send receipt. Please try again.')
+    } finally {
+      setIsSendingEmail(false)
     }
   }
 
@@ -238,11 +298,29 @@ function DonationSuccessContent() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Organization Details</h3>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900">ARPU Future Rise Life Foundation</h4>
-                  <p className="text-gray-600 text-sm mt-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 text-sm">
+                    <div>
+                      <span className="text-gray-500">CIN: </span>
+                      <span className="font-medium text-gray-900">U88900DL2025NPL451013</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">PAN: </span>
+                      <span className="font-medium text-gray-900">ABDCA2272K</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">URN: </span>
+                      <span className="font-medium text-gray-900">ABDCA2272KF20251</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">UDN: </span>
+                      <span className="font-medium text-gray-900">ABDCA2272KF2025101</span>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm mt-3">
                     Registered NGO working towards community development and social welfare
                   </p>
-                  <p className="text-gray-600 text-sm mt-2">
-                    This donation is eligible for tax deduction under Section 80G of the Income Tax Act.
+                  <p className="text-green-700 text-sm mt-2 font-medium">
+                    ✓ This donation is eligible for tax deduction under Section 80G of the Income Tax Act.
                   </p>
                 </div>
               </div>
@@ -283,28 +361,63 @@ function DonationSuccessContent() {
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button onClick={() => window.print()} variant="outline" className="flex items-center space-x-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-              </svg>
-              <span>Print Receipt</span>
-            </Button>
+          <div className="mt-8 space-y-4">
+            {/* Download and Email Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                onClick={downloadReceipt}
+                disabled={isDownloading}
+                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
+              >
+                {isDownloading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Download className="w-5 h-5" />
+                )}
+                <span>{isDownloading ? 'Downloading...' : 'Download Receipt PDF'}</span>
+              </Button>
 
-            <Link href="/donate">
-              <Button className="flex items-center space-x-2">
+              {donation.donorEmail && (
+                <Button
+                  onClick={resendReceiptEmail}
+                  disabled={isSendingEmail}
+                  variant="outline"
+                  className="flex items-center space-x-2"
+                >
+                  {isSendingEmail ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Mail className="w-5 h-5" />
+                  )}
+                  <span>{isSendingEmail ? 'Sending...' : 'Email Receipt'}</span>
+                </Button>
+              )}
+            </div>
+
+            {/* Other Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button onClick={() => window.print()} variant="outline" className="flex items-center space-x-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
-                <span>Donate Again</span>
+                <span>Print Receipt</span>
               </Button>
-            </Link>
 
-            <Link href="/">
-              <Button variant="outline">
-                Back to Home
-              </Button>
-            </Link>
+              <Link href="/donate">
+                <Button className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  <span>Donate Again</span>
+                </Button>
+              </Link>
+
+              <Link href="/">
+                <Button variant="outline">
+                  Back to Home
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Social Sharing */}

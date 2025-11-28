@@ -34,6 +34,10 @@ const createDonationSchema = z.object({
   donorName: z.string().min(2).max(100),
   donorEmail: z.string().email().optional(),
   donorPhone: z.string().min(10).max(15).optional(),
+  donorPAN: z.string()
+    .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format')
+    .length(10)
+    .transform(val => val.toUpperCase()),
   amount: z.number().min(100).max(10000000), // Amount in paise (₹1 to ₹100,000)
   programId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Please select a program'), // Made required
   referralCode: z.string().min(3).max(50).optional(),
@@ -156,7 +160,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { donorName, donorEmail, donorPhone, amount, programId, referralCode } = validationResult.data
+    const { donorName, donorEmail, donorPhone, donorPAN, amount, programId, referralCode } = validationResult.data
 
     // Validate program (REQUIRED)
     const program = await Program.findById(programId)
@@ -185,12 +189,13 @@ export async function POST(request: NextRequest) {
 
     // Create Razorpay order
     const orderInput: CreateOrderInput = {
-      amount: amount, // Amount is already in paise
+      amount: amount * 100, // Convert rupees to paise for Razorpay
       currency: 'INR',
       receipt: `donation_${Date.now()}`,
       notes: {
         donorName,
         ...(donorEmail && { donorEmail }),
+        ...(donorPAN && { donorPAN }),
         ...(programId && { programId }),
         ...(referralCode && { referralCode })
       }
@@ -203,6 +208,7 @@ export async function POST(request: NextRequest) {
       donorName,
       donorEmail,
       donorPhone,
+      donorPAN,
       amount,
       currency: 'INR',
       programId,

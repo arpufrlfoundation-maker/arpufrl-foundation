@@ -6,18 +6,23 @@ import {
   ChevronRight,
   Eye,
   ExternalLink,
-  X
+  X,
+  Download,
+  Mail
 } from 'lucide-react'
 
 interface Donation {
-  _id: string
+  id: string
+  _id?: string
   donorName: string
   donorEmail?: string
   donorPhone?: string
+  donorPAN?: string
   amount: number
   currency: string
   program?: {
-    _id: string
+    id?: string
+    _id?: string
     name: string
   }
   paymentStatus: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED'
@@ -147,6 +152,24 @@ export default function DonationTable({ filters }: DonationTableProps) {
     setShowDetails(true)
   }
 
+  const sendReceipt = async (donationId: string) => {
+    try {
+      const response = await fetch('/api/donations/receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ donationId })
+      })
+      if (response.ok) {
+        alert('Receipt sent successfully!')
+      } else {
+        alert('Failed to send receipt')
+      }
+    } catch (error) {
+      console.error('Error sending receipt:', error)
+      alert('Failed to send receipt')
+    }
+  }
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow">
@@ -205,6 +228,9 @@ export default function DonationTable({ filters }: DonationTableProps) {
                 Donor
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                PAN
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Amount
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -214,9 +240,6 @@ export default function DonationTable({ filters }: DonationTableProps) {
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Referral
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -224,7 +247,7 @@ export default function DonationTable({ filters }: DonationTableProps) {
           <tbody className="bg-white divide-y divide-gray-200">
             {donations.length > 0 ? (
               donations.map((donation) => (
-                <tr key={donation._id} className="hover:bg-gray-50">
+                <tr key={donation.id || donation._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(donation.createdAt)}
                   </td>
@@ -237,6 +260,14 @@ export default function DonationTable({ filters }: DonationTableProps) {
                         {donation.donorEmail}
                       </div>
                     )}
+                    {donation.donorPhone && (
+                      <div className="text-xs text-gray-400">
+                        {donation.donorPhone}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                    {donation.donorPAN || <span className="text-gray-400">N/A</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                     {formatCurrency(donation.amount)}
@@ -247,16 +278,6 @@ export default function DonationTable({ filters }: DonationTableProps) {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(donation.paymentStatus)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {donation.referralCode ? (
-                      <div>
-                        <div className="font-medium">{donation.referralCode.code}</div>
-                        <div className="text-xs text-gray-500">{donation.referralCode.ownerName}</div>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400">Direct</span>
-                    )}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center space-x-2">
                       <button
@@ -266,6 +287,26 @@ export default function DonationTable({ filters }: DonationTableProps) {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
+                      {donation.paymentStatus === 'SUCCESS' && (
+                        <>
+                          <a
+                            href={`/api/donations/receipt/${donation.id || donation._id}/download`}
+                            className="text-green-600 hover:text-green-900"
+                            title="Download Receipt"
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
+                          {donation.donorEmail && (
+                            <button
+                              onClick={() => sendReceipt(donation.id || donation._id || '')}
+                              className="text-purple-600 hover:text-purple-900"
+                              title="Send Receipt Email"
+                            >
+                              <Mail className="w-4 h-4" />
+                            </button>
+                          )}
+                        </>
+                      )}
                       {donation.razorpayPaymentId && (
                         <a
                           href={`https://dashboard.razorpay.com/app/payments/${donation.razorpayPaymentId}`}
@@ -320,8 +361,8 @@ export default function DonationTable({ filters }: DonationTableProps) {
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
                       className={`px-3 py-2 text-sm font-medium rounded-md ${currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
                         }`}
                     >
                       {pageNum}
@@ -386,6 +427,10 @@ export default function DonationTable({ filters }: DonationTableProps) {
                     <p className="text-sm text-gray-900">{selectedDonation.donorPhone || 'Not provided'}</p>
                   </div>
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">PAN Number</label>
+                    <p className="text-sm font-mono text-gray-900">{selectedDonation.donorPAN || 'Not provided'}</p>
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Program</label>
                     <p className="text-sm text-gray-900">{selectedDonation.program?.name || 'General Fund'}</p>
                   </div>
@@ -394,22 +439,18 @@ export default function DonationTable({ filters }: DonationTableProps) {
                     <div className="mt-1">{getStatusBadge(selectedDonation.paymentStatus)}</div>
                   </div>
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date Created</label>
+                    <p className="text-sm text-gray-900">{formatDate(selectedDonation.createdAt)}</p>
+                  </div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Razorpay Order ID</label>
                     <p className="text-sm text-gray-900 font-mono text-xs break-all">{selectedDonation.razorpayOrderId}</p>
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Razorpay Payment ID</label>
                     <p className="text-sm text-gray-900 font-mono text-xs break-all">
                       {selectedDonation.razorpayPaymentId || 'Not available'}
                     </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date Created</label>
-                    <p className="text-sm text-gray-900">{formatDate(selectedDonation.createdAt)}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
-                    <p className="text-sm text-gray-900">{formatDate(selectedDonation.updatedAt)}</p>
                   </div>
                 </div>
 
