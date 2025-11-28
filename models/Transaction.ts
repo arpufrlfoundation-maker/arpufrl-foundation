@@ -63,7 +63,7 @@ const TransactionSchema = new Schema<ITransaction>(
     amount: {
       type: Number,
       required: true,
-      min: [1, 'Amount must be at least ₹1'],
+      min: [21, 'Amount must be at least ₹21'],
       max: [10000000, 'Amount is too large']
     },
     paymentMode: {

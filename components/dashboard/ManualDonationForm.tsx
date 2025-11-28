@@ -197,7 +197,7 @@ export default function ManualDonationForm() {
                 onChange={(e) => handleChange('amount', e.target.value)}
                 placeholder="Enter amount"
                 required
-                min={100}
+                min={21}
                 max={100000}
                 step={1}
               />

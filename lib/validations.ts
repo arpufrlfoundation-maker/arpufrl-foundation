@@ -5,7 +5,7 @@ import { z } from 'zod'
 export const donationFormSchema = z.object({
   // Amount selection
   amount: z.number()
-    .min(100, 'Minimum donation amount is ₹100')
+    .min(21 , 'Minimum donation amount is ₹21')
     .max(100000, 'Maximum donation amount is ₹100,000')
     .int('Amount must be a whole number'),
 

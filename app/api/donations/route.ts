@@ -38,7 +38,7 @@ const createDonationSchema = z.object({
     .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format')
     .length(10)
     .transform(val => val.toUpperCase()),
-  amount: z.number().min(100).max(10000000), // Amount in paise (₹1 to ₹100,000)
+  amount: z.number().min(21).max(10000000), // Amount in paise (₹21 to ₹100,000)
   programId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Please select a program'), // Made required
   referralCode: z.string().min(3).max(50).optional(),
 })

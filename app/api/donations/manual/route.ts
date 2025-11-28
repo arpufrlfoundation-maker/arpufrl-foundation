@@ -12,7 +12,7 @@ const manualDonationSchema = z.object({
   donorName: z.string().min(2).max(100),
   donorEmail: z.string().email().optional(),
   donorPhone: z.string().min(10).max(15).optional(),
-  amount: z.number().min(100).max(100000),
+  amount: z.number().min(21).max(100000),
   programId: z.string().regex(/^[0-9a-fA-F]{24}$/),
   paymentMethod: z.enum(['CASH', 'BANK_TRANSFER', 'UPI', 'CHEQUE', 'OTHER']).default('CASH'),
   transactionId: z.string().optional(),

@@ -44,7 +44,7 @@ export const donationValidationSchema = z.object({
     .optional(),
 
   amount: z.number()
-    .min(100, 'Minimum donation amount is ₹100')
+    .min(21, 'Minimum donation amount is ₹21')
     .max(100000, 'Maximum donation amount is ₹100,000')
     .int('Amount must be a whole number'),
 
@@ -296,7 +296,7 @@ const donationSchema = new Schema<IDonation>({
   amount: {
     type: Number,
     required: [true, 'Amount is required'],
-    min: [100, 'Minimum donation amount is ₹100'],
+    min: [21, 'Minimum donation amount is ₹21'],
     max: [100000, 'Maximum donation amount is ₹100,000'],
     validate: {
       validator: Number.isInteger,

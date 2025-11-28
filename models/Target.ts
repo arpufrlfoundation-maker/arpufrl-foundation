@@ -42,7 +42,7 @@ export const targetValidationSchema = z.object({
   ]).optional(),
 
   targetAmount: z.number()
-    .min(1, 'Target amount must be at least ₹1')
+    .min(21, 'Target amount must be at least ₹21')
     .max(100000000, 'Target amount is too large'),
 
   status: z.enum([
@@ -299,7 +299,7 @@ const targetSchema = new Schema<ITarget>(
     targetAmount: {
       type: Number,
       required: [true, 'Target amount is required'],
-      min: [1, 'Target amount must be at least ₹1'],
+      min: [21, 'Target amount must be at least ₹21'],
       max: [100000000, 'Target amount is too large']
     },
 

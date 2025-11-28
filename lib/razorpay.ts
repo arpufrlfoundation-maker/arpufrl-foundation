@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 // Razorpay order creation schema
 export const CreateOrderSchema = z.object({
-  amount: z.number().min(100).max(10000000), // ₹1 to ₹100,000 in paise
+  amount: z.number().min(21).max(10000000), // ₹21 to ₹100,000 in paise
   currency: z.string().default('INR'),
   receipt: z.string().optional(),
   notes: z.record(z.string(), z.string()).optional(),

@@ -165,7 +165,7 @@ export default function DonationForm({
                       'focus:border-blue-500 focus:outline-none',
                       errors.amount ? 'border-red-500' : 'border-gray-200'
                     )}
-                    min="100"
+                    min="21"
                     max="100000"
                   />
                 </div>
