@@ -50,7 +50,7 @@ export default function CoordinatorRevenuePage() {
     try {
       setLoading(true)
       setError(null)
-      
+
       // Add timestamp to prevent any caching
       const timestamp = Date.now()
       const response = await fetch(`/api/revenue/commissions?_t=${timestamp}`, {
@@ -91,7 +91,7 @@ export default function CoordinatorRevenuePage() {
   useEffect(() => {
     // Wait for session to be determined
     if (status === 'loading') return
-    
+
     // Redirect if not authenticated
     if (status === 'unauthenticated') {
       router.push('/login')
@@ -268,8 +268,8 @@ export default function CoordinatorRevenuePage() {
             <button
               onClick={() => setFilter('ALL')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
             >
               All
@@ -277,8 +277,8 @@ export default function CoordinatorRevenuePage() {
             <button
               onClick={() => setFilter('PENDING')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'PENDING'
-                  ? 'bg-yellow-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-yellow-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
             >
               Pending
@@ -286,8 +286,8 @@ export default function CoordinatorRevenuePage() {
             <button
               onClick={() => setFilter('PAID')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'PAID'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
             >
               Paid
@@ -346,10 +346,10 @@ export default function CoordinatorRevenuePage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${commission.status === 'PAID'
-                            ? 'bg-green-100 text-green-800'
-                            : commission.status === 'PENDING'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
+                          ? 'bg-green-100 text-green-800'
+                          : commission.status === 'PENDING'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
                           }`}>
                           {commission.status}
                         </span>

@@ -110,22 +110,25 @@ export default function BusinessSurveyForm() {
         body: JSON.stringify({
           surveyType: 'BUSINESS',
           data: formData,
-          location: formData.fullAddress,
-          district: '',
-          state: '',
+          location: formData.fullAddress || formData.businessAddress,
+          district: 'Not Specified',
+          state: 'Not Specified',
           surveyorName: session?.user?.name || 'Anonymous',
           surveyorContact: formData.mobile,
           surveyDate: formData.surveyDate
         })
       })
 
+      const result = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to submit survey')
+        const errorMessage = result.details || result.error || 'Failed to submit survey'
+        throw new Error(errorMessage)
       }
 
       setSuccess(true)
     } catch (err: any) {
-      setError(err.message || 'Failed to submit survey')
+      setError(err.message || 'सर्वे जमा करने में विफल। कृपया पुनः प्रयास करें।')
     } finally {
       setLoading(false)
     }

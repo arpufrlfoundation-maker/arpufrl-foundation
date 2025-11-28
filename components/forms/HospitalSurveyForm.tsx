@@ -106,22 +106,26 @@ export default function HospitalSurveyForm() {
         body: JSON.stringify({
           surveyType: 'HOSPITAL',
           data: formData,
-          location: formData.address,
-          district: '',
-          state: '',
+          location: formData.address || formData.hospitalName,
+          district: 'Not Specified',
+          state: 'Not Specified',
           surveyorName: formData.surveyOfficerName || session?.user?.name || 'Anonymous',
           surveyorContact: formData.contactNumber,
           surveyDate: formData.surveyDate
         })
       })
 
+      const result = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to submit survey')
+        // Show detailed error message from API
+        const errorMessage = result.details || result.error || 'Failed to submit survey'
+        throw new Error(errorMessage)
       }
 
       setSuccess(true)
     } catch (err: any) {
-      setError(err.message || 'Failed to submit survey')
+      setError(err.message || 'सर्वे जमा करने में विफल। कृपया पुनः प्रयास करें।')
     } finally {
       setLoading(false)
     }

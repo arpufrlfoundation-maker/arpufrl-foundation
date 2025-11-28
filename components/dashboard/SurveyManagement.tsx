@@ -63,11 +63,25 @@ interface SurveyStats {
 }
 
 const surveyTypeLabels: Record<string, string> = {
-  HOSPITAL: '🏥 Hospital Survey / अस्पताल सर्वेक्षण',
-  SCHOOL: '🏫 School Survey / विद्यालय सर्वेक्षण',
-  HEALTH_CAMP: '⛑️ Health Camp Feedback / स्वास्थ्य शिविर प्रतिक्रिया',
-  COMMUNITY_WELFARE: '🤝 Community Welfare Report / सामुदायिक कल्याण रिपोर्ट',
-  STAFF_VOLUNTEER: '👥 Staff & Volunteer Feedback / कर्मचारी और स्वयंसेवक प्रतिक्रिया'
+  HOSPITAL: 'Hospital Survey / अस्पताल सर्वेक्षण',
+  SCHOOL: 'School Survey / विद्यालय सर्वेक्षण',
+  HEALTH_CAMP: 'Health Camp Feedback / स्वास्थ्य शिविर प्रतिक्रिया',
+  COMMUNITY_WELFARE: 'Community Welfare Report / सामुदायिक कल्याण रिपोर्ट',
+  STAFF_VOLUNTEER: 'Staff & Volunteer Feedback / कर्मचारी और स्वयंसेवक प्रतिक्रिया',
+  BUSINESS: 'Business Survey / व्यवसाय सर्वेक्षण',
+  CITIZEN: 'Citizen Survey / नागरिक सर्वेक्षण',
+  POLITICAL_ANALYSIS: 'Political Analysis Survey / राजनीतिक विश्लेषण सर्वेक्षण'
+}
+
+const surveyTypeEmoji: Record<string, string> = {
+  HOSPITAL: '🏥',
+  SCHOOL: '🏫',
+  HEALTH_CAMP: '⛑️',
+  COMMUNITY_WELFARE: '🤝',
+  STAFF_VOLUNTEER: '👥',
+  BUSINESS: '💼',
+  CITIZEN: '👤',
+  POLITICAL_ANALYSIS: '🗳️'
 }
 
 const surveyTypeIcons: Record<string, any> = {
@@ -75,7 +89,10 @@ const surveyTypeIcons: Record<string, any> = {
   SCHOOL: School,
   HEALTH_CAMP: Heart,
   COMMUNITY_WELFARE: Users,
-  STAFF_VOLUNTEER: UserCheck
+  STAFF_VOLUNTEER: UserCheck,
+  BUSINESS: FileText,
+  CITIZEN: Users,
+  POLITICAL_ANALYSIS: FileText
 }
 
 export default function SurveyManagement() {
@@ -179,11 +196,17 @@ export default function SurveyManagement() {
       SCHOOL: 'bg-blue-100 text-blue-800',
       HEALTH_CAMP: 'bg-green-100 text-green-800',
       COMMUNITY_WELFARE: 'bg-purple-100 text-purple-800',
-      STAFF_VOLUNTEER: 'bg-orange-100 text-orange-800'
+      STAFF_VOLUNTEER: 'bg-orange-100 text-orange-800',
+      BUSINESS: 'bg-yellow-100 text-yellow-800',
+      CITIZEN: 'bg-indigo-100 text-indigo-800',
+      POLITICAL_ANALYSIS: 'bg-pink-100 text-pink-800'
     }
 
+    const emoji = surveyTypeEmoji[type] || '📋'
+
     return (
-      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${colors[type] || 'bg-gray-100 text-gray-800'}`}>
+      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${colors[type] || 'bg-gray-100 text-gray-800'}`}>
+        <span className="text-sm">{emoji}</span>
         {surveyTypeLabels[type] || type}
       </span>
     )
@@ -332,11 +355,14 @@ export default function SurveyManagement() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">All Types</option>
-              <option value="HOSPITAL">Hospital Survey</option>
-              <option value="SCHOOL">School Survey</option>
-              <option value="HEALTH_CAMP">Health Camp</option>
-              <option value="COMMUNITY_WELFARE">Community Welfare</option>
-              <option value="STAFF_VOLUNTEER">Staff & Volunteer</option>
+              <option value="HOSPITAL">🏥 Hospital Survey</option>
+              <option value="SCHOOL">🏫 School Survey</option>
+              <option value="HEALTH_CAMP">⛑️ Health Camp</option>
+              <option value="COMMUNITY_WELFARE">🤝 Community Welfare</option>
+              <option value="STAFF_VOLUNTEER">👥 Staff & Volunteer</option>
+              <option value="BUSINESS">💼 Business Survey</option>
+              <option value="CITIZEN">👤 Citizen Survey</option>
+              <option value="POLITICAL_ANALYSIS">🗳️ Political Analysis</option>
             </select>
           </div>
 
@@ -584,9 +610,35 @@ export default function SurveyManagement() {
                 <div>
                   <h4 className="text-md font-medium text-gray-900 mb-3">Survey Data</h4>
                   <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
-                    <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-                      {JSON.stringify(selectedSurvey.data, null, 2)}
-                    </pre>
+                    {selectedSurvey.data && Object.keys(selectedSurvey.data).length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Object.entries(selectedSurvey.data).map(([key, value]) => {
+                          // Skip empty values
+                          if (value === '' || value === null || value === undefined) return null
+                          // Format array values
+                          const displayValue = Array.isArray(value) 
+                            ? value.length > 0 ? value.join(', ') : 'None'
+                            : typeof value === 'object' 
+                              ? JSON.stringify(value, null, 2)
+                              : String(value)
+                          
+                          // Format key to readable label
+                          const label = key
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^./, str => str.toUpperCase())
+                            .trim()
+                          
+                          return (
+                            <div key={key} className="border-b border-gray-200 pb-2">
+                              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</label>
+                              <p className="text-sm text-gray-900 mt-1 whitespace-pre-wrap">{displayValue}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">No survey data available</p>
+                    )}
                   </div>
                 </div>
 

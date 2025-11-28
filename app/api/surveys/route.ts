@@ -87,10 +87,19 @@ export async function POST(request: NextRequest) {
       status
     } = body
 
-    // Validate required fields
-    if (!surveyType || !location || !district || !state || !surveyorName) {
+    // Validate required fields with detailed error messages
+    const missingFields: string[] = []
+    if (!surveyType) missingFields.push('surveyType')
+    if (!location) missingFields.push('location')
+    if (!surveyorName) missingFields.push('surveyorName')
+
+    if (missingFields.length > 0) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { 
+          error: 'Missing required fields',
+          details: `Please provide: ${missingFields.join(', ')}`,
+          missingFields 
+        },
         { status: 400 }
       )
     }
@@ -98,7 +107,10 @@ export async function POST(request: NextRequest) {
     // Validate survey type
     if (!Object.values(SurveyType).includes(surveyType)) {
       return NextResponse.json(
-        { error: 'Invalid survey type' },
+        { 
+          error: 'Invalid survey type',
+          details: `Survey type '${surveyType}' is not valid. Valid types are: ${Object.values(SurveyType).join(', ')}`
+        },
         { status: 400 }
       )
     }
@@ -106,10 +118,10 @@ export async function POST(request: NextRequest) {
     const surveyData: any = {
       surveyType,
       location,
-      district,
-      state,
+      district: district || 'Not Specified',
+      state: state || 'Not Specified',
       surveyorName,
-      surveyorContact: surveyorPhone || surveyorContact,
+      surveyorContact: surveyorPhone || surveyorContact || '',
       surveyDate: surveyDate ? new Date(surveyDate) : new Date(),
       data: data || {},
       status: status || SurveyStatus.SUBMITTED
@@ -124,12 +136,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      message: 'Survey submitted successfully',
       survey
     }, { status: 201 })
   } catch (error) {
     console.error('Error creating survey:', error)
     return NextResponse.json(
-      { error: 'Failed to create survey' },
+      { 
+        error: 'Failed to create survey',
+        details: error instanceof Error ? error.message : 'An unexpected error occurred'
+      },
       { status: 500 }
     )
   }

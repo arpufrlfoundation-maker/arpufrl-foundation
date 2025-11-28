@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   experimental: {
     // Enable server actions
     serverActions: {
-      allowedOrigins: ['localhost:3000','arpufrl.in','arpufrl.vercel.app'],
+      allowedOrigins: ['localhost:3000', 'arpufrl.in', 'www.arpufrl.in', 'arpufrl.vercel.app'],
     },
   },
 
@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
   // Environment variables that should be available on the client side
   env: {
     RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
-    APP_URL: process.env.APP_URL,
+    APP_URL: process.env.APP_URL || 'https://arpufrl.in',
   },
 
   // Compression
