@@ -80,7 +80,7 @@ export function generateOrganizationSchema() {
     name: 'ARPU Future Rise Life Foundation',
     alternateName: 'ARPUFRL',
     url: baseUrl,
-    logo: `${baseUrl}/logo.png`,
+    logo: `${baseUrl}/ARPU-Logo.png`,
     description: 'A non-profit organization dedicated to empowering communities through education, healthcare, and social welfare programs.',
     address: {
       '@type': 'PostalAddress',
@@ -179,7 +179,7 @@ export function generateArticleSchema({
       name: 'ARPU Future Rise Life Foundation',
       logo: {
         '@type': 'ImageObject',
-        url: `${baseUrl}/logo.png`
+        url: `${baseUrl}/ARPU-Logo.png`
       }
     }
   }

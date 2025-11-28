@@ -190,7 +190,7 @@ export function generateOrganizationStructuredData() {
     name: 'ARPU Future Rise Life Foundation',
     alternateName: 'ARPU Foundation',
     url: defaultConfig.baseUrl,
-    logo: `${defaultConfig.baseUrl}/images/logo.png`,
+    logo: `${defaultConfig.baseUrl}/ARPU-Logo.png`,
     image: `${defaultConfig.baseUrl}/images/og-default.jpg`,
     description: 'A non-profit organization dedicated to empowering communities through education, healthcare, and sustainable development programs across India.',
 

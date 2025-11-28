@@ -233,7 +233,7 @@ export default function PoliticalAnalysisSurveyForm() {
       <div className="border-2 border-black p-4 bg-gradient-to-r from-orange-50 to-green-50">
         <div className="flex items-start gap-4">
           <div className="w-20 h-20 flex-shrink-0">
-            <img src="/pic/logo.png" alt="ARPU Logo" className="w-full h-full object-contain" />
+            <img src="/ARPU-Logo.png" alt="ARPU Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex-1 text-center">
             <h1 className="text-2xl font-bold text-gray-900">ARPU Future Rise Life Foundation</h1>
