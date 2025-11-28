@@ -5,6 +5,7 @@ import { User, UserRole, UserStatus } from '@/models/User'
 import { ReferralCode } from '@/models/ReferralCode'
 import { Donation, PaymentStatus } from '@/models/Donation'
 import { ALL_COORDINATOR_ROLES, PARENT_COORDINATOR_ROLES, isCoordinatorRole } from '@/lib/role-utils'
+import { isDemoAdminById } from '@/lib/demo-admin'
 import mongoose from 'mongoose'
 import { z } from 'zod'
 
@@ -30,6 +31,11 @@ export async function GET(
     await connectToDatabase()
 
     const { id } = await params
+
+    // Handle demo-admin case
+    if (isDemoAdminById(id)) {
+      return NextResponse.json({ error: 'Demo admin cannot be accessed as coordinator' }, { status: 400 })
+    }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid coordinator ID' }, { status: 400 })
@@ -153,6 +159,11 @@ export async function PATCH(
 
     const { id } = await params
 
+    // Handle demo-admin case
+    if (isDemoAdminById(id)) {
+      return NextResponse.json({ error: 'Demo admin cannot be modified' }, { status: 400 })
+    }
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid coordinator ID' }, { status: 400 })
     }
@@ -249,6 +260,11 @@ export async function DELETE(
     await connectToDatabase()
 
     const { id } = await params
+
+    // Handle demo-admin case
+    if (isDemoAdminById(id)) {
+      return NextResponse.json({ error: 'Demo admin cannot be deleted' }, { status: 400 })
+    }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid coordinator ID' }, { status: 400 })

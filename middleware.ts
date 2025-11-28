@@ -88,7 +88,12 @@ export default async function middleware(request: NextRequest) {
 
   // If route is public, allow access
   if (isPublicRoute) {
-    return NextResponse.next()
+    const response = NextResponse.next()
+    // Add no-cache headers for public routes to ensure fresh content
+    response.headers.set('Cache-Control', 'no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    return response
   }
 
   // If user is not authenticated and trying to access protected route, redirect to login
@@ -115,7 +120,12 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next()
+  // Add no-cache headers for protected routes
+  const response = NextResponse.next()
+  response.headers.set('Cache-Control', 'no-store, must-revalidate')
+  response.headers.set('Pragma', 'no-cache')
+  response.headers.set('Expires', '0')
+  return response
 }
 
 // Helper function to get redirect URL based on user role

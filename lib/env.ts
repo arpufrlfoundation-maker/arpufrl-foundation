@@ -6,9 +6,9 @@ const getEnv = (key: string, defaultValue: string = ''): string => {
 }
 
 export const env = {
-  MONGODB_URI: getEnv('MONGODB_URI', 'mongodb+srv://ronakkumar20062006:6a3Z2VCGkXH0ZtL4@cluster0.969t4yr.mongodb.net/?appName=Cluster0'),
+  MONGODB_URI: getEnv('MONGODB_URI', 'mongodb+srv://arpufrlfoundation_db_user:rH1e9vhyOGlggNYp@arpufrl.jxdguw5.mongodb.net/?appName=arpufrl'),
   NEXTAUTH_SECRET: getEnv('NEXTAUTH_SECRET', 'development-secret-key-change-in-production-12345678901234567890'),
-  NEXTAUTH_URL: getEnv('NEXTAUTH_URL', 'http://localhost:3000'),
+  NEXTAUTH_URL: getEnv('NEXTAUTH_URL', 'https://arpufrl.in'),
   RAZORPAY_KEY_ID: getEnv('RAZORPAY_KEY_ID', 'rzp_test_1234567890'),
   RAZORPAY_KEY_SECRET: getEnv('RAZORPAY_KEY_SECRET', 'test_secret_1234567890'),
   RAZORPAY_WEBHOOK_SECRET: getEnv('RAZORPAY_WEBHOOK_SECRET', 'webhook_secret_1234567890'),

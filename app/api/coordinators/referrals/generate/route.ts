@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/db'
 import { User, UserRole } from '@/models/User'
 import { ReferralCode } from '@/models/ReferralCode'
 import { generateReferralCode as generateCode } from '@/lib/referral-utils'
+import { isDemoAdminById } from '@/lib/demo-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       type: isCoordinator ? 'COORDINATOR' : 'SUB_COORDINATOR',
       region: user.region,
       active: true,
-      parentCodeId: user.parentCoordinatorId
+      parentCodeId: user.parentCoordinatorId && !isDemoAdminById(user.parentCoordinatorId.toString())
         ? (await ReferralCode.findOne({ ownerUserId: user.parentCoordinatorId }))?._id
         : undefined
     })

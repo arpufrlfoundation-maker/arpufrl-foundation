@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import { User } from '@/models/User'
 import { CommissionLog } from '@/models/CommissionLog'
+import { isDemoAdminById } from '@/lib/demo-admin'
 
 /**
  * Commission Rules:
@@ -122,6 +123,11 @@ async function calculateHierarchyCommissions(
   // Traverse up the hierarchy
   let isFirstParent = true
   while (currentUserId && !visited.has(currentUserId.toString())) {
+    // Skip demo-admin parent
+    if (isDemoAdminById(currentUserId.toString())) {
+      break
+    }
+
     visited.add(currentUserId.toString())
 
     const parent = await User.findById(currentUserId)

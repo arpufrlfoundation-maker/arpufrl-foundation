@@ -33,7 +33,7 @@ export default function TeamSection() {
   const fetchTeamMembers = async (parentId?: string) => {
     try {
       setLoading(true)
-      const url = parentId ? `/api/team?parentId=${parentId}` : '/api/team'
+      const url = parentId ? `/api/team?parentId=${parentId}` : '/api/team?limit=4'
       const response = await fetch(url)
       const data = await response.json()
 

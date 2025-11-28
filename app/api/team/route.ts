@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const parentId = searchParams.get('parentId')
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 100
 
     let query: any = {
       status: 'ACTIVE'
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest) {
     const teamMembers = await User.find(query)
       .select('name email role state district block image profilePhoto referralCode totalDonationsReferred totalAmountReferred parentCoordinatorId')
       .sort({ role: 1, name: 1 })
-      .limit(100) // Increased limit for sub-coordinators
+      .limit(limit) // Use dynamic limit
 
     // Get subordinate counts for each member
     const membersWithCounts = await Promise.all(

@@ -37,6 +37,12 @@ export const donationValidationSchema = z.object({
     .max(15, 'Phone number must not exceed 15 digits')
     .optional(),
 
+  donorPAN: z.string()
+    .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format (e.g., ABCDE1234F)')
+    .length(10, 'PAN must be exactly 10 characters')
+    .toUpperCase()
+    .optional(),
+
   amount: z.number()
     .min(100, 'Minimum donation amount is ₹100')
     .max(100000, 'Maximum donation amount is ₹100,000')
@@ -120,6 +126,7 @@ export interface IDonation extends Document {
   donorName: string
   donorEmail?: string
   donorPhone?: string
+  donorPAN?: string
   amount: number
   currency: CurrencyType
   programId?: mongoose.Types.ObjectId
@@ -276,6 +283,14 @@ const donationSchema = new Schema<IDonation>({
     match: [/^[+]?[\d\s-()]+$/, 'Invalid phone number format'],
     minlength: [10, 'Phone number must be at least 10 digits'],
     maxlength: [15, 'Phone number must not exceed 15 digits']
+  },
+
+  donorPAN: {
+    type: String,
+    uppercase: true,
+    trim: true,
+    match: [/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format'],
+    index: true
   },
 
   amount: {

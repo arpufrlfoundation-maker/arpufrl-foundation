@@ -21,16 +21,21 @@ const envSchema = z.object({
   // Email (optional but recommended)
   EMAIL_SERVER_HOST: z.string().optional(),
   EMAIL_SERVER_PORT: z.string().optional(),
-  EMAIL_SERVER_USER: z.string().email().optional(),
+  EMAIL_SERVER_USER: z.string().optional(),
   EMAIL_SERVER_PASSWORD: z.string().optional(),
-  EMAIL_FROM: z.string().email().optional(),
+  EMAIL_FROM: z.string().optional(),
+
+  // Cloudinary (optional)
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
 
   // Application
   NODE_ENV: z.enum(['development', 'production', 'test']),
-  APP_URL: z.string().url('Invalid APP_URL'),
+  APP_URL: z.string().url('Invalid APP_URL').optional(),
 
   // Optional
-  DEMO_ADMIN_EMAIL: z.string().email().optional(),
+  DEMO_ADMIN_EMAIL: z.string().optional(),
   DEMO_ADMIN_PASSWORD: z.string().optional(),
   DEMO_ADMIN_NAME: z.string().optional(),
 })

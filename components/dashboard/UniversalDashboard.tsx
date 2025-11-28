@@ -60,10 +60,40 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
   const [error, setError] = useState<string | null>(null)
   const [showPaymentWidget, setShowPaymentWidget] = useState(true)
   const [generatingReferral, setGeneratingReferral] = useState(false)
+  const [revenueData, setRevenueData] = useState<{
+    totalEarned: number
+    pending: number
+    paid: number
+    commissionCount: number
+  } | null>(null)
+  const [loadingRevenue, setLoadingRevenue] = useState(false)
 
   useEffect(() => {
     fetchDashboardData()
   }, [])
+
+  useEffect(() => {
+    if (dashboardData && !dashboardData.user.role.includes('VOLUNTEER')) {
+      fetchRevenueData()
+    }
+  }, [dashboardData])
+
+  const fetchRevenueData = async () => {
+    try {
+      setLoadingRevenue(true)
+      const response = await fetch('/api/revenue/commissions')
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setRevenueData(result.data.summary)
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching revenue:', err)
+    } finally {
+      setLoadingRevenue(false)
+    }
+  }
 
   const fetchDashboardData = async () => {
     try {
@@ -156,6 +186,7 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
   const canViewTeam = hierarchy.level <= 10 // All except volunteer
   const canViewAnalytics = hierarchy.level <= 8 // Up to Nodal Officer
   const isVolunteer = user.role === 'VOLUNTEER'
+  const isCoordinator = !isVolunteer && hierarchy.level <= 10 // All coordinator roles
 
   return (
     <div className={`min-h-screen bg-gray-50 p-6 ${className}`}>
@@ -299,12 +330,122 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
             </div>
           )}
 
-          {/* Manual Donation Form */}
-          <ManualDonationForm />
+          {/* Revenue Section for Coordinators */}
+          {isCoordinator && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <TrendingUp className="h-6 w-6 text-green-600 mr-2" />
+                  <h3 className="text-lg font-semibold text-gray-900">Your Revenue</h3>
+                </div>
+                <button
+                  onClick={fetchRevenueData}
+                  disabled={loadingRevenue}
+                  className="text-sm text-green-600 hover:text-green-700 disabled:opacity-50"
+                >
+                  {loadingRevenue ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+
+              {loadingRevenue ? (
+                <div className="text-center py-4">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                </div>
+              ) : revenueData ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <p className="text-sm text-green-600 font-medium">Total Earned</p>
+                      <p className="text-2xl font-bold text-green-900 mt-1">
+                        ₹{revenueData.totalEarned.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-green-600 mt-1">{revenueData.commissionCount} commissions</p>
+                    </div>
+
+                    <div className="bg-yellow-50 rounded-lg p-4">
+                      <p className="text-sm text-yellow-600 font-medium">Pending</p>
+                      <p className="text-2xl font-bold text-yellow-900 mt-1">
+                        ₹{revenueData.pending.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-yellow-600 mt-1">Awaiting payment</p>
+                    </div>
+
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <p className="text-sm text-blue-600 font-medium">Paid</p>
+                      <p className="text-2xl font-bold text-blue-900 mt-1">
+                        ₹{revenueData.paid.toLocaleString()}
+                      </p>
+                      <p className="text-xs text-blue-600 mt-1">Completed payments</p>
+                    </div>
+
+                    <div className="bg-purple-50 rounded-lg p-4">
+                      <p className="text-sm text-purple-600 font-medium">Commission Rate</p>
+                      <p className="text-2xl font-bold text-purple-900 mt-1">
+                        {donations.amount > 0 ? ((revenueData.totalEarned / donations.amount) * 100).toFixed(1) : 0}%
+                      </p>
+                      <p className="text-xs text-purple-600 mt-1">Of total donations</p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => window.location.href = '/dashboard/coordinator/revenue'}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    <TrendingUp className="h-5 w-5" />
+                    <span>View Detailed Revenue</span>
+                  </button>
+                </>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <p>No revenue data available</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Manual Donation Form - Hidden for Volunteers */}
+          {!isVolunteer && <ManualDonationForm />}
 
           {/* Volunteer Donations List */}
           {isVolunteer && user.referralCode && (
             <VolunteerDonationsList referralCode={user.referralCode} />
+          )}
+
+          {/* Volunteer Certificate Download */}
+          {isVolunteer && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Certificate</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Once your volunteer application is approved, you can download your certificate here.
+              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/volunteer/certificate?userId=${user.id}`)
+                    if (!response.ok) {
+                      const error = await response.json()
+                      alert(error.error || 'Certificate not available yet')
+                      return
+                    }
+                    const blob = await response.blob()
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `volunteer-certificate-${user.name.replace(/\s/g, '-')}.pdf`
+                    document.body.appendChild(a)
+                    a.click()
+                    window.URL.revokeObjectURL(url)
+                    document.body.removeChild(a)
+                  } catch (error) {
+                    alert('Failed to download certificate')
+                  }
+                }}
+                className="flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Download className="h-5 w-5" />
+                <span>Download Certificate</span>
+              </button>
+            </div>
           )}
 
           {/* Recent Activity */}

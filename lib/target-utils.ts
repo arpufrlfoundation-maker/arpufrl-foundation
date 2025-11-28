@@ -6,6 +6,7 @@
 import Target, { ITarget, HierarchyLevel } from '@/models/Target'
 import { User, RoleHierarchy } from '@/models/User'
 import mongoose from 'mongoose'
+import { isDemoAdminById } from '@/lib/demo-admin'
 
 /**
  * Map user role to hierarchy level
@@ -149,6 +150,11 @@ export async function propagateCollectionChain(
 
   if (!user || !user.parentCoordinatorId) {
     return // Reached top of hierarchy
+  }
+
+  // Skip demo-admin parent
+  if (isDemoAdminById(user.parentCoordinatorId.toString())) {
+    return
   }
 
   // Recalculate parent's team collection

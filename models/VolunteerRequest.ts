@@ -35,6 +35,12 @@ export interface IVolunteerRequest extends Document {
   reviewedAt?: Date
   reviewedBy?: mongoose.Types.ObjectId
   notes?: string
+
+  // Certificate fields
+  certificateIssued: boolean
+  certificateId?: mongoose.Types.ObjectId
+  certificateIssuedAt?: Date
+
   createdAt: Date
   updatedAt: Date
 }
@@ -119,6 +125,17 @@ const volunteerRequestSchema = new Schema<IVolunteerRequest>(
       type: String,
       trim: true,
       maxlength: [500, 'Notes cannot exceed 500 characters']
+    },
+    certificateIssued: {
+      type: Boolean,
+      default: false
+    },
+    certificateId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Certificate'
+    },
+    certificateIssuedAt: {
+      type: Date
     }
   },
   {

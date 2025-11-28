@@ -1,18 +1,21 @@
-// Alternative environment configuration to bypass validation issues
+// Environment configuration - reads from process.env with fallbacks for development
 export const envConfig = {
-  MONGODB_URI: 'mongodb+srv://ronakkumar20062006:6a3Z2VCGkXH0ZtL4@cluster0.969t4yr.mongodb.net/?appName=Cluster0',
-  NEXTAUTH_SECRET: 'development-secret-key-change-in-production-12345678901234567890',
-  NEXTAUTH_URL: 'http://localhost:3000',
-  RAZORPAY_KEY_ID: 'rzp_test_1234567890',
-  RAZORPAY_KEY_SECRET: 'test_secret_1234567890',
-  RAZORPAY_WEBHOOK_SECRET: 'webhook_secret_1234567890',
+  MONGODB_URI: process.env.MONGODB_URI || '',
+  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || '',
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+  RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || '',
+  RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || '',
+  RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET || '',
   NODE_ENV: (process.env.NODE_ENV || 'development') as 'development' | 'production' | 'test',
-  APP_URL: 'http://localhost:3000',
-  EMAIL_SERVER_HOST: undefined,
-  EMAIL_SERVER_PORT: undefined,
-  EMAIL_SERVER_USER: undefined,
-  EMAIL_SERVER_PASSWORD: undefined,
-  EMAIL_FROM: undefined,
+  APP_URL: process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000',
+  EMAIL_SERVER_HOST: process.env.EMAIL_SERVER_HOST,
+  EMAIL_SERVER_PORT: process.env.EMAIL_SERVER_PORT,
+  EMAIL_SERVER_USER: process.env.EMAIL_SERVER_USER,
+  EMAIL_SERVER_PASSWORD: process.env.EMAIL_SERVER_PASSWORD,
+  EMAIL_FROM: process.env.EMAIL_FROM,
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
 }
 
 export const isDevelopment = () => envConfig.NODE_ENV === 'development'

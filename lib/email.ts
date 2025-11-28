@@ -43,6 +43,11 @@ interface SendEmailOptions {
   subject: string
   html: string
   text?: string
+  attachments?: Array<{
+    filename: string
+    content: Buffer
+    contentType: string
+  }>
 }
 
 /**
@@ -64,6 +69,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<boolean> => 
       subject: options.subject,
       text: options.text,
       html: options.html,
+      attachments: options.attachments
     })
 
     console.log(`Email sent successfully to ${options.to}`)

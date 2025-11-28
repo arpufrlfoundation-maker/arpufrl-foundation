@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/db'
 import { User, UserRole } from '@/models/User'
 import { ReferralCode } from '@/models/ReferralCode'
 import { Donation } from '@/models/Donation'
+import { isDemoAdminById } from '@/lib/demo-admin'
 import mongoose from 'mongoose'
 
 // Define coordinator roles array
@@ -33,6 +34,11 @@ export async function GET(
     await connectToDatabase()
 
     const { id } = await params
+
+    // Handle demo-admin case
+    if (isDemoAdminById(id)) {
+      return NextResponse.json({ error: 'Demo admin stats not available' }, { status: 400 })
+    }
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {

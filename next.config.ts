@@ -7,8 +7,6 @@ const nextConfig: NextConfig = {
     serverActions: {
       allowedOrigins: ['localhost:3000','arpufrl.in','arpufrl.vercel.app'],
     },
-    // Enable optimized package imports
-    optimizePackageImports: ['@/components', '@/lib'],
   },
 
   // Image optimization configuration
