@@ -19,7 +19,9 @@ import {
   UserPlus,
   Copy,
   Share2,
-  Check
+  Check,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react'
 import StatsCard from './StatsCard'
 import { UserRole, RoleHierarchy, RoleDisplayNames, UserRoleType } from '@/models/User'
@@ -86,6 +88,9 @@ export default function CoordinatorManagement() {
   const [showPassword, setShowPassword] = useState(false)
   const [parentCoordinators, setParentCoordinators] = useState<{ id: string; name: string; role: string }[]>([])
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [coordinatorToDelete, setCoordinatorToDelete] = useState<Coordinator | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const [createForm, setCreateForm] = useState<CreateCoordinatorForm>({
     name: '',
@@ -267,6 +272,38 @@ export default function CoordinatorManagement() {
       console.error('Error updating coordinator status:', error)
       alert('Failed to update coordinator status')
     }
+  }
+
+  const deleteCoordinator = async (coordinatorId: string) => {
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/admin/coordinators/${coordinatorId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to delete coordinator')
+      }
+
+      // Close modals and refresh
+      setShowDeleteModal(false)
+      setCoordinatorToDelete(null)
+      setShowDetailsModal(false)
+      await fetchCoordinators()
+      await fetchStats()
+      await fetchParentCoordinators()
+    } catch (error) {
+      console.error('Error deleting coordinator:', error)
+      alert(error instanceof Error ? error.message : 'Failed to delete coordinator')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const confirmDelete = (coordinator: Coordinator) => {
+    setCoordinatorToDelete(coordinator)
+    setShowDeleteModal(true)
   }
 
   const formatCurrency = (amount: number) => {
@@ -629,8 +666,16 @@ export default function CoordinatorManagement() {
                         <button
                           onClick={() => handleViewDetails(coordinator)}
                           className="text-blue-600 hover:text-blue-900"
+                          title="View details"
                         >
                           <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => confirmDelete(coordinator)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete coordinator"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -831,28 +876,37 @@ export default function CoordinatorManagement() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end space-x-3 pt-4 border-t">
+                <div className="flex justify-between pt-4 border-t">
                   <button
-                    onClick={() => setShowDetailsModal(false)}
-                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+                    onClick={() => confirmDelete(selectedCoordinator)}
+                    className="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center"
                   >
-                    Close
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete User
                   </button>
-                  <button
-                    onClick={() => {
-                      updateCoordinatorStatus(
-                        selectedCoordinator.id,
-                        selectedCoordinator.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
-                      )
-                      setShowDetailsModal(false)
-                    }}
-                    className={`px-4 py-2 text-sm rounded-lg ${selectedCoordinator.status === 'ACTIVE'
-                      ? 'bg-red-600 text-white hover:bg-red-700'
-                      : 'bg-green-600 text-white hover:bg-green-700'
-                      }`}
-                  >
-                    {selectedCoordinator.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                  </button>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setShowDetailsModal(false)}
+                      className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+                    >
+                      Close
+                    </button>
+                    <button
+                      onClick={() => {
+                        updateCoordinatorStatus(
+                          selectedCoordinator.id,
+                          selectedCoordinator.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+                        )
+                        setShowDetailsModal(false)
+                      }}
+                      className={`px-4 py-2 text-sm rounded-lg ${selectedCoordinator.status === 'ACTIVE'
+                        ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
+                    >
+                      {selectedCoordinator.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1082,6 +1136,77 @@ export default function CoordinatorManagement() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && coordinatorToDelete && (
+        <div className="fixed inset-0 z-[200] overflow-y-auto" style={{ zIndex: 10000 }}>
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              onClick={() => !deleting && setShowDeleteModal(false)}
+              style={{ zIndex: 9999 }}
+            />
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg relative" style={{ zIndex: 10001 }}>
+              <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              
+              <h3 className="text-lg font-medium text-gray-900 text-center mb-2">
+                Delete Coordinator
+              </h3>
+              
+              <p className="text-sm text-gray-500 text-center mb-4">
+                Are you sure you want to delete <strong>{coordinatorToDelete.name}</strong>? 
+                This action cannot be undone.
+              </p>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>Warning:</strong> This will permanently remove the user and all their data from the system.
+                  {coordinatorToDelete.subordinatesCount > 0 && (
+                    <span className="block mt-1">
+                      This user has {coordinatorToDelete.subordinatesCount} subordinates who will become orphaned.
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setCoordinatorToDelete(null)
+                  }}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteCoordinator(coordinatorToDelete.id)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                >
+                  {deleting ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

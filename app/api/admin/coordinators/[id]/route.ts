@@ -119,3 +119,69 @@ export async function PATCH(
     )
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Check authentication and admin role
+    const session = await auth()
+    if (!session?.user || session.user.role !== UserRole.ADMIN) {
+      return NextResponse.json(
+        { error: 'Unauthorized access' },
+        { status: 401 }
+      )
+    }
+
+    await connectToDatabase()
+
+    const { id } = await params
+
+    // Validate the coordinator ID
+    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return NextResponse.json(
+        { error: 'Invalid coordinator ID' },
+        { status: 400 }
+      )
+    }
+
+    // Find the user to delete
+    const userToDelete = await User.findById(id)
+    if (!userToDelete) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // Prevent deleting admin users
+    if (userToDelete.role === UserRole.ADMIN) {
+      return NextResponse.json(
+        { error: 'Cannot delete admin users' },
+        { status: 403 }
+      )
+    }
+
+    // Optional: Update subordinates to have no parent (or you could prevent deletion if they have subordinates)
+    await User.updateMany(
+      { parentCoordinatorId: id },
+      { $unset: { parentCoordinatorId: 1 } }
+    )
+
+    // Delete the user
+    await User.findByIdAndDelete(id)
+
+    return NextResponse.json({
+      success: true,
+      message: 'User deleted successfully'
+    })
+
+  } catch (error) {
+    console.error('Delete coordinator error:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete user' },
+      { status: 500 }
+    )
+  }
+}
