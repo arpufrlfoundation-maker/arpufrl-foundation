@@ -1,6 +1,6 @@
-const CACHE_NAME = 'arpu-foundation-v4' // Updated version to force refresh
-const STATIC_CACHE = 'arpu-static-v4'
-const DYNAMIC_CACHE = 'arpu-dynamic-v4'
+const CACHE_NAME = 'arpu-foundation-v5' // Updated version to force refresh
+const STATIC_CACHE = 'arpu-static-v5'
+const DYNAMIC_CACHE = 'arpu-dynamic-v5'
 
 // Development mode: Minimal caching
 const IS_DEVELOPMENT = true // Set to false for production
@@ -16,8 +16,8 @@ const STATIC_ASSETS = IS_DEVELOPMENT ? [] : [
   '/_next/static/css/app/layout.css',
   '/_next/static/chunks/webpack.js',
   '/_next/static/chunks/main.js',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/ARPUICON.ico',
+  '/ARPU-Logo.png'
 ]
 
 // API routes to cache with network-first strategy
@@ -324,8 +324,8 @@ self.addEventListener('push', (event) => {
   const data = event.data.json()
   const options = {
     body: data.body,
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/ARPU-Logo.png',
+    badge: '/ARPUICON.ico',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -335,12 +335,12 @@ self.addEventListener('push', (event) => {
       {
         action: 'explore',
         title: 'View Details',
-        icon: '/icons/checkmark.png'
+        icon: '/ARPU-Logo.png'
       },
       {
         action: 'close',
         title: 'Close',
-        icon: '/icons/xmark.png'
+        icon: '/ARPU-Logo.png'
       }
     ]
   }
