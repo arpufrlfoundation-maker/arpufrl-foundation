@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectToDatabase } from '@/lib/db'
-import { User } from '@/models/User'
+import { User, UserRole } from '@/models/User'
 import VolunteerRequest from '@/models/VolunteerRequest'
 import { Certificate, CertificateStatus } from '@/models/Certificate'
 import { generateCertificatePDF } from '@/lib/pdf-certificate'
@@ -42,13 +42,8 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Check if user is a volunteer
-    if (user.role !== 'VOLUNTEER' && user.role !== 'COORDINATOR' && user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Only volunteers can download volunteer certificates' },
-        { status: 403 }
-      )
-    }
+    // All registered users can download volunteer certificates
+    // They are all volunteers of the organization
 
     // Try to find volunteer request for additional info (optional)
     const volunteerRequest = await VolunteerRequest.findOne({
