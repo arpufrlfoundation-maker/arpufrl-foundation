@@ -131,8 +131,8 @@ export default function DocumentsGrid() {
                   key={category}
                   onClick={() => setSelectedCategory(category)}
                   className={`px-6 py-2 rounded-full font-medium transition-all ${selectedCategory === category
-                      ? 'bg-indigo-600 text-white shadow-lg'
-                      : 'bg-white text-gray-700 hover:bg-indigo-50'
+                    ? 'bg-indigo-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 hover:bg-indigo-50'
                     }`}
                 >
                   {category}

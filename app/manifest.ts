@@ -22,21 +22,21 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: 'any'
       },
       {
-        src: '/ARPU-Logo.png',
+        src: '/ARPUICON.ico',
         sizes: '192x192',
-        type: 'image/png',
+        type: 'image/x-icon',
         purpose: 'any'
       },
       {
-        src: '/ARPU-Logo.png',
+        src: '/ARPUICON.ico',
         sizes: '512x512',
-        type: 'image/png',
+        type: 'image/x-icon',
         purpose: 'any'
       },
       {
-        src: '/ARPU-Logo.png',
+        src: '/ARPUICON.ico',
         sizes: '192x192',
-        type: 'image/png',
+        type: 'image/x-icon',
         purpose: 'maskable'
       }
     ],
@@ -49,9 +49,9 @@ export default function manifest(): MetadataRoute.Manifest {
         url: '/donate',
         icons: [
           {
-            src: '/ARPU-Logo.png',
+            src: '/ARPUICON.ico',
             sizes: '96x96',
-            type: 'image/png'
+            type: 'image/x-icon'
           }
         ]
       },
@@ -62,9 +62,9 @@ export default function manifest(): MetadataRoute.Manifest {
         url: '/programs',
         icons: [
           {
-            src: '/ARPU-Logo.png',
+            src: '/ARPUICON.ico',
             sizes: '96x96',
-            type: 'image/png'
+            type: 'image/x-icon'
           }
         ]
       },
@@ -75,9 +75,9 @@ export default function manifest(): MetadataRoute.Manifest {
         url: '/contact',
         icons: [
           {
-            src: '/ARPU-Logo.png',
+            src: '/ARPUICON.ico',
             sizes: '96x96',
-            type: 'image/png'
+            type: 'image/x-icon'
           }
         ]
       }
@@ -85,16 +85,16 @@ export default function manifest(): MetadataRoute.Manifest {
 
     screenshots: [
       {
-        src: '/ARPU-Logo.png',
+        src: '/ARPUICON.ico',
         sizes: '1280x720',
-        type: 'image/png',
+        type: 'image/x-icon',
         form_factor: 'wide',
         label: 'Homepage on desktop'
       },
       {
-        src: '/ARPU-Logo.png',
+        src: '/ARPUICON.ico',
         sizes: '390x844',
-        type: 'image/png',
+        type: 'image/x-icon',
         form_factor: 'narrow',
         label: 'Homepage on mobile'
       }

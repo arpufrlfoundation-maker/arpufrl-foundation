@@ -75,12 +75,9 @@ export function generateMetadata(config: SEOConfig): Metadata {
 
     // Favicon and icons
     icons: {
-      icon: [
-        { url: '/ARPUICON.ico', type: 'image/x-icon' },
-        { url: '/ARPU-Logo.png', type: 'image/png', sizes: '192x192' },
-      ],
+      icon: '/ARPUICON.ico',
       shortcut: '/ARPUICON.ico',
-      apple: '/ARPU-Logo.png',
+      apple: '/ARPUICON.ico',
     },
 
     // Open Graph

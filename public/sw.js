@@ -1,6 +1,6 @@
-const CACHE_NAME = 'arpu-foundation-v5' // Updated version to force refresh
-const STATIC_CACHE = 'arpu-static-v5'
-const DYNAMIC_CACHE = 'arpu-dynamic-v5'
+const CACHE_NAME = 'arpu-foundation-v6' // Updated version to force refresh
+const STATIC_CACHE = 'arpu-static-v6'
+const DYNAMIC_CACHE = 'arpu-dynamic-v6'
 
 // Development mode: Minimal caching
 const IS_DEVELOPMENT = true // Set to false for production
@@ -16,8 +16,7 @@ const STATIC_ASSETS = IS_DEVELOPMENT ? [] : [
   '/_next/static/css/app/layout.css',
   '/_next/static/chunks/webpack.js',
   '/_next/static/chunks/main.js',
-  '/ARPUICON.ico',
-  '/ARPU-Logo.png'
+  '/ARPUICON.ico'
 ]
 
 // API routes to cache with network-first strategy
@@ -95,7 +94,7 @@ self.addEventListener('fetch', (event) => {
   // Skip external URLs (images from unsplash, cloudinary, google drive, etc.) - let browser handle directly
   const ownHostnames = ['arpufrl', 'localhost', 'vercel.app', '127.0.0.1']
   const isOwnDomain = ownHostnames.some(host => url.hostname.includes(host))
-  
+
   if (!isOwnDomain) {
     // Don't intercept external URLs - let browser fetch directly
     return
@@ -324,7 +323,7 @@ self.addEventListener('push', (event) => {
   const data = event.data.json()
   const options = {
     body: data.body,
-    icon: '/ARPU-Logo.png',
+    icon: '/ARPUICON.ico',
     badge: '/ARPUICON.ico',
     vibrate: [100, 50, 100],
     data: {
@@ -335,12 +334,12 @@ self.addEventListener('push', (event) => {
       {
         action: 'explore',
         title: 'View Details',
-        icon: '/ARPU-Logo.png'
+        icon: '/ARPUICON.ico'
       },
       {
         action: 'close',
         title: 'Close',
-        icon: '/ARPU-Logo.png'
+        icon: '/ARPUICON.ico'
       }
     ]
   }
