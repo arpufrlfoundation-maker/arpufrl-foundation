@@ -92,7 +92,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' *.razorpay.com",
+              "connect-src 'self' *.razorpay.com *.unsplash.com images.unsplash.com plus.unsplash.com *.cloudinary.com res.cloudinary.com *.google.com drive.google.com",
               "frame-src 'self' *.razorpay.com *.google.com drive.google.com docs.google.com",
               "object-src 'none'",
               "base-uri 'self'",

@@ -92,6 +92,14 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Skip external URLs (images from unsplash, cloudinary, etc.) - let browser handle directly
+  const isExternalUrl = !url.hostname.includes('arpufrl') && 
+                        !url.hostname.includes('localhost') && 
+                        !url.hostname.includes('vercel.app')
+  if (isExternalUrl) {
+    return // Don't intercept - let browser fetch directly
+  }
+
   // DEVELOPMENT MODE: Skip ALL caching, always fetch fresh
   if (IS_DEVELOPMENT) {
     event.respondWith(
