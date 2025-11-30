@@ -101,7 +101,7 @@ export default function ReferralManagement() {
   }
 
   const getDonationLink = (referralCode: string) => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://arpufrl.in'
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://arpufrl.org'
     return `${baseUrl}/donate?ref=${referralCode}`
   }
 
@@ -357,7 +357,7 @@ export default function ReferralManagement() {
                       )}
                     </button>
                   </div>
-                  
+
                   {/* Donation Link Section */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <label className="block text-xs font-medium text-gray-500 mb-2">Donation Link</label>
@@ -370,11 +370,10 @@ export default function ReferralManagement() {
                       />
                       <button
                         onClick={() => copyDonationLink(code.code)}
-                        className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
-                          copiedCode === `link-${code.code}`
+                        className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${copiedCode === `link-${code.code}`
                             ? 'bg-green-100 text-green-700'
                             : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                        }`}
+                          }`}
                         title="Copy donation link"
                       >
                         {copiedCode === `link-${code.code}` ? (
