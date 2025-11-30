@@ -416,7 +416,7 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Certificate</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Once your volunteer application is approved, you can download your certificate here.
+                Download your volunteer certificate here.
               </p>
               <button
                 onClick={async () => {
@@ -424,7 +424,7 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
                     const response = await fetch(`/api/volunteer/certificate?userId=${user.id}`)
                     if (!response.ok) {
                       const error = await response.json()
-                      alert(error.error || 'Certificate not available yet')
+                      alert(error.error || 'Failed to generate certificate')
                       return
                     }
                     const blob = await response.blob()
