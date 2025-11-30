@@ -875,7 +875,7 @@ export default function CoordinatorManagement() {
                       value={createForm.parentCoordinatorId}
                       onChange={(e) => setCreateForm(prev => ({ ...prev, parentCoordinatorId: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      disabled={createForm.role === 'STATE_PRESIDENT' || createForm.role === 'STATE_COORDINATOR'}
+                      disabled={createForm.role === 'STATE_PRESIDENT'}
                     >
                       <option value="">None (Top-level)</option>
                       {parentCoordinators
@@ -890,7 +890,7 @@ export default function CoordinatorManagement() {
                         ))}
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
-                      {(createForm.role === 'STATE_PRESIDENT' || createForm.role === 'STATE_COORDINATOR')
+                      {createForm.role === 'STATE_PRESIDENT'
                         ? '✓ Will automatically be assigned under ADMIN'
                         : 'Parent must be higher in hierarchy than selected role'}
                     </p>
