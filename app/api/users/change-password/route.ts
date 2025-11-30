@@ -61,7 +61,8 @@ export async function POST(request: NextRequest) {
 
     await connectToDatabase()
 
-    const user = await User.findById(session.user.id)
+    // Important: Use .select('+hashedPassword') because hashedPassword has select: false in schema
+    const user = await User.findById(session.user.id).select('+hashedPassword')
 
     if (!user) {
       return NextResponse.json(
