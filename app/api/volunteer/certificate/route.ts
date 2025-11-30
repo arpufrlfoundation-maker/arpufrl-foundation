@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 import { connectToDatabase } from '@/lib/db'
 import { User } from '@/models/User'
 import VolunteerRequest from '@/models/VolunteerRequest'
-import { Certificate } from '@/models/Certificate'
+import { Certificate, CertificateStatus } from '@/models/Certificate'
 import { generateCertificatePDF } from '@/lib/pdf-certificate'
 
 /**
@@ -63,18 +63,24 @@ export async function GET(req: NextRequest) {
 
     // If no certificate exists, create one
     if (!certificate) {
+      // Generate certificate number
+      const date = new Date()
+      const year = date.getFullYear()
+      const count = await Certificate.countDocuments()
+      const certificateNumber = `ARPU/VOL/${year}/${String(count + 1).padStart(5, '0')}`
+
       certificate = await Certificate.create({
+        certificateNumber,
         userId: userId,
-        userName: user.name,
+        recipientName: user.name,
+        recipientEmail: user.email,
         certificateType: 'VOLUNTEER',
-        title: 'Volunteer Certificate',
-        description: `This certifies that ${user.name} has registered as a volunteer with ARPU Future Rise Life Foundation.`,
-        additionalInfo: {
-          interests: volunteerRequest?.interests?.join(', ') || 'Community Service',
-          registeredDate: user.createdAt || new Date()
-        },
-        validFrom: new Date(),
-        status: 'ACTIVE'
+        eventName: 'Volunteer Registration',
+        activityDescription: `This certifies that ${user.name} has registered as a volunteer with ARPU Future Rise Life Foundation, demonstrating commitment to community service and social welfare.`,
+        placeOfEvent: 'India',
+        issueDate: new Date(),
+        status: CertificateStatus.GENERATED,
+        generatedAt: new Date()
       })
 
       // Update volunteer request with certificate info if exists
