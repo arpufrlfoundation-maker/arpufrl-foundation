@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer'
+import { getBrowser } from './browser'
 
 // Organization constants
 const ORG_CONSTANTS = {
@@ -33,10 +33,7 @@ interface ReceiptData {
 }
 
 export async function generateReceiptPDF(receiptData: ReceiptData): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  })
+  const browser = await getBrowser()
 
   try {
     const page = await browser.newPage()

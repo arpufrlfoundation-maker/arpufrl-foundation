@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectToDatabase } from '@/lib/db'
+import { User } from '@/models/User'
 import VolunteerRequest from '@/models/VolunteerRequest'
 import { Certificate } from '@/models/Certificate'
 import { generateCertificatePDF } from '@/lib/pdf-certificate'
@@ -32,19 +33,29 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Find volunteer request (any status - PENDING, ACCEPTED, etc.)
-    const volunteerRequest = await VolunteerRequest.findOne({
-      email: session.user.email
-    }).sort({ createdAt: -1 })
-
-    if (!volunteerRequest) {
+    // Get user info
+    const user = await User.findById(userId)
+    if (!user) {
       return NextResponse.json(
-        { error: 'No volunteer application found. Please apply first.' },
+        { error: 'User not found' },
         { status: 404 }
       )
     }
 
-    // Find certificate
+    // Check if user is a volunteer
+    if (user.role !== 'VOLUNTEER' && user.role !== 'COORDINATOR' && user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Only volunteers can download volunteer certificates' },
+        { status: 403 }
+      )
+    }
+
+    // Try to find volunteer request for additional info (optional)
+    const volunteerRequest = await VolunteerRequest.findOne({
+      email: user.email
+    }).sort({ createdAt: -1 })
+
+    // Find or create certificate
     let certificate = await Certificate.findOne({
       userId: userId,
       certificateType: 'VOLUNTEER'
@@ -54,23 +65,25 @@ export async function GET(req: NextRequest) {
     if (!certificate) {
       certificate = await Certificate.create({
         userId: userId,
-        userName: volunteerRequest.name,
+        userName: user.name,
         certificateType: 'VOLUNTEER',
         title: 'Volunteer Certificate',
-        description: `This certifies that ${volunteerRequest.name} has registered as a volunteer with ARPU Future Rise Life Foundation.`,
+        description: `This certifies that ${user.name} has registered as a volunteer with ARPU Future Rise Life Foundation.`,
         additionalInfo: {
-          interests: volunteerRequest.interests.join(', '),
-          registeredDate: volunteerRequest.submittedAt || new Date()
+          interests: volunteerRequest?.interests?.join(', ') || 'Community Service',
+          registeredDate: user.createdAt || new Date()
         },
         validFrom: new Date(),
         status: 'ACTIVE'
       })
 
-      // Update volunteer request with certificate info
-      volunteerRequest.certificateIssued = true
-      volunteerRequest.certificateId = certificate._id
-      volunteerRequest.certificateIssuedAt = new Date()
-      await volunteerRequest.save()
+      // Update volunteer request with certificate info if exists
+      if (volunteerRequest) {
+        volunteerRequest.certificateIssued = true
+        volunteerRequest.certificateId = certificate._id
+        volunteerRequest.certificateIssuedAt = new Date()
+        await volunteerRequest.save()
+      }
     }
 
     // Generate PDF

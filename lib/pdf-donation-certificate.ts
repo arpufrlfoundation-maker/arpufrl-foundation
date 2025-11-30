@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer'
+import { getBrowser } from './browser'
 
 interface DonationCertificateData {
   certificateNumber: string
@@ -65,10 +65,7 @@ const RIBBON_SVG = `
 `
 
 export async function generateDonationCertificatePDF(data: DonationCertificateData): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  })
+  const browser = await getBrowser()
 
   try {
     const page = await browser.newPage()

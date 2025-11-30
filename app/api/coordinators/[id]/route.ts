@@ -239,7 +239,7 @@ export async function PATCH(
 
   } catch (error: any) {
     console.error('Error updating coordinator:', error)
-    
+
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.keys(error.errors).map(field => ({
@@ -251,7 +251,7 @@ export async function PATCH(
         { status: 400 }
       )
     }
-    
+
     return NextResponse.json(
       { error: 'Failed to update coordinator', message: error?.message || 'Unknown error occurred' },
       { status: 500 }

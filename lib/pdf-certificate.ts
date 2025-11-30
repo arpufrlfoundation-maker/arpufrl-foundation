@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer'
+import { getBrowser } from './browser'
 import { ICertificate, CertificateType } from '@/models/Certificate'
 
 interface CertificateData {
@@ -81,10 +81,7 @@ const RIBBON_SVG = `
 `
 
 export async function generateCertificatePDF(certificate: ICertificate | CertificateData): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  })
+  const browser = await getBrowser()
 
   try {
     const page = await browser.newPage()
