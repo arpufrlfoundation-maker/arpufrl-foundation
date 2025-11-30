@@ -1,6 +1,6 @@
-const CACHE_NAME = 'arpu-foundation-v3-dev-disabled' // DEV: No caching
-const STATIC_CACHE = 'arpu-static-v3-dev-disabled'
-const DYNAMIC_CACHE = 'arpu-dynamic-v3-dev-disabled'
+const CACHE_NAME = 'arpu-foundation-v4' // Updated version to force refresh
+const STATIC_CACHE = 'arpu-static-v4'
+const DYNAMIC_CACHE = 'arpu-dynamic-v4'
 
 // Development mode: Minimal caching
 const IS_DEVELOPMENT = true // Set to false for production
@@ -92,12 +92,13 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Skip external URLs (images from unsplash, cloudinary, etc.) - let browser handle directly
-  const isExternalUrl = !url.hostname.includes('arpufrl') && 
-                        !url.hostname.includes('localhost') && 
-                        !url.hostname.includes('vercel.app')
-  if (isExternalUrl) {
-    return // Don't intercept - let browser fetch directly
+  // Skip external URLs (images from unsplash, cloudinary, google drive, etc.) - let browser handle directly
+  const ownHostnames = ['arpufrl', 'localhost', 'vercel.app', '127.0.0.1']
+  const isOwnDomain = ownHostnames.some(host => url.hostname.includes(host))
+  
+  if (!isOwnDomain) {
+    // Don't intercept external URLs - let browser fetch directly
+    return
   }
 
   // DEVELOPMENT MODE: Skip ALL caching, always fetch fresh
