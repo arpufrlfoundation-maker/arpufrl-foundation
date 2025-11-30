@@ -386,41 +386,41 @@
         "youtube": "https://www.youtube.com/@ARPUFUTURERISELIFEFOUNDATION",
         "instagram": "https://www.instagram.com/arpufuture?igsh=N2N0M2NhM3p2d3lz"
       },
-      "logo_image": "https://arpufrl.in/ARPU.png",
-      "header_image": "https://arpufrl.in/about.jpg"
+      "logo_image": "https://arpufrl.org/ARPU.png",
+      "header_image": "https://arpufrl.org/about.jpg"
     },
     "navigation": [
       {
         "label": "HOME",
-        "link": "https://arpufrl.in/index.aspx"
+        "link": "https://arpufrl.org/index.aspx"
       },
       {
         "label": "ABOUT",
-        "link": "https://arpufrl.in/about.aspx"
+        "link": "https://arpufrl.org/about.aspx"
       },
       {
         "label": "OUR PLAN",
-        "link": "https://arpufrl.in/ARPU.pdf"
+        "link": "https://arpufrl.org/ARPU.pdf"
       },
       {
         "label": "LEGALS",
-        "link": "https://arpufrl.in/legal-documents.aspx"
+        "link": "https://arpufrl.org/legal-documents.aspx"
       },
       {
         "label": "REGISTRATION",
-        "link": "https://arpufrl.in/joinus.aspx"
+        "link": "https://arpufrl.org/joinus.aspx"
       },
       {
         "label": "TEAM",
-        "link": "https://arpufrl.in/teams.aspx"
+        "link": "https://arpufrl.org/teams.aspx"
       },
       {
         "label": "CONTEST",
-        "link": "https://arpufrl.in/contest.aspx"
+        "link": "https://arpufrl.org/contest.aspx"
       },
       {
         "label": "AWARD",
-        "link": "https://arpufrl.in/Award.aspx"
+        "link": "https://arpufrl.org/Award.aspx"
       }
     ],
     "content": {
@@ -444,23 +444,23 @@
       "quick_links": [
         {
           "label": "Home",
-          "link": "https://arpufrl.in/index.aspx"
+          "link": "https://arpufrl.org/index.aspx"
         },
         {
           "label": "Blog",
-          "link": "https://arpufrl.in/blog.aspx"
+          "link": "https://arpufrl.org/blog.aspx"
         },
         {
           "label": "About Us",
-          "link": "https://arpufrl.in/about.aspx"
+          "link": "https://arpufrl.org/about.aspx"
         },
         {
           "label": "Our Plan",
-          "link": "https://arpufrl.in/ARPU.pdf"
+          "link": "https://arpufrl.org/ARPU.pdf"
         },
         {
           "label": "Gallery",
-          "link": "https://arpufrl.in/gallery.aspx"
+          "link": "https://arpufrl.org/gallery.aspx"
         }
       ],
       "contact": {

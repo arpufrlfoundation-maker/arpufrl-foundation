@@ -16,7 +16,10 @@ import {
   XCircle,
   Award,
   Target,
-  UserPlus
+  UserPlus,
+  Copy,
+  Share2,
+  Check
 } from 'lucide-react'
 import StatsCard from './StatsCard'
 import { UserRole, RoleHierarchy, RoleDisplayNames, UserRoleType } from '@/models/User'
@@ -82,6 +85,7 @@ export default function CoordinatorManagement() {
   const [creating, setCreating] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [parentCoordinators, setParentCoordinators] = useState<{ id: string; name: string; role: string }[]>([])
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
   const [createForm, setCreateForm] = useState<CreateCoordinatorForm>({
     name: '',
@@ -272,6 +276,42 @@ export default function CoordinatorManagement() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount)
+  }
+
+  const getDonationLink = (referralCode: string) => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://arpufrl.org'
+    return `${baseUrl}/donate?ref=${referralCode}`
+  }
+
+  const copyReferralLink = async (referralCode: string) => {
+    const link = getDonationLink(referralCode)
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopiedCode(referralCode)
+      setTimeout(() => setCopiedCode(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  const shareReferralLink = async (referralCode: string, coordinatorName: string) => {
+    const link = getDonationLink(referralCode)
+    const shareData = {
+      title: 'Donate to ARPU Foundation',
+      text: `Support ARPU Foundation through ${coordinatorName}'s referral. Every donation makes a difference!`,
+      url: link
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        // Fallback to copy
+        await copyReferralLink(referralCode)
+      }
+    } catch (err) {
+      console.error('Failed to share:', err)
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -556,8 +596,32 @@ export default function CoordinatorManagement() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-mono text-gray-900">
-                        {coordinator.referralCode || 'Not assigned'}
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-mono text-gray-900">
+                          {coordinator.referralCode || 'Not assigned'}
+                        </span>
+                        {coordinator.referralCode && (
+                          <div className="flex items-center space-x-1">
+                            <button
+                              onClick={() => copyReferralLink(coordinator.referralCode!)}
+                              className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              title="Copy donation link"
+                            >
+                              {copiedCode === coordinator.referralCode ? (
+                                <Check className="w-4 h-4 text-green-600" />
+                              ) : (
+                                <Copy className="w-4 h-4" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => shareReferralLink(coordinator.referralCode!, coordinator.name)}
+                              className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              title="Share donation link"
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -727,6 +791,43 @@ export default function CoordinatorManagement() {
                       </p>
                     </div>
                   </div>
+
+                  {/* Donation Link with Referral Code */}
+                  {selectedCoordinator.referralCode && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Donation Link (with Referral)</label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={getDonationLink(selectedCoordinator.referralCode)}
+                          className="flex-1 text-sm font-mono text-gray-700 bg-gray-50 px-3 py-2 rounded border border-gray-200"
+                        />
+                        <button
+                          onClick={() => copyReferralLink(selectedCoordinator.referralCode!)}
+                          className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${copiedCode === selectedCoordinator.referralCode
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                            }`}
+                        >
+                          {copiedCode === selectedCoordinator.referralCode ? (
+                            <><Check className="w-4 h-4 mr-1" /> Copied!</>
+                          ) : (
+                            <><Copy className="w-4 h-4 mr-1" /> Copy</>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => shareReferralLink(selectedCoordinator.referralCode!, selectedCoordinator.name)}
+                          className="flex items-center px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                        >
+                          <Share2 className="w-4 h-4 mr-1" /> Share
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Share this link with donors. All donations through this link will be attributed to {selectedCoordinator.name}.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}

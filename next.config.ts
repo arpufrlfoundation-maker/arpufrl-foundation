@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
   // Environment variables that should be available on the client side
   env: {
     RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
-    APP_URL: process.env.APP_URL || 'https://arpufrl.in',
+    APP_URL: process.env.APP_URL || 'https://arpufrl.org',
   },
 
   // Compression
