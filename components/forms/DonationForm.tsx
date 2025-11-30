@@ -284,10 +284,10 @@ export default function DonationForm({
             )}
           </div>
 
-          {/* PAN Number - Mandatory for 80G Certificate */}
+          {/* PAN Number - Optional for 80G Certificate */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              PAN Number <span className="text-red-500">*</span>
+              PAN Number (Optional)
             </label>
             <input
               type="text"
@@ -305,6 +305,30 @@ export default function DonationForm({
             )}
             <p className="text-gray-500 text-sm mt-1">
               Required for 80G Tax Deduction Certificate
+            </p>
+          </div>
+
+          {/* Aadhaar Number - Optional */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Aadhaar Number (Optional)
+            </label>
+            <input
+              type="text"
+              {...register('donorAadhaar')}
+              className={cn(
+                'w-full px-4 py-3 border-2 rounded-lg',
+                'focus:border-blue-500 focus:outline-none',
+                errors.donorAadhaar ? 'border-red-500' : 'border-gray-200'
+              )}
+              placeholder="Enter your 12-digit Aadhaar number"
+              maxLength={12}
+            />
+            {errors.donorAadhaar && (
+              <p className="text-red-600 text-sm mt-1">{errors.donorAadhaar.message}</p>
+            )}
+            <p className="text-gray-500 text-sm mt-1">
+              For identity verification
             </p>
           </div>
         </div>

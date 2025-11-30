@@ -27,11 +27,20 @@ export const donationFormSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  // Donor PAN - mandatory for tax deduction certificate
+  // Donor PAN - optional for tax deduction certificate
   donorPAN: z.string()
     .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Please enter a valid PAN (e.g., ABCDE1234F)')
     .length(10, 'PAN must be exactly 10 characters')
-    .transform(val => val.toUpperCase()),
+    .transform(val => val.toUpperCase())
+    .optional()
+    .or(z.literal('')),
+
+  // Donor Aadhaar - optional
+  donorAadhaar: z.string()
+    .regex(/^[0-9]{12}$/, 'Please enter a valid 12-digit Aadhaar number')
+    .length(12, 'Aadhaar must be exactly 12 digits')
+    .optional()
+    .or(z.literal('')),
 
   // Program selection
   programId: z.string()

@@ -27,6 +27,7 @@ function DonationSuccessContent() {
   const [error, setError] = useState<string | null>(null)
   const [receiptSent, setReceiptSent] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isDownloadingCertificate, setIsDownloadingCertificate] = useState(false)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
 
   const searchParams = useSearchParams()
@@ -110,6 +111,33 @@ function DonationSuccessContent() {
       alert('Failed to download receipt. Please try again.')
     } finally {
       setIsDownloading(false)
+    }
+  }
+
+  // Download Donation Certificate
+  const downloadCertificate = async () => {
+    if (!donation) return
+    setIsDownloadingCertificate(true)
+    try {
+      const response = await fetch(`/api/donations/certificate/${donation.donationId}`)
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `donation-certificate-${generateReceiptNumber(donation.donationId, donation.createdAt)}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        alert('Failed to download certificate. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error downloading certificate:', error)
+      alert('Failed to download certificate. Please try again.')
+    } finally {
+      setIsDownloadingCertificate(false)
     }
   }
 
@@ -363,7 +391,7 @@ function DonationSuccessContent() {
           {/* Action Buttons */}
           <div className="mt-8 space-y-4">
             {/* Download and Email Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
               <Button
                 onClick={downloadReceipt}
                 disabled={isDownloading}
@@ -375,6 +403,19 @@ function DonationSuccessContent() {
                   <Download className="w-5 h-5" />
                 )}
                 <span>{isDownloading ? 'Downloading...' : 'Download Receipt PDF'}</span>
+              </Button>
+
+              <Button
+                onClick={downloadCertificate}
+                disabled={isDownloadingCertificate}
+                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+              >
+                {isDownloadingCertificate ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Download className="w-5 h-5" />
+                )}
+                <span>{isDownloadingCertificate ? 'Downloading...' : 'Download Certificate'}</span>
               </Button>
 
               {donation.donorEmail && (

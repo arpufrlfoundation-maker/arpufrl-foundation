@@ -127,6 +127,7 @@ export interface IDonation extends Document {
   donorEmail?: string
   donorPhone?: string
   donorPAN?: string
+  donorAadhaar?: string
   amount: number
   currency: CurrencyType
   programId?: mongoose.Types.ObjectId
@@ -290,6 +291,13 @@ const donationSchema = new Schema<IDonation>({
     uppercase: true,
     trim: true,
     match: [/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format'],
+    index: true
+  },
+
+  donorAadhaar: {
+    type: String,
+    trim: true,
+    match: [/^[0-9]{12}$/, 'Invalid Aadhaar format'],
     index: true
   },
 
