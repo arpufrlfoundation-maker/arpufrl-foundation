@@ -135,10 +135,10 @@ export async function GET(
       recentDonations
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching coordinator:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', message: error?.message || 'Unknown error occurred' },
       { status: 500 }
     )
   }
@@ -237,10 +237,23 @@ export async function PATCH(
 
     return NextResponse.json(coordinator.toJSON())
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating coordinator:', error)
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.keys(error.errors).map(field => ({
+        field,
+        message: error.errors[field].message
+      }))
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationErrors },
+        { status: 400 }
+      )
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to update coordinator', message: error?.message || 'Unknown error occurred' },
       { status: 500 }
     )
   }
@@ -308,10 +321,10 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Coordinator deactivated successfully' })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting coordinator:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to deactivate coordinator', message: error?.message || 'Unknown error occurred' },
       { status: 500 }
     )
   }

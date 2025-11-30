@@ -32,15 +32,14 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Find approved volunteer request
+    // Find volunteer request (any status - PENDING, ACCEPTED, etc.)
     const volunteerRequest = await VolunteerRequest.findOne({
-      email: session.user.email,
-      status: 'ACCEPTED'
-    })
+      email: session.user.email
+    }).sort({ createdAt: -1 })
 
     if (!volunteerRequest) {
       return NextResponse.json(
-        { error: 'Certificate not available. Your volunteer application must be approved first.' },
+        { error: 'No volunteer application found. Please apply first.' },
         { status: 404 }
       )
     }
@@ -58,10 +57,10 @@ export async function GET(req: NextRequest) {
         userName: volunteerRequest.name,
         certificateType: 'VOLUNTEER',
         title: 'Volunteer Certificate',
-        description: `This certifies that ${volunteerRequest.name} has been accepted as a volunteer with Arpu Foundation.`,
+        description: `This certifies that ${volunteerRequest.name} has registered as a volunteer with ARPU Future Rise Life Foundation.`,
         additionalInfo: {
           interests: volunteerRequest.interests.join(', '),
-          approvedDate: volunteerRequest.reviewedAt
+          registeredDate: volunteerRequest.submittedAt || new Date()
         },
         validFrom: new Date(),
         status: 'ACTIVE'

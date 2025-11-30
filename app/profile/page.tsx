@@ -212,7 +212,12 @@ export default function ProfilePage() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to update profile')
+        // Handle validation errors with details
+        if (result.details && Array.isArray(result.details)) {
+          const errorMessages = result.details.map((d: any) => `${d.field}: ${d.message}`).join(', ')
+          throw new Error(errorMessages)
+        }
+        throw new Error(result.error || result.message || 'Failed to update profile')
       }
 
       setSuccess('Profile updated successfully!')

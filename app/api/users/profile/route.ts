@@ -193,10 +193,32 @@ export async function PUT(request: NextRequest) {
         region: user.region
       }
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating profile:', error)
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.keys(error.errors).map(field => ({
+        field,
+        message: error.errors[field].message
+      }))
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationErrors },
+        { status: 400 }
+      )
+    }
+    
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0]
+      return NextResponse.json(
+        { error: `${field} already exists` },
+        { status: 400 }
+      )
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to update profile', message: error?.message || 'Unknown error occurred' },
       { status: 500 }
     )
   }
