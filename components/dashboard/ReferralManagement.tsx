@@ -100,6 +100,11 @@ export default function ReferralManagement() {
     setRefreshing(false)
   }
 
+  const getDonationLink = (referralCode: string) => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://arpufrl.in'
+    return `${baseUrl}/donate?ref=${referralCode}`
+  }
+
   const copyToClipboard = async (code: string) => {
     try {
       await navigator.clipboard.writeText(code)
@@ -107,6 +112,37 @@ export default function ReferralManagement() {
       setTimeout(() => setCopiedCode(null), 2000)
     } catch (err) {
       console.error('Failed to copy:', err)
+    }
+  }
+
+  const copyDonationLink = async (referralCode: string) => {
+    const link = getDonationLink(referralCode)
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopiedCode(`link-${referralCode}`)
+      setTimeout(() => setCopiedCode(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  const shareDonationLink = async (referralCode: string) => {
+    const link = getDonationLink(referralCode)
+    const shareData = {
+      title: 'Donate to ARPU Foundation',
+      text: `Support ARPU Foundation through my referral. Every donation makes a difference!`,
+      url: link
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        // Fallback to copy
+        await copyDonationLink(referralCode)
+      }
+    } catch (err) {
+      console.error('Failed to share:', err)
     }
   }
 
@@ -279,45 +315,86 @@ export default function ReferralManagement() {
               {referralCodes.map((code) => (
                 <div
                   key={code.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-green-300 transition-colors"
+                  className="p-4 border border-gray-200 rounded-lg hover:border-green-300 transition-colors"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <code className="text-lg font-mono font-bold text-green-600 bg-green-50 px-3 py-1 rounded">
-                        {code.code}
-                      </code>
-                      {code.active ? (
-                        <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                          Active
-                        </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <code className="text-lg font-mono font-bold text-green-600 bg-green-50 px-3 py-1 rounded">
+                          {code.code}
+                        </code>
+                        {code.active ? (
+                          <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded-full">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
+                        <span>{code.totalDonations} donations</span>
+                        <span>•</span>
+                        <span>{formatCurrency(code.totalAmount)} raised</span>
+                        {code.lastUsed && (
+                          <>
+                            <span>•</span>
+                            <span>Last used: {formatDate(code.lastUsed)}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(code.code)}
+                      className="ml-4 p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      title="Copy referral code"
+                    >
+                      {copiedCode === code.code ? (
+                        <Check className="w-5 h-5 text-green-600" />
                       ) : (
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded-full">
-                          Inactive
-                        </span>
+                        <Copy className="w-5 h-5" />
                       )}
-                    </div>
-                    <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
-                      <span>{code.totalDonations} donations</span>
-                      <span>•</span>
-                      <span>{formatCurrency(code.totalAmount)} raised</span>
-                      {code.lastUsed && (
-                        <>
-                          <span>•</span>
-                          <span>Last used: {formatDate(code.lastUsed)}</span>
-                        </>
-                      )}
-                    </div>
+                    </button>
                   </div>
-                  <button
-                    onClick={() => copyToClipboard(code.code)}
-                    className="ml-4 p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                  >
-                    {copiedCode === code.code ? (
-                      <Check className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <Copy className="w-5 h-5" />
-                    )}
-                  </button>
+                  
+                  {/* Donation Link Section */}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <label className="block text-xs font-medium text-gray-500 mb-2">Donation Link</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={getDonationLink(code.code)}
+                        className="flex-1 text-sm font-mono text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 truncate"
+                      />
+                      <button
+                        onClick={() => copyDonationLink(code.code)}
+                        className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                          copiedCode === `link-${code.code}`
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                        }`}
+                        title="Copy donation link"
+                      >
+                        {copiedCode === `link-${code.code}` ? (
+                          <><Check className="w-4 h-4 mr-1" /> Copied!</>
+                        ) : (
+                          <><Copy className="w-4 h-4 mr-1" /> Copy Link</>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => shareDonationLink(code.code)}
+                        className="flex items-center px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                        title="Share donation link"
+                      >
+                        <Share2 className="w-4 h-4 mr-1" /> Share
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Share this link with potential donors. All donations through this link will be attributed to you.
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
