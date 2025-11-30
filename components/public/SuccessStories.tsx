@@ -12,7 +12,7 @@ export default function SuccessStories() {
       location: 'Rajasthan',
       program: 'Women Empowerment',
       story: 'Through our skill development program, Meera learned tailoring and now runs her own successful business, supporting her family and employing 5 other women in her village.',
-      image: '/02.jpeg',
+      image: '/pic/02.jpeg',
       quote: 'This program gave me the confidence and skills to become financially independent. Now I can provide for my children\'s education.'
     },
     {
@@ -21,7 +21,7 @@ export default function SuccessStories() {
       location: 'Rural West Bengal',
       program: 'Childhood Education Support',
       story: 'Sunita was unable to attend school as her family couldn\'t afford basic supplies. Through our "Back to School" kit donation, she now has all the materials she needs and loves going to school, dreaming of a brighter future.',
-      image: '/01.jpg',
+      image: '/pic/01.jpg',
       quote: 'I love my new bag and books! I want to be a teacher when I grow up and help other children like me.'
     },
     {
@@ -30,7 +30,7 @@ export default function SuccessStories() {
       location: 'Delhi',
       program: 'Child Labor Rehabilitation',
       story: 'Rescued from a hazardous workplace, brothers Amit and Raju are now in our care. They receive education, nutrition, and a safe environment to heal and play. They are slowly rediscovering the joys of childhood.',
-      image: '/03.jpeg',
+      image: '/pic/03.jpeg',
       quote: 'We get to play and learn new things every day. It\'s much better than working. We want to go to a big school.'
     }
   ]
