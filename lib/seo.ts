@@ -73,6 +73,16 @@ export function generateMetadata(config: SEOConfig): Metadata {
     description,
     keywords: allKeywords.join(', '),
 
+    // Favicon and icons
+    icons: {
+      icon: [
+        { url: '/ARPUICON.ico', type: 'image/x-icon' },
+        { url: '/ARPU-Logo.png', type: 'image/png', sizes: '192x192' },
+      ],
+      shortcut: '/ARPUICON.ico',
+      apple: '/ARPU-Logo.png',
+    },
+
     // Open Graph
     openGraph: {
       title: title || defaultConfig.siteName,
