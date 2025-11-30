@@ -50,15 +50,31 @@ const profileSchema = z.object({
   path: ["confirmPassword"],
 })
 
+// Separate password schema
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and number'),
+  confirmPassword: z.string().min(1, 'Confirm password is required')
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+})
+
 type ProfileFormData = z.infer<typeof profileSchema>
+type PasswordFormData = z.infer<typeof passwordSchema>
 
 export default function ProfilePage() {
   const { data: session, update: updateSession } = useSession()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -69,6 +85,7 @@ export default function ProfilePage() {
   const [districtsList, setDistrictsList] = useState<string[]>([])
   const [userData, setUserData] = useState<any>(null)
 
+  // Profile form
   const {
     register,
     handleSubmit,
@@ -77,6 +94,16 @@ export default function ProfilePage() {
     formState: { errors },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
+  })
+
+  // Password form - separate from profile
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    reset: resetPasswordForm,
+    formState: { errors: passwordErrors },
+  } = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema),
   })
 
   const watchedState = watch('state')
@@ -190,17 +217,6 @@ export default function ProfilePage() {
         profilePhoto
       }
 
-      // Include password change if provided
-      if (data.newPassword && data.newPassword.length > 0) {
-        if (!data.currentPassword) {
-          setError('Current password is required to change password')
-          setIsLoading(false)
-          return
-        }
-        updateData.currentPassword = data.currentPassword
-        updateData.newPassword = data.newPassword
-      }
-
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
         headers: {
@@ -225,11 +241,6 @@ export default function ProfilePage() {
       // Update session with new data
       await updateSession()
 
-      // Clear password fields
-      setValue('currentPassword', '')
-      setValue('newPassword', '')
-      setValue('confirmPassword', '')
-
       // Refresh user data
       fetchUserData()
 
@@ -237,6 +248,45 @@ export default function ProfilePage() {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Handle password change separately
+  const onPasswordSubmit = async (data: PasswordFormData) => {
+    setIsChangingPassword(true)
+    setPasswordError(null)
+    setPasswordSuccess(null)
+
+    try {
+      const response = await fetch('/api/users/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+          confirmPassword: data.confirmPassword
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        if (result.details && Array.isArray(result.details)) {
+          const errorMessages = result.details.map((d: any) => `${d.field}: ${d.message}`).join(', ')
+          throw new Error(errorMessages)
+        }
+        throw new Error(result.error || 'Failed to change password')
+      }
+
+      setPasswordSuccess('Password changed successfully!')
+      resetPasswordForm()
+
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setIsChangingPassword(false)
     }
   }
 
@@ -491,90 +541,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Change Password */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Change Password</h2>
-            <p className="text-sm text-gray-600 mb-4">Leave blank if you don't want to change your password</p>
-            <div className="space-y-6">
-              {/* Current Password */}
-              <div>
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                  Current Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="currentPassword"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    {...register('currentPassword')}
-                    className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter current password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* New Password */}
-                <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="newPassword"
-                      type={showNewPassword ? 'text' : 'password'}
-                      {...register('newPassword')}
-                      className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter new password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                  {errors.newPassword && (
-                    <p className="mt-1 text-sm text-red-600">{errors.newPassword.message}</p>
-                  )}
-                </div>
-
-                {/* Confirm Password */}
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirm New Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      {...register('confirmPassword')}
-                      className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Confirm new password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Role Information (Read-only) */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Account Information</h2>
@@ -622,10 +588,139 @@ export default function ProfilePage() {
               ) : (
                 <>
                   <Save className="w-5 h-5" />
-                  <span>Save Changes</span>
+                  <span>Save Profile</span>
                 </>
               )}
             </button>
+          </div>
+        </form>
+
+        {/* Change Password - Separate Form */}
+        <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="mt-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Change Password</h2>
+            <p className="text-sm text-gray-600 mb-6">Update your password to keep your account secure</p>
+
+            {/* Password Success Message */}
+            {passwordSuccess && (
+              <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <p className="text-green-800">{passwordSuccess}</p>
+              </div>
+            )}
+
+            {/* Password Error Message */}
+            {passwordError && (
+              <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-800">{passwordError}</p>
+              </div>
+            )}
+
+            <div className="space-y-6">
+              {/* Current Password */}
+              <div>
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  Current Password *
+                </label>
+                <div className="relative">
+                  <input
+                    id="currentPassword"
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    {...registerPassword('currentPassword')}
+                    className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter current password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {passwordErrors.currentPassword && (
+                  <p className="mt-1 text-sm text-red-600">{passwordErrors.currentPassword.message}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* New Password */}
+                <div>
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                    New Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="newPassword"
+                      type={showNewPassword ? 'text' : 'password'}
+                      {...registerPassword('newPassword')}
+                      className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {passwordErrors.newPassword && (
+                    <p className="mt-1 text-sm text-red-600">{passwordErrors.newPassword.message}</p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Must be at least 8 characters with uppercase, lowercase, and number
+                  </p>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                    Confirm New Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      {...registerPassword('confirmPassword')}
+                      className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Confirm new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {passwordErrors.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600">{passwordErrors.confirmPassword.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Change Password Button */}
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {isChangingPassword ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Changing Password...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" />
+                      <span>Change Password</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </form>
       </div>
