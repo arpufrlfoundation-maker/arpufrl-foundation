@@ -12,6 +12,28 @@ interface Document {
   category: string
 }
 
+// Helper function to convert Google Drive URLs to embeddable format
+const getEmbedUrl = (url: string): string => {
+  // Extract file ID from Google Drive URL
+  const match = url.match(/\/file\/d\/([^/]+)/)
+  if (match) {
+    const fileId = match[1]
+    // Use Google Docs Viewer for better iframe compatibility
+    return `https://drive.google.com/file/d/${fileId}/preview`
+  }
+  return url
+}
+
+// Helper function to get direct view URL
+const getViewUrl = (url: string): string => {
+  const match = url.match(/\/file\/d\/([^/]+)/)
+  if (match) {
+    const fileId = match[1]
+    return `https://drive.google.com/file/d/${fileId}/view`
+  }
+  return url
+}
+
 const documents: Document[] = [
   {
     id: '1',
@@ -154,7 +176,7 @@ export default function DocumentsGrid() {
                       View
                     </button>
                     <a
-                      href={doc.type === 'pdf' ? doc.path.replace('/preview', '/view') : doc.path}
+                      href={doc.type === 'pdf' ? getViewUrl(doc.path) : doc.path}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -209,10 +231,12 @@ export default function DocumentsGrid() {
             <div className="p-6">
               {viewDocument.type === 'pdf' ? (
                 <iframe
-                  src={`${viewDocument.path}#view=FitH&toolbar=1&navpanes=0`}
-                  className="w-full h-[70vh] border-0"
+                  src={getEmbedUrl(viewDocument.path)}
+                  className="w-full h-[70vh] border-0 rounded"
                   title={viewDocument.title}
-                  allow="fullscreen"
+                  allow="autoplay"
+                  allowFullScreen
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                 />
               ) : (
                 <div className="flex justify-center items-center bg-gray-50 p-4 rounded">
@@ -228,7 +252,7 @@ export default function DocumentsGrid() {
 
             <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3">
               <a
-                href={viewDocument.type === 'pdf' ? viewDocument.path.replace('/preview', '/view') : viewDocument.path}
+                href={viewDocument.type === 'pdf' ? getViewUrl(viewDocument.path) : viewDocument.path}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"

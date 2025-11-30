@@ -93,11 +93,11 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
               "connect-src 'self' *.razorpay.com",
-              "frame-src 'self' *.razorpay.com",
+              "frame-src 'self' *.razorpay.com *.google.com drive.google.com docs.google.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "frame-ancestors 'none'",
+              "frame-ancestors 'self'",
               "upgrade-insecure-requests"
             ].join('; ')
           }])
