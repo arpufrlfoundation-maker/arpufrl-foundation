@@ -66,12 +66,6 @@ const navigation: NavItem[] = [
     description: 'Manage donations and payments'
   },
   {
-    name: 'Users',
-    href: '/dashboard/admin/users',
-    icon: Users,
-    description: 'User management and roles'
-  },
-  {
     name: 'Coordinators',
     href: '/dashboard/admin/coordinators',
     icon: UserCheck,

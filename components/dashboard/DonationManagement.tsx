@@ -12,8 +12,7 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  FileText
+  Eye
 } from 'lucide-react'
 import DonationTable from './DonationTable'
 import StatsCard from './StatsCard'
@@ -39,7 +38,7 @@ export default function DonationManagement() {
   const [stats, setStats] = useState<DonationStats | null>(null)
   const [filters, setFilters] = useState<DonationFilters>({
     search: '',
-    status: '',
+    status: 'SUCCESS',
     program: '',
     dateFrom: '',
     dateTo: '',
@@ -82,7 +81,7 @@ export default function DonationManagement() {
   const clearFilters = () => {
     setFilters({
       search: '',
-      status: '',
+      status: 'SUCCESS',
       program: '',
       dateFrom: '',
       dateTo: '',
@@ -148,13 +147,6 @@ export default function DonationManagement() {
           >
             <Download className="w-4 h-4 mr-2" />
             Export CSV
-          </button>
-          <button
-            onClick={() => exportDonations('pdf')}
-            className="flex items-center px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            Export PDF
           </button>
         </div>
       </div>

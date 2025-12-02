@@ -97,8 +97,8 @@ export default function DonationTable({ filters }: DonationTableProps) {
 
       const data = await response.json()
       setDonations(data.donations || [])
-      setTotalPages(data.totalPages || 1)
-      setTotalCount(data.totalCount || 0)
+      setTotalPages(data.pagination?.totalPages || data.totalPages || 1)
+      setTotalCount(data.pagination?.totalCount || data.totalCount || 0)
 
     } catch (err) {
       console.error('Fetch error:', err)
