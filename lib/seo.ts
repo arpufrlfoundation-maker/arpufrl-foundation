@@ -17,11 +17,11 @@ export interface SEOConfig {
 }
 
 const defaultConfig = {
-  siteName: 'ARPU Future Rise Life Foundation',
+  siteName: 'ARPU Future Rise Life Foundation | ARPUFRL',
   locale: 'en_IN',
   type: 'website' as const,
   image: '/images/og-default.jpg',
-  baseUrl: process.env.APP_URL || 'https://arpufuturerise.org',
+  baseUrl: process.env.APP_URL || 'https://arpufrl.org',
 }
 
 export function generateMetadata(config: SEOConfig): Metadata {
@@ -55,6 +55,13 @@ export function generateMetadata(config: SEOConfig): Metadata {
     : `${defaultConfig.baseUrl}${ogImage}`
 
   const allKeywords = [
+    'ARPUFRL',
+    'arpufrl',
+    'ARPU',
+    'arpu',
+    'ARPU Future Rise Life Foundation',
+    'ARPU Foundation',
+    'arpufrl.org',
     'NGO',
     'charity',
     'donation',
@@ -63,7 +70,9 @@ export function generateMetadata(config: SEOConfig): Metadata {
     'healthcare',
     'community development',
     'social impact',
-    'ARPU Future Rise Life Foundation',
+    'NGO in India',
+    'donate to NGO India',
+    'best NGO India',
     ...keywords,
     ...tags
   ]
@@ -75,9 +84,9 @@ export function generateMetadata(config: SEOConfig): Metadata {
 
     // Favicon and icons
     icons: {
-      icon: '/ARPUICON.ico',
-      shortcut: '/ARPUICON.ico',
-      apple: '/ARPUICON.ico',
+      icon: '/favicon_io/favicon.ico',
+      shortcut: '/favicon_io/favicon.ico',
+      apple: '/favicon_io/apple-touch-icon.png',
     },
 
     // Open Graph
@@ -147,44 +156,44 @@ export function generateMetadata(config: SEOConfig): Metadata {
 // Predefined metadata for common pages
 export const pageMetadata = {
   home: {
-    title: 'ARPU Future Rise Life Foundation - Empowering Communities Through Education & Healthcare',
-    description: 'Join ARPU Future Rise Life Foundation in creating positive change through education, healthcare, and sustainable development programs across India. Donate now to make an impact.',
-    keywords: ['NGO India', 'education programs', 'healthcare initiatives', 'community development', 'donate online'],
+    title: 'ARPUFRL - ARPU Future Rise Life Foundation | Empowering Communities Through Education & Healthcare',
+    description: 'ARPUFRL (ARPU Future Rise Life Foundation) is a leading NGO in India creating positive change through education, healthcare, and sustainable development programs. Donate now to make an impact at arpufrl.org',
+    keywords: ['ARPUFRL', 'arpufrl', 'ARPU', 'ARPU Foundation', 'arpufrl.org', 'NGO India', 'education programs', 'healthcare initiatives', 'community development', 'donate online', 'best NGO India'],
     url: '/',
   },
 
   about: {
-    title: 'About Us - Our Mission to Transform Lives',
-    description: 'Learn about ARPU Future Rise Life Foundation\'s mission, vision, and the dedicated team working to create positive change in communities across India.',
-    keywords: ['about NGO', 'mission vision', 'team', 'social impact', 'community work'],
+    title: 'About ARPUFRL - Our Mission to Transform Lives',
+    description: 'Learn about ARPUFRL (ARPU Future Rise Life Foundation) mission, vision, and the dedicated team working to create positive change in communities across India since 2018.',
+    keywords: ['about ARPUFRL', 'about ARPU', 'ARPU Foundation mission', 'NGO mission vision', 'team', 'social impact', 'community work'],
     url: '/about',
   },
 
   programs: {
-    title: 'Our Programs - Education, Healthcare & Community Development',
-    description: 'Discover our comprehensive initiatives in education, healthcare, and community development designed to create lasting positive change across India.',
-    keywords: ['NGO programs', 'education initiatives', 'healthcare programs', 'community projects'],
+    title: 'ARPUFRL Programs - Education, Healthcare & Community Development',
+    description: 'Discover ARPUFRL comprehensive initiatives in education, healthcare, and community development designed to create lasting positive change across India.',
+    keywords: ['ARPUFRL programs', 'ARPU NGO programs', 'education initiatives', 'healthcare programs', 'community projects India'],
     url: '/programs',
   },
 
   donate: {
-    title: 'Donate Now - Make a Difference Today',
-    description: 'Support our mission by making a secure online donation. Every contribution helps us create positive change in education, healthcare, and community development.',
-    keywords: ['donate online', 'charity donation', 'support NGO', 'make impact', 'secure payment'],
+    title: 'Donate to ARPUFRL - Make a Difference Today',
+    description: 'Support ARPUFRL mission by making a secure online donation. Every contribution to ARPU Future Rise Life Foundation helps create positive change in education, healthcare, and community development.',
+    keywords: ['donate ARPUFRL', 'donate ARPU', 'charity donation India', 'support NGO', 'make impact', 'secure payment', '80G tax benefit'],
     url: '/donate',
   },
 
   contact: {
-    title: 'Contact Us - Get in Touch',
-    description: 'Connect with ARPU Future Rise Life Foundation. Find our contact information, office locations, and get in touch to learn more about our work.',
-    keywords: ['contact NGO', 'get in touch', 'office location', 'partnership'],
+    title: 'Contact ARPUFRL - Get in Touch',
+    description: 'Connect with ARPUFRL (ARPU Future Rise Life Foundation). Find our contact information, office locations, and get in touch to learn more about our work.',
+    keywords: ['contact ARPUFRL', 'contact ARPU', 'ARPU Foundation contact', 'get in touch', 'office location', 'partnership'],
     url: '/contact',
   },
 
   stories: {
-    title: 'Success Stories - Real Impact, Real Change',
-    description: 'Read inspiring success stories from our programs and see the real impact of your donations on communities across India.',
-    keywords: ['success stories', 'impact stories', 'testimonials', 'real change', 'beneficiaries'],
+    title: 'ARPUFRL Success Stories - Real Impact, Real Change',
+    description: 'Read inspiring success stories from ARPUFRL programs and see the real impact of your donations on communities across India.',
+    keywords: ['ARPUFRL success stories', 'ARPU impact stories', 'testimonials', 'real change', 'beneficiaries', 'NGO impact'],
     url: '/stories',
   },
 }
@@ -195,16 +204,17 @@ export function generateOrganizationStructuredData() {
     '@context': 'https://schema.org',
     '@type': 'NGO',
     name: 'ARPU Future Rise Life Foundation',
-    alternateName: 'ARPU Foundation',
+    alternateName: ['ARPUFRL', 'ARPU Foundation', 'ARPU', 'arpufrl'],
     url: defaultConfig.baseUrl,
-    logo: `${defaultConfig.baseUrl}/ARPU-Logo.png`,
+    logo: `${defaultConfig.baseUrl}/favicon_io/android-chrome-512x512.png`,
     image: `${defaultConfig.baseUrl}/images/og-default.jpg`,
-    description: 'A non-profit organization dedicated to empowering communities through education, healthcare, and sustainable development programs across India.',
+    description: 'ARPUFRL (ARPU Future Rise Life Foundation) is a leading non-profit organization in India dedicated to empowering communities through education, healthcare, and sustainable development programs. Visit arpufrl.org to donate and make an impact.',
 
     // Contact Information
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+91-XXXXXXXXXX',
+      telephone: '+91-9919003332',
+      email: 'arpufrlfoundation@gmail.com',
       contactType: 'customer service',
       availableLanguage: ['English', 'Hindi'],
     },
@@ -212,24 +222,23 @@ export function generateOrganizationStructuredData() {
     // Address
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Your Street Address',
-      addressLocality: 'Your City',
-      addressRegion: 'Your State',
-      postalCode: 'Your Postal Code',
+      addressLocality: 'New Delhi',
+      addressRegion: 'Delhi',
       addressCountry: 'IN',
     },
 
     // Social Media
     sameAs: [
-      'https://www.facebook.com/arpufuturerise',
-      'https://www.twitter.com/arpufuturerise',
-      'https://www.instagram.com/arpufuturerise',
-      'https://www.linkedin.com/company/arpufuturerise',
+      'https://www.facebook.com/share/1PNHJHKMLa/',
+      'https://x.com/ArpufrlF',
+      'https://www.instagram.com/arpufuture',
+      'https://youtube.com/@arpufutureriselifefoundation',
     ],
 
     // Organization details
-    foundingDate: '2020',
-    nonprofitStatus: 'NonprofitType',
+    foundingDate: '2018',
+    nonprofitStatus: 'Nonprofit501c3',
+    taxID: '80G Registered',
 
     // Areas of focus
     knowsAbout: [
@@ -238,13 +247,22 @@ export function generateOrganizationStructuredData() {
       'Community Development',
       'Sustainable Development',
       'Social Impact',
+      'Rural Development',
+      'Women Empowerment',
+      'Child Education',
     ],
 
     // Donation information
     potentialAction: {
       '@type': 'DonateAction',
       target: `${defaultConfig.baseUrl}/donate`,
+      name: 'Donate to ARPUFRL',
     },
+
+    // Additional SEO properties
+    slogan: 'Empowering Communities, Transforming Lives',
+    areaServed: 'India',
+    award: '80G Tax Exemption Certificate',
   }
 }
 

@@ -43,7 +43,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: '/favicon_io/apple-touch-icon.png',
         sizes: '180x180',
         type: 'image/png',
-        purpose: 'apple touch icon'
+        purpose: 'any'
       },
       {
         src: '/favicon_io/android-chrome-192x192.png',
