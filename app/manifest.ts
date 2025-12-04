@@ -16,27 +16,39 @@ export default function manifest(): MetadataRoute.Manifest {
 
     icons: [
       {
-        src: '/ARPUICON.ico',
-        sizes: '48x48',
-        type: 'image/x-icon',
+        src: '/favicon_io/favicon-16x16.png',
+        sizes: '16x16',
+        type: 'image/png',
         purpose: 'any'
       },
       {
-        src: '/ARPUICON.ico',
+        src: '/favicon_io/favicon-32x32.png',
+        sizes: '32x32',
+        type: 'image/png',
+        purpose: 'any'
+      },
+      {
+        src: '/favicon_io/android-chrome-192x192.png',
         sizes: '192x192',
-        type: 'image/x-icon',
+        type: 'image/png',
         purpose: 'any'
       },
       {
-        src: '/ARPUICON.ico',
+        src: '/favicon_io/android-chrome-512x512.png',
         sizes: '512x512',
-        type: 'image/x-icon',
+        type: 'image/png',
         purpose: 'any'
       },
       {
-        src: '/ARPUICON.ico',
+        src: '/favicon_io/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+        purpose: 'apple touch icon'
+      },
+      {
+        src: '/favicon_io/android-chrome-192x192.png',
         sizes: '192x192',
-        type: 'image/x-icon',
+        type: 'image/png',
         purpose: 'maskable'
       }
     ],
@@ -49,9 +61,9 @@ export default function manifest(): MetadataRoute.Manifest {
         url: '/donate',
         icons: [
           {
-            src: '/ARPUICON.ico',
-            sizes: '96x96',
-            type: 'image/x-icon'
+            src: '/favicon_io/android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
           }
         ]
       },
@@ -62,9 +74,9 @@ export default function manifest(): MetadataRoute.Manifest {
         url: '/programs',
         icons: [
           {
-            src: '/ARPUICON.ico',
-            sizes: '96x96',
-            type: 'image/x-icon'
+            src: '/favicon_io/android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
           }
         ]
       },
@@ -75,9 +87,9 @@ export default function manifest(): MetadataRoute.Manifest {
         url: '/contact',
         icons: [
           {
-            src: '/ARPUICON.ico',
-            sizes: '96x96',
-            type: 'image/x-icon'
+            src: '/favicon_io/android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
           }
         ]
       }
@@ -85,16 +97,16 @@ export default function manifest(): MetadataRoute.Manifest {
 
     screenshots: [
       {
-        src: '/ARPUICON.ico',
-        sizes: '1280x720',
-        type: 'image/x-icon',
+        src: '/favicon_io/android-chrome-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
         form_factor: 'wide',
         label: 'Homepage on desktop'
       },
       {
-        src: '/ARPUICON.ico',
-        sizes: '390x844',
-        type: 'image/x-icon',
+        src: '/favicon_io/android-chrome-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
         form_factor: 'narrow',
         label: 'Homepage on mobile'
       }

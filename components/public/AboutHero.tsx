@@ -1,8 +1,15 @@
 export default function AboutHero() {
   return (
-    <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white">
+    <section className="relative text-white">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1623122617524-18ca7a791c37?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
+        }}
+      ></div>
       {/* Background overlay */}
-      <div className="absolute inset-0 bg-black/20"></div>
+      <div className="absolute inset-0 bg-black/60"></div>
 
       <div className="relative container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-4xl mx-auto text-center">

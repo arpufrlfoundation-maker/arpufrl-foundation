@@ -161,6 +161,40 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
+      {/* Developer Credits */}
+      <div className="border-t border-gray-800 bg-gray-950">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-2 text-sm text-gray-500">
+            <span>Developed with ❤️ by</span>
+            <a 
+              href="http://makeyou.online/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+            >
+              Ronak Kumar Singh
+            </a>
+            <span className="hidden md:inline">|</span>
+            <div className="flex items-center space-x-3">
+              <a 
+                href="mailto:ronakkumar20062006@gmail.com" 
+                className="text-gray-400 hover:text-white transition-colors"
+                title="Email"
+              >
+                <Mail className="w-4 h-4" />
+              </a>
+              <a 
+                href="tel:+917009097789" 
+                className="text-gray-400 hover:text-white transition-colors"
+                title="Phone"
+              >
+                <Phone className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </footer>
   )
 }

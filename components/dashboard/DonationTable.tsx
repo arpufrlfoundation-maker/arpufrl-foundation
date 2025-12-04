@@ -7,7 +7,6 @@ import {
   Eye,
   ExternalLink,
   X,
-  Download,
   Mail
 } from 'lucide-react'
 
@@ -287,25 +286,14 @@ export default function DonationTable({ filters }: DonationTableProps) {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      {donation.paymentStatus === 'SUCCESS' && (
-                        <>
-                          <a
-                            href={`/api/donations/receipt/${donation.id || donation._id}/download`}
-                            className="text-green-600 hover:text-green-900"
-                            title="Download Receipt"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
-                          {donation.donorEmail && (
-                            <button
-                              onClick={() => sendReceipt(donation.id || donation._id || '')}
-                              className="text-purple-600 hover:text-purple-900"
-                              title="Send Receipt Email"
-                            >
-                              <Mail className="w-4 h-4" />
-                            </button>
-                          )}
-                        </>
+                      {donation.paymentStatus === 'SUCCESS' && donation.donorEmail && (
+                        <button
+                          onClick={() => sendReceipt(donation.id || donation._id || '')}
+                          className="text-purple-600 hover:text-purple-900"
+                          title="Send Receipt Email"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </button>
                       )}
                       {donation.razorpayPaymentId && (
                         <a

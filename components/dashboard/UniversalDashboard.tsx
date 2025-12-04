@@ -13,7 +13,7 @@ import { PaymentWidget } from './PaymentWidget'
 import { TeamNetworkView } from './TeamNetworkView'
 import ManualDonationForm from './ManualDonationForm'
 import { VolunteerDonationsList } from './VolunteerDonationsList'
-import { Download, Share2, Bell, TrendingUp, BarChart3 } from 'lucide-react'
+import { Share2, Bell, TrendingUp, BarChart3, Download } from 'lucide-react'
 
 interface DashboardData {
   user: {
@@ -409,43 +409,6 @@ export function UniversalDashboard({ className = '' }: UniversalDashboardProps) 
           {/* Volunteer Donations List */}
           {isVolunteer && user.referralCode && (
             <VolunteerDonationsList referralCode={user.referralCode} />
-          )}
-
-          {/* Volunteer Certificate Download */}
-          {isVolunteer && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Certificate</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Download your volunteer certificate here.
-              </p>
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch(`/api/volunteer/certificate?userId=${user.id}`)
-                    if (!response.ok) {
-                      const error = await response.json()
-                      alert(error.error || 'Failed to generate certificate')
-                      return
-                    }
-                    const blob = await response.blob()
-                    const url = window.URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = url
-                    a.download = `volunteer-certificate-${user.name.replace(/\s/g, '-')}.pdf`
-                    document.body.appendChild(a)
-                    a.click()
-                    window.URL.revokeObjectURL(url)
-                    document.body.removeChild(a)
-                  } catch (error) {
-                    alert('Failed to download certificate')
-                  }
-                }}
-                className="flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                <Download className="h-5 w-5" />
-                <span>Download Certificate</span>
-              </button>
-            </div>
           )}
 
           {/* Recent Activity */}

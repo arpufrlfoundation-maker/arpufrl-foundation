@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
     const validationResult = changePasswordSchema.safeParse(body)
     if (!validationResult.success) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Validation failed',
           details: validationResult.error.issues.map(issue => ({
             field: issue.path.join('.'),
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 12)
-    
+
     // Update password
     user.hashedPassword = hashedPassword
     await user.save()

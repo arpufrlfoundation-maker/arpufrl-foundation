@@ -371,8 +371,8 @@ export default function ReferralManagement() {
                       <button
                         onClick={() => copyDonationLink(code.code)}
                         className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${copiedCode === `link-${code.code}`
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                           }`}
                         title="Copy donation link"
                       >

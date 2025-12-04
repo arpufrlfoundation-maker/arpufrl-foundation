@@ -15,9 +15,9 @@ export async function getBrowser() {
     try {
       // Use @sparticuz/chromium-min for Vercel
       const chromium = await import('@sparticuz/chromium-min')
-      
+
       const executablePath = await chromium.default.executablePath(CHROMIUM_EXECUTABLE_URL)
-      
+
       return puppeteerCore.launch({
         args: chromium.default.args,
         defaultViewport: { width: 1920, height: 1080 },

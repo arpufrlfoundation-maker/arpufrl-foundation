@@ -851,8 +851,8 @@ export default function CoordinatorManagement() {
                         <button
                           onClick={() => copyReferralLink(selectedCoordinator.referralCode!)}
                           className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${copiedCode === selectedCoordinator.referralCode
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                             }`}
                         >
                           {copiedCode === selectedCoordinator.referralCode ? (
@@ -1157,13 +1157,13 @@ export default function CoordinatorManagement() {
               <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              
+
               <h3 className="text-lg font-medium text-gray-900 text-center mb-2">
                 Delete Coordinator
               </h3>
-              
+
               <p className="text-sm text-gray-500 text-center mb-4">
-                Are you sure you want to delete <strong>{coordinatorToDelete.name}</strong>? 
+                Are you sure you want to delete <strong>{coordinatorToDelete.name}</strong>?
                 This action cannot be undone.
               </p>
 

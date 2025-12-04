@@ -200,17 +200,6 @@ export default function DonationHistory({ userEmail, className }: DonationHistor
 
                   <div className="flex items-center space-x-3">
                     {getStatusBadge(donation.paymentStatus)}
-
-                    {donation.paymentStatus === 'SUCCESS' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => downloadReceipt(donation._id)}
-                        className="text-xs"
-                      >
-                        Receipt
-                      </Button>
-                    )}
                   </div>
                 </div>
               </div>
