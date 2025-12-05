@@ -68,13 +68,16 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(totalCount / limit)
 
-    // Format response
+    // Format response - including Hindi fields
     const formattedPrograms = programs.map((program: any) => ({
       id: program._id.toString(),
       name: program.name,
+      nameHindi: program.nameHindi,
       slug: program.slug,
       description: program.description,
+      descriptionHindi: program.descriptionHindi,
       longDescription: program.longDescription,
+      longDescriptionHindi: program.longDescriptionHindi,
       image: program.image,
       gallery: program.gallery,
       targetAmount: program.targetAmount,
@@ -83,6 +86,7 @@ export async function GET(request: NextRequest) {
       active: program.active,
       featured: program.featured,
       priority: program.priority,
+      category: program.category,
       metaTitle: program.metaTitle,
       metaDescription: program.metaDescription,
       createdAt: program.createdAt.toISOString(),
@@ -152,14 +156,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create new program
+    // Create new program with Hindi fields
     const programData = {
       name,
+      nameHindi: body.nameHindi || undefined,
       slug,
       description,
+      descriptionHindi: body.descriptionHindi || undefined,
       longDescription: body.longDescription && body.longDescription.trim().length >= 50
         ? body.longDescription
         : undefined,
+      longDescriptionHindi: body.longDescriptionHindi || undefined,
       image: body.image,
       gallery: body.gallery || [],
       targetAmount: body.targetAmount ? parseFloat(body.targetAmount) : undefined,
@@ -168,6 +175,7 @@ export async function POST(request: NextRequest) {
       active: body.active !== undefined ? body.active : true,
       featured: body.featured !== undefined ? body.featured : false,
       priority: body.priority ? parseInt(body.priority) : 0,
+      category: body.category || undefined,
       metaTitle: body.metaTitle,
       metaDescription: body.metaDescription
     }

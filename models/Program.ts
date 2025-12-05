@@ -66,9 +66,12 @@ export const programCreationSchema = programValidationSchema.omit({
 export interface IProgram extends Document {
   _id: mongoose.Types.ObjectId
   name: string
+  nameHindi?: string
   slug: string
   description: string
+  descriptionHindi?: string
   longDescription?: string
+  longDescriptionHindi?: string
   image?: string
   gallery?: string[]
 
@@ -138,6 +141,12 @@ const programSchema = new Schema<IProgram>({
     index: true
   },
 
+  nameHindi: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Hindi name must not exceed 200 characters']
+  },
+
   slug: {
     type: String,
     required: [true, 'Program slug is required'],
@@ -158,11 +167,23 @@ const programSchema = new Schema<IProgram>({
     maxlength: [500, 'Description must not exceed 500 characters']
   },
 
+  descriptionHindi: {
+    type: String,
+    trim: true,
+    maxlength: [1000, 'Hindi description must not exceed 1000 characters']
+  },
+
   longDescription: {
     type: String,
     trim: true,
     minlength: [50, 'Long description must be at least 50 characters'],
     maxlength: [5000, 'Long description must not exceed 5000 characters']
+  },
+
+  longDescriptionHindi: {
+    type: String,
+    trim: true,
+    maxlength: [10000, 'Hindi long description must not exceed 10000 characters']
   },
 
   image: {

@@ -162,13 +162,16 @@ export default function ProgramGrid() {
             <div className="relative h-56 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 overflow-hidden">
               {program.image ? (
                 <div className="relative w-full h-full">
-                  <OptimizedImage
+                  <img
                     src={program.image}
                     alt={program.name}
-                    width={400}
-                    height={224}
                     className="w-full h-full object-cover object-center transform group-hover:scale-110 transition-transform duration-500"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    loading="lazy"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = `<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500"><div class="text-white text-7xl drop-shadow-lg">${getCategoryIcon(program.category)}</div></div>`;
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>

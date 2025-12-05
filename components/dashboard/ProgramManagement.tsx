@@ -27,9 +27,12 @@ import { CloudinaryService } from '@/lib/cloudinary'
 interface Program {
   id: string
   name: string
+  nameHindi?: string
   slug: string
   description: string
+  descriptionHindi?: string
   longDescription?: string
+  longDescriptionHindi?: string
   image?: string
   gallery?: string[]
   targetAmount?: number
@@ -38,6 +41,7 @@ interface Program {
   active: boolean
   featured: boolean
   priority: number
+  category?: string
   metaTitle?: string
   metaDescription?: string
   createdAt: string
@@ -84,10 +88,14 @@ export default function ProgramManagement() {
 
   const [createForm, setCreateForm] = useState({
     name: '',
+    nameHindi: '',
     description: '',
+    descriptionHindi: '',
     longDescription: '',
+    longDescriptionHindi: '',
     targetAmount: '',
     image: '',
+    category: '',
     active: true,
     featured: false,
     priority: '0'
@@ -95,11 +103,15 @@ export default function ProgramManagement() {
 
   const [editForm, setEditForm] = useState({
     name: '',
+    nameHindi: '',
     description: '',
+    descriptionHindi: '',
     longDescription: '',
+    longDescriptionHindi: '',
     targetAmount: '',
     raisedAmount: '',
     image: '',
+    category: '',
     active: true,
     featured: false,
     priority: '0'
@@ -224,26 +236,47 @@ export default function ProgramManagement() {
     }
   }
 
-  const deleteProgram = async (programId: string) => {
-    if (!confirm('Are you sure you want to delete this program? This action cannot be undone.')) {
+  const deleteProgram = async (programId: string, forceDelete: boolean = false) => {
+    const confirmMessage = forceDelete 
+      ? 'WARNING: This program has donations. Are you sure you want to force delete? This action cannot be undone!'
+      : 'Are you sure you want to delete this program? This action cannot be undone.'
+    
+    if (!confirm(confirmMessage)) {
       return
     }
 
     try {
-      const response = await fetch(`/api/admin/programs/${programId}`, {
+      const url = forceDelete 
+        ? `/api/admin/programs/${programId}?force=true`
+        : `/api/admin/programs/${programId}`
+      
+      const response = await fetch(url, {
         method: 'DELETE',
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to delete program')
+        // Check if it's because of donations
+        if (data.hasDonations) {
+          const shouldForceDelete = confirm(
+            `This program has ${data.donationCount} donation(s). Do you want to force delete it anyway?\n\nWARNING: This will permanently delete the program!`
+          )
+          if (shouldForceDelete) {
+            await deleteProgram(programId, true)
+          }
+          return
+        }
+        throw new Error(data.error || 'Failed to delete program')
       }
 
+      alert('Program deleted successfully!')
       // Refresh the programs list
       await fetchPrograms()
       await fetchStats()
     } catch (error) {
       console.error('Error deleting program:', error)
-      alert('Failed to delete program')
+      alert(error instanceof Error ? error.message : 'Failed to delete program')
     }
   }
 
@@ -295,10 +328,14 @@ export default function ProgramManagement() {
       // Reset form and close modal
       setCreateForm({
         name: '',
+        nameHindi: '',
         description: '',
+        descriptionHindi: '',
         longDescription: '',
+        longDescriptionHindi: '',
         targetAmount: '',
         image: '',
+        category: '',
         active: true,
         featured: false,
         priority: '0'
@@ -409,11 +446,15 @@ export default function ProgramManagement() {
     setSelectedProgram(program)
     setEditForm({
       name: program.name,
+      nameHindi: program.nameHindi || '',
       description: program.description,
+      descriptionHindi: program.descriptionHindi || '',
       longDescription: program.longDescription || '',
+      longDescriptionHindi: program.longDescriptionHindi || '',
       targetAmount: program.targetAmount?.toString() || '',
       raisedAmount: program.raisedAmount?.toString() || '0',
       image: program.image || '',
+      category: program.category || '',
       active: program.active,
       featured: program.featured,
       priority: program.priority?.toString() || '0'
@@ -1166,11 +1207,12 @@ export default function ProgramManagement() {
                 </div>
               )}
 
-              <form onSubmit={handleCreateProgram} className="space-y-4">
+              <form onSubmit={handleCreateProgram} className="space-y-4 max-h-[70vh] overflow-y-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
+                  {/* English Name */}
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Program Name *
+                      Program Name (English) *
                     </label>
                     <input
                       type="text"
@@ -1178,13 +1220,28 @@ export default function ProgramManagement() {
                       value={createForm.name}
                       onChange={(e) => setCreateForm(prev => ({ ...prev, name: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter program name"
+                      placeholder="Enter program name in English"
                     />
                   </div>
 
-                  <div className="md:col-span-2">
+                  {/* Hindi Name */}
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Short Description *
+                      कार्यक्रम का नाम (हिंदी)
+                    </label>
+                    <input
+                      type="text"
+                      value={createForm.nameHindi}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, nameHindi: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="हिंदी में कार्यक्रम का नाम दर्ज करें"
+                    />
+                  </div>
+
+                  {/* English Short Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Short Description (English) *
                     </label>
                     <textarea
                       required
@@ -1198,18 +1255,70 @@ export default function ProgramManagement() {
                     />
                   </div>
 
-                  <div className="md:col-span-2">
+                  {/* Hindi Short Description */}
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Long Description
+                      संक्षिप्त विवरण (हिंदी)
                     </label>
                     <textarea
-                      rows={4}
+                      rows={2}
+                      value={createForm.descriptionHindi}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, descriptionHindi: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="हिंदी में संक्षिप्त विवरण"
+                      maxLength={1000}
+                    />
+                  </div>
+
+                  {/* English Long Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Long Description (English)
+                    </label>
+                    <textarea
+                      rows={3}
                       value={createForm.longDescription}
                       onChange={(e) => setCreateForm(prev => ({ ...prev, longDescription: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Detailed description (optional, 50-5000 characters)"
+                      placeholder="Detailed description (optional)"
                       maxLength={5000}
                     />
+                  </div>
+
+                  {/* Hindi Long Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      विस्तृत विवरण (हिंदी)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={createForm.longDescriptionHindi}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, longDescriptionHindi: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="हिंदी में विस्तृत विवरण"
+                      maxLength={10000}
+                    />
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={createForm.category}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, category: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select Category</option>
+                      <option value="education">Education / शिक्षा</option>
+                      <option value="healthcare">Healthcare / स्वास्थ्य</option>
+                      <option value="community">Community / समुदाय</option>
+                      <option value="environment">Environment / पर्यावरण</option>
+                      <option value="water">Water / जल</option>
+                      <option value="women">Women Empowerment / महिला सशक्तिकरण</option>
+                      <option value="children">Children / बच्चे</option>
+                    </select>
                   </div>
 
                   <div>

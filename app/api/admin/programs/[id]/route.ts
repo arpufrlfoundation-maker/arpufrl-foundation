@@ -40,11 +40,12 @@ export async function PATCH(
       )
     }
 
-    // Validate update fields
+    // Validate update fields - including Hindi fields
     const allowedUpdates = [
-      'name', 'description', 'longDescription', 'image', 'gallery',
+      'name', 'nameHindi', 'description', 'descriptionHindi', 
+      'longDescription', 'longDescriptionHindi', 'image', 'gallery',
       'targetAmount', 'raisedAmount', 'active', 'featured', 'priority',
-      'metaTitle', 'metaDescription'
+      'metaTitle', 'metaDescription', 'category'
     ]
     const updates: any = {}
 
@@ -155,7 +156,7 @@ export async function DELETE(
     const session = await auth()
     if (!session?.user || session.user.role !== UserRole.ADMIN) {
       return NextResponse.json(
-        { error: 'Unauthorized access' },
+        { success: false, error: 'Unauthorized access' },
         { status: 401 }
       )
     }
@@ -163,11 +164,15 @@ export async function DELETE(
     await connectToDatabase()
 
     const { id } = await params
+    
+    // Check for force delete query param
+    const { searchParams } = new URL(request.url)
+    const forceDelete = searchParams.get('force') === 'true'
 
     // Validate the program ID
     if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
       return NextResponse.json(
-        { error: 'Invalid program ID' },
+        { success: false, error: 'Invalid program ID' },
         { status: 400 }
       )
     }
@@ -176,15 +181,20 @@ export async function DELETE(
     const program = await Program.findById(id)
     if (!program) {
       return NextResponse.json(
-        { error: 'Program not found' },
+        { success: false, error: 'Program not found' },
         { status: 404 }
       )
     }
 
-    // Check if program has donations
-    if (program.donationCount > 0) {
+    // Check if program has donations (unless force delete)
+    if (program.donationCount > 0 && !forceDelete) {
       return NextResponse.json(
-        { error: 'Cannot delete program with existing donations. Please deactivate it instead.' },
+        { 
+          success: false, 
+          error: 'Cannot delete program with existing donations. Please deactivate it instead or use force delete.',
+          hasDonations: true,
+          donationCount: program.donationCount
+        },
         { status: 400 }
       )
     }
@@ -193,13 +203,14 @@ export async function DELETE(
     await Program.findByIdAndDelete(id)
 
     return NextResponse.json({
+      success: true,
       message: 'Program deleted successfully'
     })
 
   } catch (error) {
     console.error('Delete program error:', error)
     return NextResponse.json(
-      { error: 'Failed to delete program' },
+      { success: false, error: 'Failed to delete program' },
       { status: 500 }
     )
   }

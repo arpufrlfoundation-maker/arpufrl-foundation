@@ -15,6 +15,7 @@ interface OptimizedImageProps {
   quality?: number
   placeholder?: 'blur' | 'empty'
   blurDataURL?: string
+  unoptimized?: boolean
 }
 
 export default function OptimizedImage({
@@ -29,6 +30,7 @@ export default function OptimizedImage({
   quality = 85,
   placeholder = 'empty',
   blurDataURL,
+  unoptimized = false,
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -42,14 +44,17 @@ export default function OptimizedImage({
     setHasError(true)
   }
 
-  if (hasError) {
+  // Check if the src is a valid URL or path
+  const isValidSrc = src && (src.startsWith('http') || src.startsWith('/') || src.startsWith('data:'))
+
+  if (!isValidSrc || hasError) {
     return (
       <div
-        className={`bg-gray-200 flex items-center justify-center ${className}`}
-        style={{ width, height }}
+        className={`bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center ${className}`}
+        style={{ width: fill ? '100%' : width, height: fill ? '100%' : height }}
       >
         <svg
-          className="w-8 h-8 text-gray-400"
+          className="w-12 h-12 text-blue-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -65,35 +70,36 @@ export default function OptimizedImage({
     )
   }
 
+  // For external URLs, use unoptimized mode to avoid Next.js image optimization issues
+  const shouldUnoptimize = unoptimized || src.startsWith('http')
+
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative overflow-hidden ${fill ? 'w-full h-full' : ''} ${className}`}>
       {isLoading && (
         <div
-          className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center"
-          style={{ width, height }}
+          className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse flex items-center justify-center z-10"
         >
-          <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
         </div>
       )}
 
       <Image
         src={src}
         alt={alt}
-        width={fill ? undefined : width}
-        height={fill ? undefined : height}
+        width={fill ? undefined : (width || 400)}
+        height={fill ? undefined : (height || 300)}
         fill={fill}
         priority={priority}
         quality={quality}
         sizes={sizes || (fill ? '100vw' : undefined)}
         placeholder={placeholder}
         blurDataURL={blurDataURL}
-        className={`transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'
-          }`}
+        unoptimized={shouldUnoptimize}
+        className={`transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'} ${className}`}
         onLoad={handleLoad}
         onError={handleError}
         style={{
           objectFit: 'cover',
-          ...(fill ? {} : { maxWidth: '100%', height: 'auto' }),
         }}
       />
     </div>

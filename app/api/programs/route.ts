@@ -12,11 +12,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const active = searchParams.get('active')
     const featured = searchParams.get('featured')
+    const slug = searchParams.get('slug')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
     // Build filter query
     const filter: any = {}
+
+    // If slug is provided, search by slug
+    if (slug) {
+      filter.slug = slug
+    }
 
     // Only show active programs by default
     if (active !== 'false') {
@@ -31,9 +37,9 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
     const total = await Program.countDocuments(filter)
 
-    // Fetch programs
+    // Fetch programs with Hindi fields
     const programs = await Program.find(filter)
-      .select('name slug description longDescription image targetAmount raisedAmount donationCount active featured priority category')
+      .select('name nameHindi slug description descriptionHindi longDescription longDescriptionHindi image gallery targetAmount raisedAmount donationCount active featured priority category metaTitle metaDescription')
       .sort({ priority: -1, featured: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
