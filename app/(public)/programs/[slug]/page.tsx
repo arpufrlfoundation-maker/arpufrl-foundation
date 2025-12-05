@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import ProgramDetail from '@/components/public/ProgramDetail'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 
@@ -9,11 +9,18 @@ interface ProgramPageProps {
   }
 }
 
+// Clean slug by removing trailing/leading hyphens
+function cleanSlug(slug: string): string {
+  return slug.replace(/-+$/, '').replace(/^-+/, '').trim()
+}
+
 // Fetch program by slug from API
 async function getProgram(slug: string) {
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/programs?slug=${slug}`, {
+    const clean = cleanSlug(slug)
+    
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.APP_URL || 'https://arpufrl.org'
+    const response = await fetch(`${baseUrl}/api/programs?slug=${clean}`, {
       cache: 'no-store',
       next: { revalidate: 60 } // Revalidate every minute
     })
@@ -35,7 +42,15 @@ async function getProgram(slug: string) {
 }
 
 export default async function ProgramPage({ params }: ProgramPageProps) {
-  const program = await getProgram(params.slug)
+  const { slug } = params
+  const clean = cleanSlug(slug)
+  
+  // Redirect if slug has trailing/leading hyphens
+  if (slug !== clean) {
+    redirect(`/programs/${clean}`)
+  }
+  
+  const program = await getProgram(slug)
 
   if (!program) {
     notFound()

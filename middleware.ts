@@ -69,6 +69,12 @@ const authRoutes = ['/login']
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Handle URLs with trailing hyphens - redirect to clean URL
+  if (pathname.includes('/programs/') && (pathname.endsWith('-') || pathname.match(/-+$/))) {
+    const cleanPath = pathname.replace(/-+$/, '')
+    return NextResponse.redirect(new URL(cleanPath, request.url), 301)
+  }
+
   // Get session
   const session = await auth()
 

@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button'
 interface Program {
   _id: string
   name: string
+  nameHindi?: string
   slug: string
   description: string
+  descriptionHindi?: string
   longDescription?: string
+  longDescriptionHindi?: string
   image?: string
   gallery?: string[]
   targetAmount?: number
@@ -134,13 +137,23 @@ export default function ProgramDetail({ program }: ProgramDetailProps) {
                 </span>
               </div>
 
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
                 {program.name}
               </h1>
+              {program.nameHindi && (
+                <p className="text-xl text-orange-600 font-semibold mb-4">
+                  {program.nameHindi}
+                </p>
+              )}
 
-              <p className="text-xl text-gray-600 mb-8">
+              <p className="text-xl text-gray-600 mb-4">
                 {program.description}
               </p>
+              {program.descriptionHindi && (
+                <p className="text-lg text-gray-500 mb-8 italic border-l-4 border-orange-400 pl-4">
+                  {program.descriptionHindi}
+                </p>
+              )}
 
               {/* Funding Progress */}
               {program.targetAmount && (
@@ -239,6 +252,22 @@ export default function ProgramDetail({ program }: ProgramDetailProps) {
               <p className="text-gray-700 text-lg leading-relaxed">
                 {program.description}
               </p>
+            )}
+
+            {/* Hindi Long Description */}
+            {program.longDescriptionHindi && (
+              <div className="mt-12 pt-8 border-t-2 border-orange-200">
+                <h2 className="text-2xl font-bold text-orange-600 mb-6 flex items-center gap-2">
+                  <span>🇮🇳</span> हिंदी में विवरण
+                </h2>
+                <div className="bg-orange-50 rounded-lg p-6 border-l-4 border-orange-400">
+                  {program.longDescriptionHindi.split('\n\n').map((paragraph, index) => (
+                    <p key={index} className="text-gray-700 mb-4 leading-relaxed text-lg">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </div>

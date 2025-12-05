@@ -19,9 +19,9 @@ export async function GET(request: NextRequest) {
     // Build filter query
     const filter: any = {}
 
-    // If slug is provided, search by slug
+    // If slug is provided, search by slug (clean trailing/leading hyphens)
     if (slug) {
-      filter.slug = slug
+      filter.slug = slug.trim().replace(/^-+|-+$/g, '')
     }
 
     // Only show active programs by default

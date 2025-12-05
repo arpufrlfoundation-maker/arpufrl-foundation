@@ -9,9 +9,12 @@ import { TrendingUp, Users, Target, Heart, ArrowRight, Sparkles } from 'lucide-r
 interface Program {
   _id: string
   name: string
+  nameHindi?: string
   slug: string
   description: string
+  descriptionHindi?: string
   longDescription?: string
+  longDescriptionHindi?: string
   image?: string
   targetAmount?: number
   raisedAmount: number
@@ -201,13 +204,23 @@ export default function ProgramGrid() {
 
             {/* Program Content */}
             <div className="p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+              <h3 className="text-xl font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors">
                 {program.name}
               </h3>
+              {program.nameHindi && (
+                <p className="text-sm text-orange-600 font-medium mb-3">
+                  {program.nameHindi}
+                </p>
+              )}
 
-              <p className="text-gray-600 mb-4 line-clamp-3 text-sm leading-relaxed">
+              <p className="text-gray-600 mb-2 line-clamp-2 text-sm leading-relaxed">
                 {program.description}
               </p>
+              {program.descriptionHindi && (
+                <p className="text-gray-500 mb-4 line-clamp-2 text-sm leading-relaxed italic">
+                  {program.descriptionHindi}
+                </p>
+              )}
 
               {/* Funding Progress */}
               {program.targetAmount && (
