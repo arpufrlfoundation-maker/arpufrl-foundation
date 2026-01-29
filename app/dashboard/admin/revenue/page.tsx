@@ -89,7 +89,7 @@ export default function RevenueDashboardPage() {
         </div>
 
         {/* Content */}
-        {activeTab === 'overview' && <RevenueOverview key={refreshKey} />}
+        {activeTab === 'overview' && <RevenueOverview key={refreshKey} refreshKey={refreshKey} />}
         {activeTab === 'commissions' && <CommissionsList key={refreshKey} />}
         {activeTab === 'pending' && <PendingPayments key={refreshKey} />}
         {activeTab === 'distribute' && <DistributeCommissions key={refreshKey} onSuccess={handleRefresh} />}
@@ -98,13 +98,13 @@ export default function RevenueDashboardPage() {
   )
 }
 
-function RevenueOverview({ key }: { key: number }) {
+function RevenueOverview({ refreshKey }: { refreshKey: number }) {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchDashboardData()
-  }, [key])
+  }, [refreshKey])
 
   const fetchDashboardData = async () => {
     try {

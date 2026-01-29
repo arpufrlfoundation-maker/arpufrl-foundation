@@ -62,6 +62,15 @@ export class CloudinaryService {
   }
 
   /**
+   * Upload a gallery image to Cloudinary
+   * @param file - File object from input
+   * @returns Promise with upload result
+   */
+  static async uploadGalleryImage(file: File): Promise<CloudinaryUploadResponse> {
+    return this.uploadImage(file, 'arpufrl/gallery')
+  }
+
+  /**
    * Generic image upload function
    * @param file - File object from input
    * @param folder - Cloudinary folder path

@@ -2,10 +2,8 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import BlogGrid from '@/components/public/BlogGrid'
 import BlogFilters from '@/components/public/BlogFilters'
-import GalleryGrid from '@/components/public/GalleryGrid'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { generateMetadata, generateBreadcrumbStructuredData } from '@/lib/seo'
-import { Camera } from 'lucide-react'
 
 export const metadata = generateMetadata({
   title: 'Blogs & Success Stories - ARPUFRL',
@@ -155,60 +153,17 @@ export default function BlogsPage() {
               We&apos;d love to hear about the impact you&apos;ve made or how our programs have helped you. Share your story with us.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a
+              <Link
                 href="/contact"
                 className="px-8 py-3 bg-purple-600 text-white font-semibold rounded-full hover:bg-purple-700 transition-colors shadow-lg hover:shadow-xl"
               >
                 Get in Touch
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/donate"
                 className="px-8 py-3 bg-white text-purple-600 font-semibold rounded-full border-2 border-purple-600 hover:bg-purple-50 transition-colors"
               >
                 Support Our Mission
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* Gallery Preview Section */}
-        <section className="py-16 md:py-24 bg-white">
-          <div className="container mx-auto px-4">
-            {/* Section Header */}
-            <div className="text-center mb-12">
-              <div className="inline-block mb-4">
-                <span className="px-4 py-2 bg-blue-50 text-blue-600 text-sm font-semibold rounded-full border border-blue-200">
-                  <Camera className="inline w-4 h-4 mr-2" />
-                  Gallery
-                </span>
-              </div>
-              <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-                Visual Moments & Memories
-              </h2>
-              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                Explore our photo gallery capturing the essence of our programs, community engagement, and the positive impact we&apos;re creating together.
-              </p>
-            </div>
-
-            {/* Gallery Grid */}
-            <div className="mb-8">
-              <Suspense fallback={
-                <div className="flex justify-center py-12">
-                  <LoadingSpinner />
-                </div>
-              }>
-                <GalleryGrid limit={6} />
-              </Suspense>
-            </div>
-
-            {/* View All Gallery Link */}
-            <div className="text-center">
-              <Link
-                href="/gallery"
-                className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all"
-              >
-                <span>View Full Gallery</span>
-                <Camera className="w-4 h-4" />
               </Link>
             </div>
           </div>
