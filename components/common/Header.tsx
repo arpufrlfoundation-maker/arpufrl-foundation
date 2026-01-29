@@ -37,7 +37,10 @@ export default function Header() {
       case 'our plan':
         return '/programs'
       case 'stories':
-        return '/stories'
+      case 'blogs':
+        return '/blogs'
+      case 'gallery':
+        return '/gallery'
       case 'contact':
         return '/contact'
       case 'donate':

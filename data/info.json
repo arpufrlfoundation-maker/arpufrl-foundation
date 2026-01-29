@@ -35,11 +35,21 @@
     },
     {
       "id": 3,
+      "label": "GALLERY",
+      "link": "/gallery"
+    },
+    {
+      "id": 4,
+      "label": "BLOGS",
+      "link": "/blogs"
+    },
+    {
+      "id": 5,
       "label": "DOCUMENTS",
       "link": "/documents"
     },
     {
-      "id": 4,
+      "id": 6,
       "label": "CONTACT",
       "link": "/contact"
     }

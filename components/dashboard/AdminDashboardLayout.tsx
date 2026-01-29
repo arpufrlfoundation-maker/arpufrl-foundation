@@ -20,7 +20,10 @@ import {
   Receipt,
   TrendingUp,
   UserPlus,
-  Mail
+  Mail,
+  Image as ImageIcon,
+  Camera,
+  BookOpen
 } from 'lucide-react'
 
 interface AdminDashboardLayoutProps {
@@ -82,6 +85,18 @@ const navigation: NavItem[] = [
     href: '/dashboard/admin/programs',
     icon: FileText,
     description: 'Program management and analytics'
+  },
+  {
+    name: 'Gallery',
+    href: '/dashboard/admin/gallery',
+    icon: ImageIcon,
+    description: 'Upload and manage photo gallery'
+  },
+  {
+    name: 'Blogs',
+    href: '/dashboard/admin/blogs',
+    icon: BookOpen,
+    description: 'Create and manage blog posts'
   },
   {
     name: 'Volunteers',

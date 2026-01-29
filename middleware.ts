@@ -60,6 +60,10 @@ const publicRoutes = [
   '/api/team', // Public team information
   '/api/test-email', // Public test email endpoint
   '/forgot-password',
+  '/gallery',
+  '/blogs',
+  '/api/gallery', // Public gallery images (read-only, admin upload requires auth)
+  '/api/blogs' // Public blog posts (read-only, admin CRUD requires auth)
 ]
 
 // Auth routes that should redirect if already authenticated

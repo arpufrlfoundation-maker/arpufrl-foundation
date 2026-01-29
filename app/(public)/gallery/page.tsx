@@ -1,34 +1,31 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
-import BlogGrid from '@/components/public/BlogGrid'
-import BlogFilters from '@/components/public/BlogFilters'
 import GalleryGrid from '@/components/public/GalleryGrid'
+import GalleryFilters from '@/components/public/GalleryFilters'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { generateMetadata, generateBreadcrumbStructuredData } from '@/lib/seo'
-import { Camera } from 'lucide-react'
 
 export const metadata = generateMetadata({
-  title: 'Blogs & Success Stories - ARPUFRL',
-  description: 'Read inspiring success stories and insightful blogs from ARPUFRL. Discover the real impact of our programs and the stories of communities we serve.',
-  keywords: ['blogs', 'success stories', 'ARPUFRL blog', 'impact stories', 'community impact', 'testimonials'],
-  url: '/blogs'
+  title: 'Photo Gallery - Capturing Our Journey & Impact',
+  description: 'Explore ARPUFRL photo gallery showcasing our events, programs, team activities, and the positive impact we create in communities across India.',
+  keywords: ['ARPUFRL gallery', 'ARPU photos', 'NGO events', 'community impact images', 'team photos', 'program pictures'],
+  url: '/gallery',
 })
 
-export default function BlogsPage() {
+export default function GalleryPage() {
   const breadcrumbs = [
     { name: 'Home', url: '/' },
-    { name: 'Blogs', url: '/blogs' },
+    { name: 'Gallery', url: '/gallery' },
   ]
 
   const breadcrumbData = generateBreadcrumbStructuredData(breadcrumbs)
 
-  // Structured data for blog collection
-  const blogCollectionData = {
+  // Structured data for image gallery
+  const galleryStructuredData = {
     '@context': 'https://schema.org',
-    '@type': 'Blog',
-    name: 'ARPUFRL Blog',
-    description: 'Inspiring stories and insightful articles about our programs and impact',
-    url: 'https://arpufrl.org/blogs',
+    '@type': 'ImageGallery',
+    name: 'ARPUFRL Photo Gallery',
+    description: 'A collection of photographs from ARPUFRL events, programs, and community initiatives.',
+    url: 'https://arpufrl.org/gallery',
     publisher: {
       '@type': 'Organization',
       name: 'ARPU Future Rise Life Foundation',
@@ -46,17 +43,17 @@ export default function BlogsPage() {
         }}
       />
       
-      {/* Structured Data for Blog Collection */}
+      {/* Structured Data for Gallery */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(blogCollectionData),
+          __html: JSON.stringify(galleryStructuredData),
         }}
       />
 
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Page Header */}
-        <section className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 overflow-hidden">
+        <section className="relative bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute inset-0 bg-[url('/patterns/grid.svg')] opacity-10"></div>
 
@@ -64,45 +61,45 @@ export default function BlogsPage() {
             <div className="text-center max-w-4xl mx-auto">
               <div className="inline-block mb-4">
                 <span className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-semibold rounded-full border border-white/30">
-                  📖 Our Stories & Insights
+                  📸 Our Visual Journey
                 </span>
               </div>
 
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg">
-                Blogs & Success Stories
+                Photo Gallery
               </h1>
 
               <p className="text-lg md:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto drop-shadow-md">
-                Read inspiring success stories and insightful articles about our programs, the communities we serve, 
-                and the positive impact we&apos;re making together.
+                Browse through moments captured from our events, programs, and community initiatives.
+                Every image tells a story of hope, progress, and positive change.
               </p>
 
               <div className="mt-8 flex flex-wrap justify-center gap-6 text-white/90">
                 <div className="flex items-center gap-2">
                   <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <span className="text-2xl">📝</span>
+                    <span className="text-2xl">📷</span>
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-medium">Articles</p>
+                    <p className="text-sm font-medium">Moments Captured</p>
+                    <p className="text-2xl font-bold">500+</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <span className="text-2xl">🎉</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium">Events Covered</p>
                     <p className="text-2xl font-bold">50+</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <span className="text-2xl">🎯</span>
+                    <span className="text-2xl">🌟</span>
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-medium">Success Stories</p>
+                    <p className="text-sm font-medium">Stories Shared</p>
                     <p className="text-2xl font-bold">100+</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <span className="text-2xl">👥</span>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium">Lives Impacted</p>
-                    <p className="text-2xl font-bold">1000+</p>
                   </div>
                 </div>
               </div>
@@ -124,92 +121,49 @@ export default function BlogsPage() {
           </div>
         </section>
 
-        {/* Blog Content */}
+        {/* Gallery Content */}
         <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
             {/* Filters */}
             <div className="mb-8">
               <Suspense fallback={<div className="h-12 bg-gray-100 rounded-lg animate-pulse" />}>
-                <BlogFilters />
+                <GalleryFilters />
               </Suspense>
             </div>
 
-            {/* Blog Grid */}
+            {/* Gallery Grid */}
             <Suspense fallback={
               <div className="flex justify-center py-12">
                 <LoadingSpinner />
               </div>
             }>
-              <BlogGrid />
+              <GalleryGrid />
             </Suspense>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
+        <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Have Your Own Success Story?
+              Be Part of Our Story
             </h2>
             <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              We&apos;d love to hear about the impact you&apos;ve made or how our programs have helped you. Share your story with us.
+              Join our community of changemakers and help us create more beautiful moments of impact and transformation.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <a
-                href="/contact"
+                href="/volunteer"
                 className="px-8 py-3 bg-purple-600 text-white font-semibold rounded-full hover:bg-purple-700 transition-colors shadow-lg hover:shadow-xl"
               >
-                Get in Touch
+                Become a Volunteer
               </a>
               <a
                 href="/donate"
                 className="px-8 py-3 bg-white text-purple-600 font-semibold rounded-full border-2 border-purple-600 hover:bg-purple-50 transition-colors"
               >
-                Support Our Mission
+                Support Our Cause
               </a>
-            </div>
-          </div>
-        </section>
-
-        {/* Gallery Preview Section */}
-        <section className="py-16 md:py-24 bg-white">
-          <div className="container mx-auto px-4">
-            {/* Section Header */}
-            <div className="text-center mb-12">
-              <div className="inline-block mb-4">
-                <span className="px-4 py-2 bg-blue-50 text-blue-600 text-sm font-semibold rounded-full border border-blue-200">
-                  <Camera className="inline w-4 h-4 mr-2" />
-                  Gallery
-                </span>
-              </div>
-              <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-                Visual Moments & Memories
-              </h2>
-              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                Explore our photo gallery capturing the essence of our programs, community engagement, and the positive impact we&apos;re creating together.
-              </p>
-            </div>
-
-            {/* Gallery Grid */}
-            <div className="mb-8">
-              <Suspense fallback={
-                <div className="flex justify-center py-12">
-                  <LoadingSpinner />
-                </div>
-              }>
-                <GalleryGrid limit={6} />
-              </Suspense>
-            </div>
-
-            {/* View All Gallery Link */}
-            <div className="text-center">
-              <Link
-                href="/gallery"
-                className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all"
-              >
-                <span>View Full Gallery</span>
-                <Camera className="w-4 h-4" />
-              </Link>
             </div>
           </div>
         </section>
